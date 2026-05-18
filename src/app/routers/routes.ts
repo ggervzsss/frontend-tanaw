@@ -13,6 +13,8 @@ export const routes = {
   },
   staff: {
     root: "/staff",
+    batchReports: "/staff/batch-reports",
+    finalReportsAudit: "/staff/final-reports-audit",
     analytics: "/staff/analytics",
   },
 } as const;

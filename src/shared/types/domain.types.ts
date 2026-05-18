@@ -120,3 +120,58 @@ export type SystemAlert = {
   status: AlertStatus;
   desc: string;
 };
+
+export type ReportStatus = "Pending Review" | "Ready to Consolidate" | "Returned" | "Consolidated" | "Missing";
+export type FinalReportStatus = "Draft" | "Approved" | "Archived";
+
+export type IntakeReport = {
+  id: string;
+  enterpriseId: string;
+  enterprise: string;
+  category: string;
+  barangay: string;
+  month: string;
+  period: string;
+  submitted: string;
+  status: ReportStatus;
+  code: string;
+  remarks?: string;
+  metrics: {
+    entry: number;
+    exit: number;
+    unique: number;
+    peak: string;
+  };
+};
+
+export type ReportEnterprise = {
+  id: string;
+  name: string;
+  category: string;
+  barangay: string;
+  complianceOwner: string;
+};
+
+export type FinalReportSource = {
+  id: string;
+  enterprise: string;
+  code: string;
+  unique: number;
+  entry: number;
+  exit: number;
+};
+
+export type FinalReport = {
+  id: string;
+  title: string;
+  period: string;
+  generatedOn: string;
+  preparedBy: string;
+  preparedRole: string;
+  status: FinalReportStatus;
+  totalEntry: number;
+  totalExit: number;
+  totalUnique: number;
+  enterpriseCount: number;
+  sources: FinalReportSource[];
+};

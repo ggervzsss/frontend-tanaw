@@ -48,13 +48,13 @@ export function AdminSystemLogsPage() {
         <MetricCard label="Last Config Change" value="11:05 AM" foot="By jdelacruz (IT)" color="#ff6204" footClassName="text-orange-600" icon={Settings2} />
       </motion.section>
 
-      <Panel className="mt-6 relative flex min-h-155 flex-col overflow-hidden">
+      <Panel className="relative mt-6 flex min-h-155 flex-col overflow-hidden">
         <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-slate-200/80 bg-linear-to-r from-white via-slate-50 to-emerald-50/40 p-4">
           <div className="relative min-w-62.5 flex-1">
             <Search size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400" />
             <input
               placeholder="Search user, description, or module..."
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 pl-9 text-[11px] font-semibold tracking-wide text-slate-600 uppercase shadow-sm transition-all outline-none focus:border-tanaw-green focus:ring-2 focus:ring-tanaw-green/10"
+              className="focus:border-tanaw-green focus:ring-tanaw-green/10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 pl-9 text-[11px] font-semibold tracking-wide text-slate-600 uppercase shadow-sm transition-all outline-none focus:ring-2"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
             />
@@ -72,7 +72,7 @@ export function AdminSystemLogsPage() {
           <input type="date" className="admin-select" />
           <button
             type="button"
-            className="flex items-center gap-2 rounded-lg bg-tanaw-green px-4 py-2 text-[10px] font-black tracking-widest text-white uppercase shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-tanaw-lime hover:shadow-md active:translate-y-0"
+            className="bg-tanaw-green hover:bg-tanaw-lime flex items-center gap-2 rounded-lg px-4 py-2 text-[10px] font-black tracking-widest text-white uppercase shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
           >
             <Filter size={12} /> Filter
           </button>
@@ -97,7 +97,7 @@ export function AdminSystemLogsPage() {
                       <Calendar size={10} /> {log.time}
                     </div>
                   </td>
-                  <td className="border-b border-slate-100 p-3 font-bold text-tanaw-navy transition-colors group-hover:border-emerald-100 group-hover:text-tanaw-green">{log.user}</td>
+                  <td className="text-tanaw-navy group-hover:text-tanaw-green border-b border-slate-100 p-3 font-bold transition-colors group-hover:border-emerald-100">{log.user}</td>
                   <td className="border-b border-slate-100 p-3 transition-colors group-hover:border-emerald-100">
                     <RoleBadge role={log.role} />
                   </td>

@@ -1,4 +1,4 @@
-import { BarChart3, Bell, FileText, LayoutDashboard, MapPinned } from "lucide-react";
+import { BarChart3, Bell, FileCheck2, FileText, Layers, LayoutDashboard, MapPinned } from "lucide-react";
 import type { ComponentType } from "react";
 import { routes } from "../../../app/routers/routes";
 import type { UserRole } from "../../types/role.types";
@@ -37,6 +37,18 @@ export const roleNavigation: Record<UserRole, NavigationItem[]> = {
       label: "Comparative Analytics",
       path: routes.staff.analytics,
       icon: BarChart3,
+    },
+    {
+      id: "batch-reports",
+      label: "Batch Reports",
+      path: routes.staff.batchReports,
+      icon: Layers,
+    },
+    {
+      id: "final-reports-audit",
+      label: "Final Reports Audit",
+      path: routes.staff.finalReportsAudit,
+      icon: FileCheck2,
     },
   ],
   it: [

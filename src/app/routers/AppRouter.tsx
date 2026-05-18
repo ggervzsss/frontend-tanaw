@@ -4,6 +4,7 @@ import { StaffAnalyticsPage } from "../../features/analytics";
 import { ITDashboardPage } from "../../features/dashboard";
 import { LoginPage } from "../../features/login";
 import { AdminMapViewPage } from "../../features/mapview";
+import { StaffBatchReportsPage, StaffFinalReportsAuditPage } from "../../features/reports";
 import { AdminSystemLogsPage } from "../../features/system-logs";
 import { AccountLayout } from "../../shared/components/layout";
 import { getRoleDashboardPath } from "../../shared/utils/routeUtils";
@@ -57,6 +58,8 @@ export function AppRouter() {
         }
       >
         <Route index element={<Navigate to={routes.staff.analytics} replace />} />
+        <Route path="batch-reports" element={<StaffBatchReportsPage />} />
+        <Route path="final-reports-audit" element={<StaffFinalReportsAuditPage />} />
         <Route path="analytics" element={<StaffAnalyticsPage />} />
       </Route>
 

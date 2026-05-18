@@ -1,5 +1,9 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { StaffAnalyticsPage } from "../../features/analytics";
+import { ITDashboardPage } from "../../features/dashboard";
 import { LoginPage } from "../../features/login";
+import { AdminMapViewPage } from "../../features/mapview";
+import { AccountLayout } from "../../shared/components/layout";
 import { appRoutes } from "../../shared/constants/appRoutes";
 import { getRoleDashboardPath } from "../../shared/utils/routeUtils";
 import { useAuthStore } from "../store/authStore";
@@ -10,20 +14,6 @@ function RootRedirect() {
   return <Navigate to={user ? getRoleDashboardPath(user.role) : appRoutes.login} replace />;
 }
 
-function AccountPlaceholder() {
-  const user = useAuthStore((state) => state.user);
-
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f8f9fa] p-6 font-['Bai_Jamjuree'] text-charcoal-800">
-      <section className="w-full max-w-md rounded-[28px] border-t-8 border-t-tanaw-lime bg-white p-8 text-center shadow-[0_25px_50px_-12px_rgba(0,0,0,0.18)]">
-        <p className="mb-2 text-[10px] font-bold tracking-[0.3em] text-[#9ca3af] uppercase">Portal Initialized</p>
-        <h1 className="font-['Montserrat'] text-2xl font-extrabold text-tanaw-green">{user?.displayName}</h1>
-        <p className="mt-2 text-sm font-semibold text-charcoal-800">{user?.title}</p>
-      </section>
-    </main>
-  );
-}
-
 export function AppRouter() {
   return (
     <Routes>
@@ -31,29 +21,40 @@ export function AppRouter() {
       <Route path={appRoutes.login} element={<LoginPage />} />
 
       <Route
-        path={appRoutes.it.dashboard}
+        path={appRoutes.it.root}
         element={
           <ProtectedRoute allowedRoles={["it"]}>
-            <AccountPlaceholder />
+            <AccountLayout role="it" />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<Navigate to={appRoutes.it.dashboard} replace />} />
+        <Route path="dashboard" element={<ITDashboardPage />} />
+      </Route>
+
       <Route
-        path={appRoutes.admin.dashboard}
+        path={appRoutes.admin.root}
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
-            <AccountPlaceholder />
+            <AccountLayout role="admin" />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<Navigate to={appRoutes.admin.mapview} replace />} />
+        <Route path="mapview" element={<AdminMapViewPage />} />
+      </Route>
+
       <Route
-        path={appRoutes.staff.dashboard}
+        path={appRoutes.staff.root}
         element={
           <ProtectedRoute allowedRoles={["staff"]}>
-            <AccountPlaceholder />
+            <AccountLayout role="staff" />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<Navigate to={appRoutes.staff.analytics} replace />} />
+        <Route path="analytics" element={<StaffAnalyticsPage />} />
+      </Route>
 
       <Route path="*" element={<RootRedirect />} />
     </Routes>

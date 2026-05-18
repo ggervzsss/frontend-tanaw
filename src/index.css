@@ -43,8 +43,40 @@
   body {
     min-width: 320px;
     background: linear-gradient(135deg, rgb(241 245 249), rgb(229 231 235));
-    font-family: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+    font-family: "Bai Jamjuree", ui-sans-serif, system-ui, sans-serif;
     color: #2a3063;
+  }
+}
+
+@layer components {
+  .profile-menu-button {
+    @apply flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 hover:text-tanaw-green;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

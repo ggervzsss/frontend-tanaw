@@ -7,10 +7,10 @@ export const appRoutes = {
   },
   admin: {
     root: "/admin",
-    dashboard: "/admin/dashboard",
+    mapview: "/admin/mapview",
   },
   staff: {
     root: "/staff",
-    dashboard: "/staff/dashboard",
+    analytics: "/staff/analytics",
   },
 } as const;

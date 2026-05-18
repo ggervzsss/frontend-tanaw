@@ -1,4 +1,4 @@
-import { BarChart3, LayoutDashboard, MapPinned } from "lucide-react";
+import { BarChart3, Bell, FileText, LayoutDashboard, MapPinned } from "lucide-react";
 import type { ComponentType } from "react";
 import { routes } from "../../../app/routers/routes";
 import type { UserRole } from "../../types/role.types";
@@ -17,6 +17,18 @@ export const roleNavigation: Record<UserRole, NavigationItem[]> = {
       label: "Map View",
       path: routes.admin.mapview,
       icon: MapPinned,
+    },
+    {
+      id: "system-logs",
+      label: "System Logs",
+      path: routes.admin.systemLogs,
+      icon: FileText,
+    },
+    {
+      id: "alerts-monitor",
+      label: "Alerts & Monitor",
+      path: routes.admin.alertsMonitor,
+      icon: Bell,
     },
   ],
   staff: [

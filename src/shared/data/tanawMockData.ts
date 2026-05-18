@@ -1,4 +1,4 @@
-import type { AnalyticsPeriod, AnalyticsPeriodData, CameraNode, Enterprise, MapEnterprise, PipelineHealth, TechnicalLog } from "../types";
+import type { AnalyticsPeriod, AnalyticsPeriodData, AuditLog, CameraNode, Enterprise, MapEnterprise, PipelineHealth, SystemAlert, TechnicalLog } from "../types";
 
 export const mapEnterprises: MapEnterprise[] = [
   {
@@ -304,3 +304,138 @@ export const analyticsPeriods: Record<AnalyticsPeriod, AnalyticsPeriodData> = {
     ],
   },
 };
+
+const baseAuditLogs = [
+  {
+    id: 1,
+    time: "2026-05-13 11:10:05 AM",
+    user: "system",
+    role: "System",
+    module: "Analytics",
+    event: "Generate",
+    desc: "Automated hourly visitor aggregation completed.",
+  },
+  {
+    id: 2,
+    time: "2026-05-13 11:05:22 AM",
+    user: "jdelacruz (IT)",
+    role: "IT Personnel",
+    module: "Camera Config",
+    event: "Update",
+    desc: "Updated RTSP stream URL and frame rate for Boundary Gateway - Cam 01.",
+  },
+  {
+    id: 3,
+    time: "2026-05-13 10:50:11 AM",
+    user: "ent_pacita",
+    role: "Enterprise",
+    module: "Auth",
+    event: "Error",
+    desc: "Failed login attempt. Invalid credentials provided.",
+  },
+  {
+    id: 4,
+    time: "2026-05-13 10:48:00 AM",
+    user: "ent_pacita",
+    role: "Enterprise",
+    module: "Auth",
+    event: "Login",
+    desc: "Successful login from IP 112.204.15.88.",
+  },
+  {
+    id: 5,
+    time: "2026-05-13 10:30:45 AM",
+    user: "msantos (Staff)",
+    role: "Staff",
+    module: "Reports",
+    event: "Export",
+    desc: "Exported Weekly Tourism Report (May W2) as PDF.",
+  },
+  {
+    id: 6,
+    time: "2026-05-13 10:15:30 AM",
+    user: "admin_super",
+    role: "Admin",
+    module: "Ledger",
+    event: "Query",
+    desc: "Queried Enterprise Performance Ledger for Lakeside Park.",
+  },
+  {
+    id: 7,
+    time: "2026-05-13 09:45:22 AM",
+    user: "jdelacruz (IT)",
+    role: "IT Personnel",
+    module: "Camera Config",
+    event: "Update",
+    desc: "IT Personnel updated RTSP stream URL for Enterprise A - Cam 02.",
+  },
+  {
+    id: 8,
+    time: "2026-05-13 09:30:00 AM",
+    user: "ent_lakeside",
+    role: "Enterprise",
+    module: "Reports",
+    event: "Submit",
+    desc: "Enterprise Lakeside Park submitted Weekly Compliance Report.",
+  },
+] satisfies Array<Omit<AuditLog, "hashId" | "ip" | "sessionId" | "userAgent" | "payload" | "prevState" | "newState">>;
+
+export const auditLogs: AuditLog[] = baseAuditLogs.map((log) => {
+  const hashId = `EVT-${log.time.replace(/[^0-9]/g, "").substring(0, 8)}-${log.id.toString().padStart(4, "0")}`;
+  const isUpdate = log.event === "Update";
+  const isAuth = log.event === "Login" || log.event === "Error";
+
+  return {
+    ...log,
+    hashId,
+    ip: log.user === "system" ? "127.0.0.1" : `112.204.${(31 + log.id * 17) % 255}.${(80 + log.id * 19) % 255}`,
+    sessionId: log.user === "system" ? "SYS-DAEMON-X" : `SESS-${hashId.slice(-6)}`,
+    userAgent: log.user === "system" ? "TANAW-Core-Service/2.0" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) TANAW-Portal/1.0",
+    payload: isUpdate
+      ? { action: "modify_configuration", target_module: log.module, execution_ms: 142 }
+      : isAuth
+        ? { auth_method: "jwt_token", provider: "internal_db", attempts: log.event === "Error" ? 5 : 1 }
+        : { report_type: "tourism_census", attached_files: 1, signature: "verified" },
+    prevState: isUpdate ? { status: "active", version: "1.0.0", flags: ["legacy_config"] } : null,
+    newState: isUpdate ? { status: "active", version: "1.0.1", flags: ["optimized_stream"] } : null,
+  };
+});
+
+export const systemAlerts: SystemAlert[] = [
+  {
+    id: "ALRT-901",
+    type: "Overcrowding Breach",
+    enterprise: "San Pedro Town Center",
+    severity: "Critical",
+    timestamp: new Date(Date.now() - 5 * 60000).toISOString(),
+    status: "Active",
+    desc: "Occupancy exceeded 90% hard threshold. Security mobilization recommended.",
+  },
+  {
+    id: "ALRT-902",
+    type: "Camera Offline",
+    enterprise: "Boundary Gateway",
+    severity: "Warning",
+    timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
+    status: "Active",
+    desc: "RTSP stream dropped for Cam 01. Video analytics suspended.",
+  },
+  {
+    id: "ALRT-903",
+    type: "Visitor Surge",
+    enterprise: "Lakeside Park",
+    severity: "Warning",
+    timestamp: new Date(Date.now() - 42 * 60000).toISOString(),
+    status: "IT Notified",
+    desc: "Sudden 40% increase in entry rate within 10 minutes. Monitoring required.",
+  },
+  {
+    id: "ALRT-904",
+    type: "Database Sync Delay",
+    enterprise: "Plaza Pacita Hub",
+    severity: "Info",
+    timestamp: new Date(Date.now() - 120 * 60000).toISOString(),
+    status: "Resolved",
+    desc: "Edge node cache failed to sync to central cloud. Auto-resolved via redundant path.",
+  },
+];

@@ -1,8 +1,12 @@
 export type { AuthUser, UserRole } from "./role.types";
 export type {
   AlertSeverity,
+  AlertStatus,
   AnalyticsPeriod,
   AnalyticsPeriodData,
+  AuditEvent,
+  AuditLog,
+  AuditRole,
   CameraNode,
   CameraStatus,
   Enterprise,
@@ -12,4 +16,5 @@ export type {
   PipelineAlert,
   PipelineHealth,
   TechnicalLog,
+  SystemAlert,
 } from "./domain.types";

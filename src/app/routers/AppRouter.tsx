@@ -1,8 +1,10 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { AdminAlertsMonitorPage } from "../../features/alerts-monitor";
 import { StaffAnalyticsPage } from "../../features/analytics";
 import { ITDashboardPage } from "../../features/dashboard";
 import { LoginPage } from "../../features/login";
 import { AdminMapViewPage } from "../../features/mapview";
+import { AdminSystemLogsPage } from "../../features/system-logs";
 import { AccountLayout } from "../../shared/components/layout";
 import { getRoleDashboardPath } from "../../shared/utils/routeUtils";
 import { useAuthStore } from "../store/authStore";
@@ -42,6 +44,8 @@ export function AppRouter() {
       >
         <Route index element={<Navigate to={routes.admin.mapview} replace />} />
         <Route path="mapview" element={<AdminMapViewPage />} />
+        <Route path="system-logs" element={<AdminSystemLogsPage />} />
+        <Route path="alerts-monitor" element={<AdminAlertsMonitorPage />} />
       </Route>
 
       <Route

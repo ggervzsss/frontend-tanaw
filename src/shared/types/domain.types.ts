@@ -2,6 +2,9 @@ export type EnterpriseStatus = "Normal" | "Warning" | "Critical";
 export type CameraStatus = "Online" | "Offline" | "Unstable";
 export type GatewayStatus = "Connected" | "Sync Delayed" | "Offline" | "Not Linked";
 export type AlertSeverity = "Info" | "Warning" | "Critical";
+export type AuditEvent = "Generate" | "Update" | "Error" | "Login" | "Export" | "Query" | "Submit";
+export type AuditRole = "System" | "IT Personnel" | "Enterprise" | "Staff" | "Admin";
+export type AlertStatus = "Active" | "IT Notified" | "Resolved";
 
 export type MapEnterprise = {
   id: number;
@@ -89,4 +92,31 @@ export type AnalyticsPeriodData = {
     entries: number;
     unique: number;
   }[];
+};
+
+export type AuditLog = {
+  id: number;
+  time: string;
+  user: string;
+  role: AuditRole;
+  module: string;
+  event: AuditEvent;
+  desc: string;
+  hashId: string;
+  ip: string;
+  sessionId: string;
+  userAgent: string;
+  payload: Record<string, unknown>;
+  prevState: Record<string, unknown> | null;
+  newState: Record<string, unknown> | null;
+};
+
+export type SystemAlert = {
+  id: string;
+  type: string;
+  enterprise: string;
+  severity: AlertSeverity;
+  timestamp: string;
+  status: AlertStatus;
+  desc: string;
 };

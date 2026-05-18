@@ -1,1 +1,1 @@
-export { analyticsPeriods, enterpriseCameras, enterprises, mapEnterprises, pipelineHealth, technicalLogs } from "./tanawMockData";
+export { analyticsPeriods, auditLogs, enterpriseCameras, enterprises, mapEnterprises, pipelineHealth, systemAlerts, technicalLogs } from "./tanawMockData";

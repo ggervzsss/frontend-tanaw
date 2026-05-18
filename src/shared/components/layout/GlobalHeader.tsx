@@ -86,7 +86,7 @@ export function GlobalHeader({ role }: GlobalHeaderProps) {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.98 }}
                   transition={{ duration: 0.18, ease: "easeOut" }}
-                  className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-white/80 bg-white py-2 shadow-xl ring-1 ring-slate-900/[0.04]"
+                  className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-white/80 bg-white py-2 shadow-xl ring-1 ring-slate-900/4"
                 >
                   <div className="mb-1 border-b border-slate-100 px-4 py-3">
                     <p className="text-tanaw-navy text-sm font-bold">{profile.name}</p>

@@ -8,6 +8,8 @@ export const routes = {
   admin: {
     root: "/admin",
     mapview: "/admin/mapview",
+    systemLogs: "/admin/system-logs",
+    alertsMonitor: "/admin/alerts-monitor",
   },
   staff: {
     root: "/staff",

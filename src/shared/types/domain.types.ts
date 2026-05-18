@@ -123,6 +123,48 @@ export type SystemAlert = {
 
 export type ReportStatus = "Pending Review" | "Ready to Consolidate" | "Returned" | "Consolidated" | "Missing";
 export type FinalReportStatus = "Draft" | "Approved" | "Archived";
+export type LguAccountRoleLabel = "Admin" | "IT Personnel" | "LGU Staff";
+export type LguAccountStatus = "Active" | "Inactive" | "Suspended";
+export type EnterpriseAccountStatus = "Active" | "Archived" | "Suspended";
+
+export type LguAccount = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: LguAccountRoleLabel;
+  status: LguAccountStatus;
+  department: string;
+  phone: string;
+  lastLogin: string;
+  createdAt: string;
+};
+
+export type EnterpriseCamera = {
+  id: string;
+  name: string;
+  location: string;
+  rtspStatus: string;
+  onvifStatus: string;
+  status: CameraStatus;
+  lastChecked: string;
+};
+
+export type EnterpriseAccount = {
+  id: string;
+  enterpriseName: string;
+  category: string;
+  managerName: string;
+  email: string;
+  contactNumber: string;
+  barangay: string;
+  address: string;
+  gatewayStatus: GatewayStatus;
+  gatewayId?: string;
+  accountStatus: EnterpriseAccountStatus;
+  lastSync: string;
+  cameras: EnterpriseCamera[];
+};
 
 export type IntakeReport = {
   id: string;

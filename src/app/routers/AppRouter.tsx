@@ -2,10 +2,13 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AdminAlertsMonitorPage } from "../../features/alerts-monitor";
 import { StaffAnalyticsPage } from "../../features/analytics";
 import { ITDashboardPage } from "../../features/dashboard";
+import { ITEnterpriseAccountsPage } from "../../features/enterprise-accounts";
+import { ITLguAccountsPage } from "../../features/lgu-accounts";
 import { LoginPage } from "../../features/login";
 import { AdminMapViewPage } from "../../features/mapview";
 import { StaffBatchReportsPage, StaffFinalReportsAuditPage } from "../../features/reports";
-import { AdminSystemLogsPage } from "../../features/system-logs";
+import { ITSystemSettingsPage } from "../../features/system-settings";
+import { AdminSystemLogsPage, ITSystemLogsPage } from "../../features/system-logs";
 import { AccountLayout } from "../../shared/components/layout";
 import { getRoleDashboardPath } from "../../shared/utils/routeUtils";
 import { useAuthStore } from "../store/authStore";
@@ -33,6 +36,10 @@ export function AppRouter() {
       >
         <Route index element={<Navigate to={routes.it.dashboard} replace />} />
         <Route path="dashboard" element={<ITDashboardPage />} />
+        <Route path="lgu-accounts" element={<ITLguAccountsPage />} />
+        <Route path="enterprise-accounts" element={<ITEnterpriseAccountsPage />} />
+        <Route path="system-logs" element={<ITSystemLogsPage />} />
+        <Route path="system-settings" element={<ITSystemSettingsPage />} />
       </Route>
 
       <Route

@@ -4,6 +4,10 @@ export const routes = {
   it: {
     root: "/it",
     dashboard: "/it/dashboard",
+    lguAccounts: "/it/lgu-accounts",
+    enterpriseAccounts: "/it/enterprise-accounts",
+    systemLogs: "/it/system-logs",
+    systemSettings: "/it/system-settings",
   },
   admin: {
     root: "/admin",

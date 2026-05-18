@@ -1,5 +1,5 @@
 import L, { type GeoJSONOptions, type Layer } from "leaflet";
-import { ArrowLeft, BarChart3, Building2, Map as MapIcon, MapPin, PanelLeftClose, PanelLeftOpen, Search, Users } from "lucide-react";
+import { ArrowLeft, BarChart3, Building2, Map as MapIcon, MapPin, PanelRightClose, PanelRightOpen, Search, Users } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { mapEnterprises } from "../../../shared/data";
@@ -207,15 +207,13 @@ export function AdminEnterpriseMap() {
       const bounds = targetLayer.getBounds();
       if (!bounds?.isValid()) return;
 
-      const shouldPadForDirectory = !isDirectoryCollapsed && map.getSize().x > 760;
       map.fitBounds(bounds.pad(0.24), {
         maxZoom: 15.4,
-        paddingBottomRight: [24, 24],
-        paddingTopLeft: [shouldPadForDirectory ? 370 : 28, 24],
+        padding: [28, 28],
       });
       targetLayer.openTooltip();
     },
-    [applyBoundarySelection, findBoundaryLayerByName, isDirectoryCollapsed],
+    [applyBoundarySelection, findBoundaryLayerByName],
   );
 
   const clearSelectedBarangay = useCallback(() => {
@@ -224,9 +222,9 @@ export function AdminEnterpriseMap() {
     applyBoundarySelection(null);
 
     if (mapRef.current) {
-      fitMapToSanPedroBounds(mapRef.current, boundaryLayerRef.current, isDirectoryCollapsed);
+      fitMapToSanPedroBounds(mapRef.current, boundaryLayerRef.current);
     }
-  }, [applyBoundarySelection, isDirectoryCollapsed]);
+  }, [applyBoundarySelection]);
 
   useEffect(() => {
     let isMounted = true;
@@ -354,7 +352,7 @@ export function AdminEnterpriseMap() {
     }
 
     applyBoundarySelection(selectedBarangayNameRef.current);
-    fitMapToSanPedroBounds(map, boundaryLayerRef.current, isDirectoryCollapsed);
+    fitMapToSanPedroBounds(map, boundaryLayerRef.current);
   }, [applyBoundarySelection, boundary, isDirectoryCollapsed, selectBarangay, showBoundaries]);
 
   useEffect(() => {
@@ -364,7 +362,7 @@ export function AdminEnterpriseMap() {
     const timers = [0, 120, 280].map((delay) =>
       window.setTimeout(() => {
         map.invalidateSize({ pan: false });
-        fitMapToSanPedroBounds(map, boundaryLayerRef.current, isDirectoryCollapsed);
+        fitMapToSanPedroBounds(map, boundaryLayerRef.current);
         applyBoundarySelection(selectedBarangayNameRef.current);
       }, delay),
     );
@@ -422,18 +420,20 @@ export function AdminEnterpriseMap() {
   }, [selectedEnterpriseId]);
 
   return (
-    <div className="border-tanaw-gray bg-tanaw-gray relative min-h-155 overflow-hidden rounded-xl border shadow-sm">
-      <div id={mapContainerId} className="absolute inset-0 z-0" />
+    <div className="border-tanaw-gray bg-tanaw-gray relative min-h-0 flex-1 overflow-hidden rounded-xl border shadow-sm max-sm:min-h-140">
+      <div className={["absolute top-0 bottom-0 left-0 z-0 transition-[right] duration-300 ease-out", isDirectoryCollapsed ? "right-0" : "right-0 lg:right-103"].join(" ")}>
+        <div id={mapContainerId} className="h-full w-full" />
+      </div>
 
       <AnimatePresence initial={false}>
         {!isDirectoryCollapsed && (
           <motion.aside
             id="spatial-directory-panel"
-            initial={{ opacity: 0, x: -24 }}
+            initial={{ opacity: 0, x: 24 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -24 }}
+            exit={{ opacity: 0, x: 24 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
-            className="absolute top-4 bottom-4 left-4 z-420 flex w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-white/10 bg-slate-950/40 shadow-2xl backdrop-blur-md"
+            className="absolute top-4 right-4 bottom-4 z-420 flex w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-white/10 bg-slate-950/40 shadow-2xl backdrop-blur-md"
           >
             <div className="flex shrink-0 flex-col gap-3 border-b border-white/10 bg-black/20 px-4 py-3">
               <div className="relative z-10 flex items-start justify-between gap-3">
@@ -469,7 +469,7 @@ export function AdminEnterpriseMap() {
                     onClick={() => setIsDirectoryCollapsed(true)}
                     className="focus:ring-tanaw-sky flex h-8 w-8 shrink-0 items-center justify-center rounded border border-white/15 bg-white/10 text-white transition hover:bg-white/20 focus:ring-2 focus:outline-none"
                   >
-                    <PanelLeftClose size={15} />
+                    <PanelRightClose size={15} />
                   </button>
                 </div>
               </div>
@@ -584,18 +584,18 @@ export function AdminEnterpriseMap() {
           aria-controls="spatial-directory-panel"
           aria-label="Expand spatial directory"
           title="Expand spatial directory"
-          initial={{ opacity: 0, x: -12 }}
+          initial={{ opacity: 0, x: 12 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
           onClick={() => setIsDirectoryCollapsed(false)}
-          className="focus:ring-tanaw-sky absolute top-4 left-4 z-430 flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-slate-950/50 text-white shadow-2xl backdrop-blur-md transition hover:bg-slate-950/65 focus:ring-2 focus:outline-none"
+          className="focus:ring-tanaw-sky absolute top-4 right-4 z-430 flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-slate-950/50 text-white shadow-2xl backdrop-blur-md transition hover:bg-slate-950/65 focus:ring-2 focus:outline-none"
         >
-          <PanelLeftOpen size={18} />
+          <PanelRightOpen size={18} />
         </motion.button>
       )}
 
       {selectedEnterprise && (
-        <div className="absolute right-4 bottom-4 z-420 hidden w-80 rounded-xl border border-white/80 bg-white/95 p-4 shadow-xl backdrop-blur md:block">
+        <div className="absolute bottom-4 left-4 z-420 hidden w-80 rounded-xl border border-white/80 bg-white/95 p-4 shadow-xl backdrop-blur md:block">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
               <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Selected Enterprise</p>
@@ -832,14 +832,12 @@ function calculateBarangayAnalytics(enterprises: MapEnterprise[]): BarangayAnaly
   );
 }
 
-function fitMapToSanPedroBounds(map: L.Map, layer: L.GeoJSON | null, isDirectoryCollapsed: boolean) {
+function fitMapToSanPedroBounds(map: L.Map, layer: L.GeoJSON | null) {
   if (!layer) return;
 
   const bounds = layer.getBounds();
   if (!bounds.isValid()) return;
 
-  const mapSize = map.getSize();
-  const shouldPadForDirectory = !isDirectoryCollapsed && mapSize.x > 760;
   const initialViewBounds = bounds.pad(0.36);
   const interactionBounds = bounds.pad(0.58);
   const minZoomReferenceBounds = bounds.pad(0.62);
@@ -848,8 +846,7 @@ function fitMapToSanPedroBounds(map: L.Map, layer: L.GeoJSON | null, isDirectory
   map.setMinZoom(Math.max(11.2, map.getBoundsZoom(minZoomReferenceBounds, true) - 0.72));
   map.fitBounds(initialViewBounds, {
     maxZoom: 13.45,
-    paddingBottomRight: [48, 48],
-    paddingTopLeft: [shouldPadForDirectory ? 440 : 48, 48],
+    padding: [48, 48],
   });
 }
 

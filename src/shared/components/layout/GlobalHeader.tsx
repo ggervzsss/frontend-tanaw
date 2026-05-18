@@ -3,8 +3,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { routes } from "../../../app/routers/routes";
 import { useAuthStore } from "../../../app/store/authStore";
-import { appRoutes } from "../../constants/appRoutes";
 import type { UserRole } from "../../types/role.types";
 import { ProfileSettingsModal, SecurityDataControlModal } from "./ProfileModals";
 import { roleAccessLabel } from "./navigation";
@@ -43,7 +43,7 @@ export function GlobalHeader({ role }: GlobalHeaderProps) {
     setShowProfileMenu(false);
     logout();
     toast.success("Secure logout complete.");
-    navigate(appRoutes.login, { replace: true });
+    navigate(routes.login, { replace: true });
   };
 
   const openAccountModal = (modal: "profile" | "security") => {

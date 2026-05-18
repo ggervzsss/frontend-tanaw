@@ -1,6 +1,6 @@
 import { BarChart3, LayoutDashboard, MapPinned } from "lucide-react";
 import type { ComponentType } from "react";
-import { appRoutes } from "../../constants/appRoutes";
+import { routes } from "../../../app/routers/routes";
 import type { UserRole } from "../../types/role.types";
 
 export type NavigationItem = {
@@ -15,7 +15,7 @@ export const roleNavigation: Record<UserRole, NavigationItem[]> = {
     {
       id: "mapview",
       label: "Map View",
-      path: appRoutes.admin.mapview,
+      path: routes.admin.mapview,
       icon: MapPinned,
     },
   ],
@@ -23,7 +23,7 @@ export const roleNavigation: Record<UserRole, NavigationItem[]> = {
     {
       id: "analytics",
       label: "Comparative Analytics",
-      path: appRoutes.staff.analytics,
+      path: routes.staff.analytics,
       icon: BarChart3,
     },
   ],
@@ -31,7 +31,7 @@ export const roleNavigation: Record<UserRole, NavigationItem[]> = {
     {
       id: "dashboard",
       label: "Dashboard",
-      path: appRoutes.it.dashboard,
+      path: routes.it.dashboard,
       icon: LayoutDashboard,
     },
   ],

@@ -2,8 +2,8 @@ import { LogOut } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../../app/store/authStore";
+import { routes } from "../../../app/routers/routes";
 import { CITY_SEAL } from "../../constants/branding";
-import { appRoutes } from "../../constants/appRoutes";
 import type { UserRole } from "../../types/role.types";
 import { roleNavigation, rolePortalLabel } from "./navigation";
 
@@ -18,11 +18,11 @@ export function GlobalSidebar({ role }: GlobalSidebarProps) {
   const handleLogout = () => {
     logout();
     toast.success("Secure logout complete.");
-    navigate(appRoutes.login, { replace: true });
+    navigate(routes.login, { replace: true });
   };
 
   return (
-    <aside className="z-20 flex h-full w-64 flex-col rounded-r-[2rem] border-r border-white/10 bg-tanaw-green text-white shadow-2xl max-[920px]:h-auto max-[920px]:w-full max-[920px]:rounded-none">
+    <aside className="z-20 flex h-full w-64 flex-col rounded-r-4xl border-r border-white/10 bg-tanaw-green text-white shadow-2xl max-[920px]:h-auto max-[920px]:w-full max-[920px]:rounded-none">
       <div className="mt-4 flex flex-col items-center border-b border-white/10 p-6 max-[920px]:mt-0">
         <img src={CITY_SEAL} alt="San Pedro Seal" className="mb-2 h-16 w-16 drop-shadow-md" />
         <h1 className="font-display text-2xl font-bold tracking-wider">TANAW</h1>
@@ -54,7 +54,7 @@ export function GlobalSidebar({ role }: GlobalSidebarProps) {
         <button
           type="button"
           onClick={handleLogout}
-          className="flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#f5d2bd] transition-all duration-200 hover:bg-[#a40e0e] hover:text-white active:scale-[0.99]"
+          className="flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-tanaw-peach transition-all duration-200 hover:bg-tanaw-red hover:text-white active:scale-[0.99]"
         >
           <LogOut size={18} />
           Sign Out Session

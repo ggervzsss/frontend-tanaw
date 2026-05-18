@@ -1,0 +1,1 @@
+export { getRoleDashboardPath } from "./routeUtils";

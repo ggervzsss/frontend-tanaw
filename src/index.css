@@ -1,1 +1,55 @@
+@import url("https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;900&display=swap");
+@import "@fortawesome/fontawesome-free/css/all.min.css";
+@import "leaflet/dist/leaflet.css";
 @import "tailwindcss";
+
+@theme {
+  --color-tanaw-green: #055b25;
+  --color-tanaw-lime: #45a549;
+  --color-tanaw-navy: #2a3063;
+  --color-tanaw-yellow: #ffd200;
+  --color-tanaw-red: #a40e0e;
+  --color-tanaw-orange: #ff6204;
+  --color-tanaw-blue: #2d5eff;
+  --color-tanaw-sky: #a0bbff;
+  --color-tanaw-gray: #e5e5e5;
+  --color-tanaw-peach: #f5d2bd;
+  --color-tgreen-dark: #065f46;
+  --color-tgreen-light: #10b981;
+  --color-tgreen-brand: #065f46;
+  --color-tgreen-brandHover: #044a36;
+  --color-charcoal-800: #1f2937;
+  --color-charcoal-900: #111827;
+  --color-charcoal-950: #030712;
+  --color-tblue-dark: #1e3a8a;
+  --color-tblue-base: #2563eb;
+  --color-tblue-light: #93c5fd;
+  --color-tred: #dc2626;
+  --color-tyellow: #f59e0b;
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bai Jamjuree", ui-sans-serif, system-ui, sans-serif;
+  --shadow-panel: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    min-width: 320px;
+    background: linear-gradient(135deg, rgb(241 245 249), rgb(229 231 235));
+    font-family: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+    color: #2a3063;
+  }
+}
+
+.leaflet-popup-content-wrapper {
+  border: 1px solid #e5e5e5 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 30%) !important;
+}

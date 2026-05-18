@@ -13,7 +13,7 @@ export function LoginPage() {
   }
 
   return (
-    <section className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#f8f9fa] p-6 font-['Bai_Jamjuree'] text-charcoal-800">
+    <section className="text-charcoal-800 relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#f8f9fa] p-6 font-['Bai_Jamjuree']">
       <LoginBackground />
       <LoginCard>
         <LoginBrandHeader />

@@ -22,11 +22,11 @@ export function GlobalSidebar({ role }: GlobalSidebarProps) {
   };
 
   return (
-    <aside className="z-20 flex h-full w-64 flex-col rounded-r-4xl border-r border-white/10 bg-tanaw-green text-white shadow-2xl max-[920px]:h-auto max-[920px]:w-full max-[920px]:rounded-none">
+    <aside className="bg-tanaw-green z-20 flex h-full w-64 flex-col rounded-r-4xl border-r border-white/10 text-white shadow-2xl max-[920px]:h-auto max-[920px]:w-full max-[920px]:rounded-none">
       <div className="mt-4 flex flex-col items-center border-b border-white/10 p-6 max-[920px]:mt-0">
         <img src={CITY_SEAL} alt="San Pedro Seal" className="mb-2 h-16 w-16 drop-shadow-md" />
         <h1 className="font-display text-2xl font-bold tracking-wider">TANAW</h1>
-        <span className="mt-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] tracking-widest text-tanaw-sky uppercase">{rolePortalLabel[role]}</span>
+        <span className="text-tanaw-sky mt-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] tracking-widest uppercase">{rolePortalLabel[role]}</span>
       </div>
 
       <nav className="mt-4 flex-1 space-y-2 p-4 max-[920px]:grid max-[920px]:grid-cols-2 max-[920px]:space-y-0 max-sm:grid-cols-1" aria-label={`${rolePortalLabel[role]} navigation`}>
@@ -39,7 +39,7 @@ export function GlobalSidebar({ role }: GlobalSidebarProps) {
               className={({ isActive }) =>
                 [
                   "flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.99]",
-                  isActive ? "bg-white text-tanaw-green shadow-lg shadow-black/10" : "text-white/80 hover:bg-white/10 hover:text-white hover:shadow-sm",
+                  isActive ? "text-tanaw-green bg-white shadow-lg shadow-black/10" : "text-white/80 hover:bg-white/10 hover:text-white hover:shadow-sm",
                 ].join(" ")
               }
             >
@@ -54,7 +54,7 @@ export function GlobalSidebar({ role }: GlobalSidebarProps) {
         <button
           type="button"
           onClick={handleLogout}
-          className="flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-tanaw-peach transition-all duration-200 hover:bg-tanaw-red hover:text-white active:scale-[0.99]"
+          className="text-tanaw-peach hover:bg-tanaw-red flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 hover:text-white active:scale-[0.99]"
         >
           <LogOut size={18} />
           Sign Out Session

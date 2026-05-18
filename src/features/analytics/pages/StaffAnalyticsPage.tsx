@@ -72,7 +72,9 @@ export function StaffAnalyticsPage() {
             <Anomaly color="yellow" title="Utilization Spike">
               <strong>Plaza Mall San Pedro</strong> exceeded 90% utilization multiple times over the weekend period.
             </Anomaly>
-            <Anomaly color="blue" title="Status Discrepancy">2 reports in the current batch remain in Pending Review status.</Anomaly>
+            <Anomaly color="blue" title="Status Discrepancy">
+              2 reports in the current batch remain in Pending Review status.
+            </Anomaly>
           </div>
         </section>
       </div>

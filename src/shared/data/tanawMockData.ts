@@ -140,12 +140,62 @@ export const mapEnterprises: MapEnterprise[] = [
 ];
 
 export const enterpriseCameras: CameraNode[] = [
-  { id: "CAM-01", enterpriseId: "E1", enterpriseName: "Archies Diner & Resort", name: "Main Gate", status: "Online", connectivity: 97.2, fps: 30.2, latencyMs: 42, lastChecked: "May 14, 2026 08:14 AM" },
+  {
+    id: "CAM-01",
+    enterpriseId: "E1",
+    enterpriseName: "Archies Diner & Resort",
+    name: "Main Gate",
+    status: "Online",
+    connectivity: 97.2,
+    fps: 30.2,
+    latencyMs: 42,
+    lastChecked: "May 14, 2026 08:14 AM",
+  },
   { id: "CAM-02", enterpriseId: "E1", enterpriseName: "Archies Diner & Resort", name: "Lobby", status: "Online", connectivity: 94.5, fps: 28.7, latencyMs: 48, lastChecked: "May 14, 2026 08:13 AM" },
-  { id: "CAM-03", enterpriseId: "E1", enterpriseName: "Archies Diner & Resort", name: "Pool Deck", status: "Unstable", connectivity: 58.3, fps: 11.2, latencyMs: 212, lastChecked: "May 14, 2026 08:09 AM" },
-  { id: "CAM-05", enterpriseId: "E2", enterpriseName: "San Pedro Heritage Hotel", name: "Heritage Gate", status: "Offline", connectivity: 0, fps: 0, latencyMs: 0, lastChecked: "May 14, 2026 07:52 AM" },
-  { id: "CAM-07", enterpriseId: "E2", enterpriseName: "San Pedro Heritage Hotel", name: "Rooftop Terrace", status: "Unstable", connectivity: 44.1, fps: 8.3, latencyMs: 390, lastChecked: "May 14, 2026 07:59 AM" },
-  { id: "CAM-08", enterpriseId: "E3", enterpriseName: "Laguna Eco-Resort", name: "Nature Trail Entry", status: "Online", connectivity: 96.8, fps: 29.4, latencyMs: 51, lastChecked: "May 14, 2026 08:12 AM" },
+  {
+    id: "CAM-03",
+    enterpriseId: "E1",
+    enterpriseName: "Archies Diner & Resort",
+    name: "Pool Deck",
+    status: "Unstable",
+    connectivity: 58.3,
+    fps: 11.2,
+    latencyMs: 212,
+    lastChecked: "May 14, 2026 08:09 AM",
+  },
+  {
+    id: "CAM-05",
+    enterpriseId: "E2",
+    enterpriseName: "San Pedro Heritage Hotel",
+    name: "Heritage Gate",
+    status: "Offline",
+    connectivity: 0,
+    fps: 0,
+    latencyMs: 0,
+    lastChecked: "May 14, 2026 07:52 AM",
+  },
+  {
+    id: "CAM-07",
+    enterpriseId: "E2",
+    enterpriseName: "San Pedro Heritage Hotel",
+    name: "Rooftop Terrace",
+    status: "Unstable",
+    connectivity: 44.1,
+    fps: 8.3,
+    latencyMs: 390,
+    lastChecked: "May 14, 2026 07:59 AM",
+  },
+  {
+    id: "CAM-08",
+    enterpriseId: "E3",
+    enterpriseName: "Laguna Eco-Resort",
+    name: "Nature Trail Entry",
+    status: "Online",
+    connectivity: 96.8,
+    fps: 29.4,
+    latencyMs: 51,
+    lastChecked: "May 14, 2026 08:12 AM",
+  },
 ];
 
 export const enterprises: Enterprise[] = [
@@ -189,10 +239,37 @@ export const pipelineHealth: PipelineHealth[] = [
 ];
 
 export const technicalLogs: TechnicalLog[] = [
-  { id: "LOG-001", severity: "Critical", eventType: "Camera", enterprise: "San Pedro Heritage Hotel", device: "CAM-05", desc: "Camera CAM-05 went offline after repeated RTSP connection timeouts.", performedBy: "System monitor", time: "2m ago" },
-  { id: "LOG-002", severity: "Warning", eventType: "Sync", enterprise: "Archies Diner & Resort", device: "GW-ARCHIES-01", desc: "Gateway sync delayed. 34 local records are waiting for upload.", performedBy: "Sync service", time: "15m ago" },
+  {
+    id: "LOG-001",
+    severity: "Critical",
+    eventType: "Camera",
+    enterprise: "San Pedro Heritage Hotel",
+    device: "CAM-05",
+    desc: "Camera CAM-05 went offline after repeated RTSP connection timeouts.",
+    performedBy: "System monitor",
+    time: "2m ago",
+  },
+  {
+    id: "LOG-002",
+    severity: "Warning",
+    eventType: "Sync",
+    enterprise: "Archies Diner & Resort",
+    device: "GW-ARCHIES-01",
+    desc: "Gateway sync delayed. 34 local records are waiting for upload.",
+    performedBy: "Sync service",
+    time: "15m ago",
+  },
   { id: "LOG-003", severity: "Info", eventType: "Account", desc: "New LGU Staff account created for Ana Reyes.", performedBy: "Mike Santos", time: "1h ago" },
-  { id: "LOG-004", severity: "Warning", eventType: "Camera", enterprise: "Archies Diner & Resort", device: "CAM-03", desc: "High occlusion and low FPS detected on Pool Deck camera.", performedBy: "Camera health check", time: "1h ago" },
+  {
+    id: "LOG-004",
+    severity: "Warning",
+    eventType: "Camera",
+    enterprise: "Archies Diner & Resort",
+    device: "CAM-03",
+    desc: "High occlusion and low FPS detected on Pool Deck camera.",
+    performedBy: "Camera health check",
+    time: "1h ago",
+  },
 ];
 
 export const analyticsPeriods: Record<AnalyticsPeriod, AnalyticsPeriodData> = {

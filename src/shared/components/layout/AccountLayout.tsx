@@ -9,7 +9,7 @@ type AccountLayoutProps = {
 
 export function AccountLayout({ role }: AccountLayoutProps) {
   return (
-    <section className="flex h-screen w-full overflow-hidden bg-[#f8f9fa] font-['Bai_Jamjuree'] text-charcoal-800 max-[920px]:h-auto max-[920px]:min-h-screen max-[920px]:flex-col max-[920px]:overflow-visible">
+    <section className="text-charcoal-800 flex h-screen w-full overflow-hidden bg-[#f8f9fa] font-['Bai_Jamjuree'] max-[920px]:h-auto max-[920px]:min-h-screen max-[920px]:flex-col max-[920px]:overflow-visible">
       <GlobalSidebar role={role} />
       <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
         <GlobalHeader role={role} />

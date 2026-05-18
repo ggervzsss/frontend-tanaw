@@ -38,10 +38,10 @@ export function ITDashboardPage() {
         <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-6 py-5 max-sm:flex-col max-sm:items-start">
             <div>
-              <h3 className="m-0 text-base font-bold text-charcoal-800">Priority Alerts</h3>
+              <h3 className="text-charcoal-800 m-0 text-base font-bold">Priority Alerts</h3>
               <p className="mt-1 mb-0 text-xs text-gray-500">Issues that need IT attention.</p>
             </div>
-            <span className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-tanaw-green">
+            <span className="text-tanaw-green inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold">
               <ClipboardList className="h-4 w-4" />
               Health Queue
             </span>
@@ -56,7 +56,7 @@ export function ITDashboardPage() {
                   </div>
                   <div>
                     <FieldLabel>Enterprise</FieldLabel>
-                    <p className="m-0 text-sm font-semibold text-charcoal-800">{alert.enterprise}</p>
+                    <p className="text-charcoal-800 m-0 text-sm font-semibold">{alert.enterprise}</p>
                   </div>
                   <div>
                     <FieldLabel>Device</FieldLabel>
@@ -74,11 +74,11 @@ export function ITDashboardPage() {
 
         <aside className="grid gap-6">
           <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h3 className="m-0 text-base font-bold text-charcoal-800">Recent System Activity</h3>
+            <h3 className="text-charcoal-800 m-0 text-base font-bold">Recent System Activity</h3>
             <div className="mt-5 space-y-4">
               {technicalLogs.map((log) => (
                 <div className="border-l-2 border-gray-200 pl-4" key={log.id}>
-                  <p className="m-0 text-sm font-semibold text-charcoal-800">{log.desc}</p>
+                  <p className="text-charcoal-800 m-0 text-sm font-semibold">{log.desc}</p>
                   <p className="mt-1 mb-0 text-xs text-gray-500">
                     {log.eventType} by {log.performedBy} · {log.time}
                   </p>

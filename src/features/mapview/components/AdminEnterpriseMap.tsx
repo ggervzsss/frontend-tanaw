@@ -1,15 +1,5 @@
 import L, { type GeoJSONOptions, type Layer } from "leaflet";
-import {
-  ArrowLeft,
-  BarChart3,
-  Building2,
-  Map as MapIcon,
-  MapPin,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Search,
-  Users,
-} from "lucide-react";
+import { ArrowLeft, BarChart3, Building2, Map as MapIcon, MapPin, PanelLeftClose, PanelLeftOpen, Search, Users } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { mapEnterprises } from "../../../shared/data";
@@ -432,7 +422,7 @@ export function AdminEnterpriseMap() {
   }, [selectedEnterpriseId]);
 
   return (
-    <div className="relative min-h-155 overflow-hidden rounded-xl border border-tanaw-gray bg-tanaw-gray shadow-sm">
+    <div className="border-tanaw-gray bg-tanaw-gray relative min-h-155 overflow-hidden rounded-xl border shadow-sm">
       <div id={mapContainerId} className="absolute inset-0 z-0" />
 
       <AnimatePresence initial={false}>
@@ -467,7 +457,7 @@ export function AdminEnterpriseMap() {
                     title={showBoundaries ? "Hide barangay boundaries" : "Show barangay boundaries"}
                     aria-pressed={showBoundaries}
                     onClick={() => setShowBoundaries((value) => !value)}
-                    className={`rounded border px-2 py-1 text-[9px] font-black tracking-widest uppercase transition focus:ring-2 focus:ring-tanaw-sky focus:outline-none ${showBoundaries ? "border-emerald-400/40 bg-emerald-500/20 text-white" : "border-white/15 bg-white/10 text-white/70 hover:bg-white/20"}`}
+                    className={`focus:ring-tanaw-sky rounded border px-2 py-1 text-[9px] font-black tracking-widest uppercase transition focus:ring-2 focus:outline-none ${showBoundaries ? "border-emerald-400/40 bg-emerald-500/20 text-white" : "border-white/15 bg-white/10 text-white/70 hover:bg-white/20"}`}
                   >
                     Boundaries
                   </button>
@@ -477,7 +467,7 @@ export function AdminEnterpriseMap() {
                     aria-label="Collapse spatial directory"
                     title="Collapse spatial directory"
                     onClick={() => setIsDirectoryCollapsed(true)}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-white/15 bg-white/10 text-white transition hover:bg-white/20 focus:ring-2 focus:ring-tanaw-sky focus:outline-none"
+                    className="focus:ring-tanaw-sky flex h-8 w-8 shrink-0 items-center justify-center rounded border border-white/15 bg-white/10 text-white transition hover:bg-white/20 focus:ring-2 focus:outline-none"
                   >
                     <PanelLeftClose size={15} />
                   </button>
@@ -499,7 +489,7 @@ export function AdminEnterpriseMap() {
                     <button
                       type="button"
                       onClick={clearSelectedBarangay}
-                      className="flex w-full items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left text-[9px] font-black tracking-widest text-white/70 uppercase transition hover:bg-white/10 focus:ring-2 focus:ring-tanaw-sky focus:outline-none"
+                      className="focus:ring-tanaw-sky flex w-full items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left text-[9px] font-black tracking-widest text-white/70 uppercase transition hover:bg-white/10 focus:ring-2 focus:outline-none"
                     >
                       <ArrowLeft size={13} className="text-tanaw-sky" />
                       Back to Barangay Directory
@@ -557,7 +547,7 @@ export function AdminEnterpriseMap() {
                         <span className="text-[9px] font-bold tracking-widest text-white/50 uppercase">{barangayDirectoryItems.length}</span>
                       </div>
 
-                      <label className="mb-3 flex items-center gap-2 rounded-lg border border-white/15 bg-black/15 px-3 py-2 text-white focus-within:border-tanaw-sky">
+                      <label className="focus-within:border-tanaw-sky mb-3 flex items-center gap-2 rounded-lg border border-white/15 bg-black/15 px-3 py-2 text-white">
                         <Search size={13} className="text-white/45" />
                         <input
                           value={barangaySearch}
@@ -598,7 +588,7 @@ export function AdminEnterpriseMap() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
           onClick={() => setIsDirectoryCollapsed(false)}
-          className="absolute top-4 left-4 z-430 flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-slate-950/50 text-white shadow-2xl backdrop-blur-md transition hover:bg-slate-950/65 focus:ring-2 focus:ring-tanaw-sky focus:outline-none"
+          className="focus:ring-tanaw-sky absolute top-4 left-4 z-430 flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-slate-950/50 text-white shadow-2xl backdrop-blur-md transition hover:bg-slate-950/65 focus:ring-2 focus:outline-none"
         >
           <PanelLeftOpen size={18} />
         </motion.button>
@@ -609,11 +599,9 @@ export function AdminEnterpriseMap() {
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
               <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Selected Enterprise</p>
-              <h3 className="mt-1 text-sm font-black text-tanaw-navy">{selectedEnterprise.name}</h3>
+              <h3 className="text-tanaw-navy mt-1 text-sm font-black">{selectedEnterprise.name}</h3>
             </div>
-            <span className={`rounded border px-2 py-1 text-[9px] font-black tracking-widest uppercase ${getLightStatusBadgeClass(selectedEnterprise.status)}`}>
-              {selectedEnterprise.status}
-            </span>
+            <span className={`rounded border px-2 py-1 text-[9px] font-black tracking-widest uppercase ${getLightStatusBadgeClass(selectedEnterprise.status)}`}>{selectedEnterprise.status}</span>
           </div>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <InfoTile label="Barangay" value={selectedEnterprise.barangay} />
@@ -629,7 +617,11 @@ export function AdminEnterpriseMap() {
 
 function BarangayDirectoryCard({ title, subtitle, enterpriseCount, visitorCount, onClick }: { title: string; subtitle: string; enterpriseCount: number; visitorCount: number; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left transition hover:bg-white/10 focus:ring-2 focus:ring-tanaw-sky focus:outline-none">
+    <button
+      type="button"
+      onClick={onClick}
+      className="focus:ring-tanaw-sky w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left transition hover:bg-white/10 focus:ring-2 focus:outline-none"
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="truncate text-[11px] font-bold tracking-widest text-white uppercase">{title}</div>
@@ -679,7 +671,7 @@ function EnterpriseMapCard({ enterprise, selected, onClick }: { enterprise: MapE
     <button
       type="button"
       onClick={onClick}
-      className={`w-full rounded-lg border p-3 text-left transition-all hover:bg-white/10 focus:ring-2 focus:ring-tanaw-sky focus:outline-none ${selected ? "border-tanaw-sky/50 bg-white/15" : "border-white/10 bg-white/5"}`}
+      className={`focus:ring-tanaw-sky w-full rounded-lg border p-3 text-left transition-all hover:bg-white/10 focus:ring-2 focus:outline-none ${selected ? "border-tanaw-sky/50 bg-white/15" : "border-white/10 bg-white/5"}`}
     >
       <div className="mb-2 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">

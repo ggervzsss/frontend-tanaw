@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { routes } from "../../../app/routers/routes";
 import { useAuthStore } from "../../../app/store/authStore";
+import { useHeaderStore } from "../../../app/store/headerStore";
 import type { UserRole } from "../../types/role.types";
 import { ProfileSettingsModal, SecurityDataControlModal } from "./ProfileModals";
 import { roleAccessLabel } from "./navigation";
@@ -16,6 +17,7 @@ type GlobalHeaderProps = {
 export function GlobalHeader({ role }: GlobalHeaderProps) {
   const authUser = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const { title, description } = useHeaderStore();
   const navigate = useNavigate();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [activeAccountModal, setActiveAccountModal] = useState<"profile" | "security" | null>(null);
@@ -53,14 +55,38 @@ export function GlobalHeader({ role }: GlobalHeaderProps) {
 
   return (
     <>
-      <header className="z-10 flex h-20 items-center justify-end border-b border-white/70 bg-slate-100/80 px-8 backdrop-blur max-sm:px-4">
-        <div className="flex items-center gap-6 max-sm:gap-3">
+      <header className="z-10 flex h-16 items-center justify-between border-b border-white/70 bg-slate-100/80 px-8 backdrop-blur max-sm:px-4">
+        {/* Left Section: Page Title & Subtitle */}
+        <div className="flex flex-col min-w-0 pr-4">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={title}
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.15 }}
+              className="flex flex-col"
+            >
+              <h1 className="text-tanaw-navy font-display text-base font-bold leading-tight tracking-tight sm:text-lg truncate">
+                {title || "TANAW"}
+              </h1>
+              {description && (
+                <p className="mt-0.5 text-[10px] sm:text-xs text-gray-500 font-medium truncate max-md:hidden">
+                  {description}
+                </p>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Right Section: Actions & Profile Menu */}
+        <div className="flex items-center gap-6 max-sm:gap-3 shrink-0">
           <button
             type="button"
             aria-label="Notifications"
-            className="text-tanaw-navy hover:text-tanaw-green relative rounded-full border border-white/80 bg-white p-2.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
+            className="text-tanaw-navy hover:text-tanaw-green relative rounded-full border border-white/80 bg-white p-2 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
           >
-            <Bell size={20} />
+            <Bell size={18} />
             <span className="bg-tanaw-red absolute top-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white" />
           </button>
 
@@ -69,7 +95,7 @@ export function GlobalHeader({ role }: GlobalHeaderProps) {
               type="button"
               aria-label="Open account menu"
               onClick={() => setShowProfileMenu((current) => !current)}
-              className="flex items-center gap-3 rounded-full border border-white/80 bg-white py-1.5 pr-4 pl-2 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-md active:translate-y-0"
+              className="flex items-center gap-3 rounded-full border border-white/80 bg-white py-1 pr-3 pl-1.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-md active:translate-y-0"
             >
               <div className="bg-tanaw-green flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white">{initials}</div>
               <div className="hidden text-left md:block">

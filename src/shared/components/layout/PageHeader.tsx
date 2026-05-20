@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import type { ReactNode } from "react";
+import { useHeaderStore } from "../../../app/store/headerStore";
 
 type PageHeaderProps = {
   title: string;
@@ -7,12 +9,16 @@ type PageHeaderProps = {
 };
 
 export function PageHeader({ title, description, action }: PageHeaderProps) {
+  const setHeader = useHeaderStore((state) => state.setHeader);
+
+  useEffect(() => {
+    setHeader(title, description);
+  }, [title, description, setHeader]);
+
+  if (!action) return null;
+
   return (
-    <div className="mb-8 flex items-end justify-between gap-6 max-md:flex-col max-md:items-start">
-      <div>
-        <h2 className="text-charcoal-800 m-0 text-2xl font-bold tracking-normal">{title}</h2>
-        <p className="mt-1 mb-0 text-sm text-[#6b7280]">{description}</p>
-      </div>
+    <div className="mb-6 flex justify-end max-md:justify-start">
       {action}
     </div>
   );

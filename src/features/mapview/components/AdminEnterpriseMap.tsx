@@ -1,22 +1,11 @@
 import L, { type GeoJSONOptions, type Layer } from "leaflet";
-import { ArrowLeft, BarChart3, Building2, Map as MapIcon, MapPin, PanelRightClose, PanelRightOpen, Search, Users } from "lucide-react";
+import { Building2, ChevronDown, Map as MapIcon, MapPin, PanelRightClose, PanelRightOpen, Search, Users } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { mapEnterprises } from "../../../shared/data";
 import type { EnterpriseStatus, MapEnterprise } from "../../../shared/types";
 
 type GeoJsonFeatureCollection = GeoJSON.FeatureCollection;
-
-type BarangayAnalytics = {
-  totalVisitors: number;
-  topSegment: string;
-  localVisitors: number;
-  nonLocalVisitors: number;
-  maleVisitors: number;
-  femaleVisitors: number;
-  totalTourists: number;
-  status: EnterpriseStatus | "No Data";
-};
 
 const SAN_PEDRO_BARANGAYS_URL = "/data/san_pedro_barangays_clean_v4.geojson";
 
@@ -111,6 +100,7 @@ export function AdminEnterpriseMap() {
   const [barangaySearch, setBarangaySearch] = useState("");
   const [selectedBarangayName, setSelectedBarangayName] = useState<string | null>(null);
   const [selectedEnterpriseId, setSelectedEnterpriseId] = useState<number | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const boundaryFeatureCount = useMemo(() => boundary?.features.filter(isBoundaryPolygonFeature).length ?? 0, [boundary]);
 
@@ -153,7 +143,7 @@ export function AdminEnterpriseMap() {
   }, [barangaySearch, boundary, enterpriseCountsByBarangay]);
 
   const selectedBarangayEnterprises = useMemo(() => (selectedBarangayName ? getEnterprisesByBarangay(selectedBarangayName) : []), [selectedBarangayName]);
-  const selectedBarangayAnalytics = useMemo(() => calculateBarangayAnalytics(selectedBarangayEnterprises), [selectedBarangayEnterprises]);
+  const barangayHighestStatus = useMemo(() => getHighestStatus(selectedBarangayEnterprises), [selectedBarangayEnterprises]);
   const visibleEnterprises = selectedBarangayName ? selectedBarangayEnterprises : mapEnterprises;
   const selectedEnterprise = mapEnterprises.find((enterprise) => enterprise.id === selectedEnterpriseId);
 
@@ -435,6 +425,7 @@ export function AdminEnterpriseMap() {
             transition={{ duration: 0.22, ease: "easeOut" }}
             className="absolute top-4 right-4 bottom-4 z-420 flex w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-white/10 bg-slate-950/40 shadow-2xl backdrop-blur-md"
           >
+            {/* Header section (Fixed size, shrink-0) */}
             <div className="flex shrink-0 flex-col gap-3 border-b border-white/10 bg-black/20 px-4 py-3">
               <div className="relative z-10 flex items-start justify-between gap-3">
                 <div>
@@ -475,101 +466,201 @@ export function AdminEnterpriseMap() {
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-hidden">
+            {/* Dropdown Selector section (Fixed size, shrink-0, overflow-visible for dropdown menu) */}
+            <div className="relative shrink-0 z-20 border-b border-white/10 bg-black/10 px-4 py-3 overflow-visible">
+              <label className="mb-1 block text-[9px] font-black tracking-widest text-white/50 uppercase">
+                Select Barangay
+              </label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="focus:ring-tanaw-sky flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left transition hover:bg-white/10 focus:ring-2 focus:outline-none"
+                >
+                  <span className="truncate text-[10px] font-bold tracking-widest text-white uppercase">
+                    {selectedBarangayName ? `Barangay ${selectedBarangayName}` : "All Barangays"}
+                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {selectedBarangayName && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          clearSelectedBarangay();
+                        }}
+                        className="rounded p-0.5 text-white/40 hover:bg-white/10 hover:text-white transition"
+                        title="Clear selection"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    )}
+                    <ChevronDown size={14} className={["text-white/50 transition-transform duration-200", isDropdownOpen ? "rotate-180" : ""].join(" ")} />
+                  </div>
+                </button>
+
+                <AnimatePresence>
+                  {isDropdownOpen && (
+                    <>
+                      {/* Dropdown overlay/backdrop */}
+                      <div
+                        className="fixed inset-0 z-30"
+                        onClick={() => setIsDropdownOpen(false)}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute left-0 right-0 z-40 mt-1 flex max-h-64 flex-col overflow-hidden rounded-lg border border-white/10 bg-slate-950 shadow-2xl backdrop-blur-md"
+                      >
+                        <div className="p-2 border-b border-white/5 shrink-0 bg-black/20">
+                          <label className="flex items-center gap-2 rounded-md border border-white/10 bg-black/25 px-2 py-1 text-white">
+                            <Search size={11} className="text-white/40" />
+                            <input
+                              value={barangaySearch}
+                              onChange={(event) => setBarangaySearch(event.target.value)}
+                              placeholder="Search barangay..."
+                              className="min-w-0 flex-1 bg-transparent text-[10px] font-bold tracking-widest text-white uppercase outline-none placeholder:text-white/30"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </label>
+                        </div>
+
+                        <div className="min-h-0 flex-1 overflow-y-auto p-1.5 space-y-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              clearSelectedBarangay();
+                              setIsDropdownOpen(false);
+                            }}
+                            className={["focus:ring-tanaw-sky w-full rounded-md px-2 py-1.5 text-left text-[9px] font-black tracking-widest uppercase transition focus:ring-1 focus:outline-none flex justify-between items-center border border-transparent", !selectedBarangayName ? "bg-tanaw-sky/20 text-white border-tanaw-sky/30" : "text-white/60 hover:bg-white/5 hover:text-white"].join(" ")}
+                          >
+                            <span>All Barangays</span>
+                            <span className="text-[8px] opacity-60 font-mono font-bold bg-black/35 px-1.5 py-0.5 rounded-sm">{mapEnterprises.length}</span>
+                          </button>
+                          {barangayDirectoryItems.map((item) => (
+                            <button
+                              key={item.label}
+                              type="button"
+                              onClick={() => {
+                                selectBarangay(item.label);
+                                setIsDropdownOpen(false);
+                              }}
+                              className={["focus:ring-tanaw-sky w-full rounded-md px-2 py-1.5 text-left text-[9px] font-black tracking-widest uppercase transition focus:ring-1 focus:outline-none flex justify-between items-center border border-transparent", selectedBarangayName === item.label ? "bg-tanaw-sky/20 text-white border-tanaw-sky/30" : "text-white/60 hover:bg-white/5 hover:text-white"].join(" ")}
+                            >
+                              <span className="truncate">Barangay {item.label}</span>
+                              <span className="text-[8px] opacity-60 font-mono font-bold bg-black/35 px-1.5 py-0.5 rounded-sm">{item.enterpriseCount}</span>
+                            </button>
+                          ))}
+                          {barangayDirectoryItems.length === 0 && (
+                            <div className="py-4 text-center text-[9px] font-bold tracking-widest text-white/30 uppercase">
+                              No matching barangays
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Scrollable details and enterprise list container */}
+            <div className="min-h-0 flex-1 flex flex-col overflow-hidden">
               <AnimatePresence mode="wait" initial={false}>
                 {selectedBarangayName ? (
                   <motion.div
                     key="barangay-enterprises"
-                    initial={{ opacity: 0, x: 28 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 28 }}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 12 }}
                     transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="flex h-full flex-col gap-3 overflow-y-auto p-3"
+                    className="flex-1 min-h-0 flex flex-col gap-3 p-3 overflow-hidden"
                   >
-                    <button
-                      type="button"
-                      onClick={clearSelectedBarangay}
-                      className="focus:ring-tanaw-sky flex w-full items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left text-[9px] font-black tracking-widest text-white/70 uppercase transition hover:bg-white/10 focus:ring-2 focus:outline-none"
-                    >
-                      <ArrowLeft size={13} className="text-tanaw-sky" />
-                      Back to Barangay Directory
-                    </button>
-
-                    <section className="rounded-lg border border-white/10 bg-white/5 p-3">
+                    {/* Selected Barangay Info */}
+                    <div className="shrink-0 rounded-lg border border-white/10 bg-white/5 p-3">
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <h3 className="text-sm font-black tracking-wide text-white uppercase">Barangay {selectedBarangayName}</h3>
-                          <p className="mt-1 text-[9px] font-bold tracking-widest text-white/55 uppercase">Enterprises within this barangay</p>
+                          <p className="mt-1 text-[9px] font-bold tracking-widest text-white/55 uppercase">
+                            {selectedBarangayEnterprises.length} registered enterprises
+                          </p>
                         </div>
-                        <span className={`shrink-0 rounded border px-2 py-1 text-[9px] font-black tracking-widest uppercase ${getDarkStatusBadgeClass(selectedBarangayAnalytics.status)}`}>
-                          {selectedBarangayAnalytics.status}
+                        <span className={`shrink-0 rounded border px-2 py-1 text-[9px] font-black tracking-widest uppercase ${getDarkStatusBadgeClass(barangayHighestStatus)}`}>
+                          {barangayHighestStatus}
                         </span>
                       </div>
-                    </section>
+                    </div>
 
-                    <BarangayAnalyticsCard analytics={selectedBarangayAnalytics} />
-
-                    <section className="rounded-lg border border-white/10 bg-white/5 p-3">
-                      <div className="mb-2 flex items-center justify-between gap-3">
+                    {/* Dedicated Enterprise List section at the bottom */}
+                    <div className="flex-1 min-h-0 flex flex-col rounded-lg border border-white/10 bg-white/5 p-3">
+                      <div className="mb-2 flex items-center justify-between gap-3 shrink-0">
                         <h3 className="flex items-center gap-2 text-[9px] font-black tracking-widest text-white/70 uppercase">
                           <Building2 size={13} className="text-tanaw-sky" />
                           Enterprise List
                         </h3>
-                        <span className="text-[9px] font-bold tracking-widest text-white/50 uppercase">{selectedBarangayEnterprises.length}</span>
+                        <span className="text-[9px] font-bold tracking-widest text-white/55 uppercase">{selectedBarangayEnterprises.length}</span>
                       </div>
-                      <div className="space-y-2">
+                      <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
                         {selectedBarangayEnterprises.map((enterprise) => (
-                          <EnterpriseMapCard key={enterprise.id} enterprise={enterprise} selected={selectedEnterpriseId === enterprise.id} onClick={() => setSelectedEnterpriseId(enterprise.id)} />
+                          <EnterpriseMapCard
+                            key={enterprise.id}
+                            enterprise={enterprise}
+                            selected={selectedEnterpriseId === enterprise.id}
+                            onClick={() => setSelectedEnterpriseId(enterprise.id)}
+                          />
                         ))}
+                        {selectedBarangayEnterprises.length === 0 && (
+                          <div className="rounded-lg border border-white/10 bg-black/10 p-6 text-center text-[10px] font-bold tracking-widest text-white/55 uppercase">
+                            No registered enterprises found for this barangay yet.
+                          </div>
+                        )}
                       </div>
-                      {selectedBarangayEnterprises.length === 0 && (
-                        <div className="rounded-lg border border-white/10 bg-black/10 p-6 text-center text-[10px] font-bold tracking-widest text-white/50 uppercase">
-                          No registered enterprises found for this barangay yet.
-                        </div>
-                      )}
-                    </section>
+                    </div>
                   </motion.div>
                 ) : (
                   <motion.div
-                    key="barangay-directory"
-                    initial={{ opacity: 0, x: -18 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -18 }}
+                    key="all-enterprises-view"
+                    initial={{ opacity: 0, y: -12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
                     transition={{ duration: 0.18, ease: "easeOut" }}
-                    className="flex h-full flex-col gap-3 overflow-y-auto p-3"
+                    className="flex-1 min-h-0 flex flex-col gap-3 p-3 overflow-hidden"
                   >
-                    <section className="rounded-lg border border-white/10 bg-white/5 p-3">
-                      <div className="mb-3 flex items-center justify-between gap-3">
-                        <div>
-                          <h3 className="text-[10px] font-black tracking-widest text-white uppercase">Barangay Directory</h3>
-                          <p className="mt-1 text-[9px] font-bold tracking-widest text-white/50 uppercase">Showing barangay boundaries</p>
-                        </div>
-                        <span className="text-[9px] font-bold tracking-widest text-white/50 uppercase">{barangayDirectoryItems.length}</span>
+                    {/* Prompt card */}
+                    <div className="shrink-0 rounded-lg border border-white/10 bg-white/5 p-3 text-center">
+                      <MapPin size={18} className="mx-auto text-tanaw-sky mb-1.5 animate-bounce" style={{ animationDuration: "3s" }} />
+                      <h4 className="text-[10px] font-black tracking-widest text-white uppercase">No Barangay Selected</h4>
+                      <p className="mt-1 text-[9px] font-bold tracking-widest text-white/55 uppercase leading-normal">
+                        Click a barangay boundary on the map or use the dropdown above to filter.
+                      </p>
+                    </div>
+
+                    {/* Dedicated Enterprise List section showing all enterprises */}
+                    <div className="flex-1 min-h-0 flex flex-col rounded-lg border border-white/10 bg-white/5 p-3">
+                      <div className="mb-2 flex items-center justify-between gap-3 shrink-0">
+                        <h3 className="flex items-center gap-2 text-[9px] font-black tracking-widest text-white/70 uppercase">
+                          <Building2 size={13} className="text-tanaw-sky" />
+                          All Enterprises
+                        </h3>
+                        <span className="text-[9px] font-bold tracking-widest text-white/55 uppercase">{mapEnterprises.length}</span>
                       </div>
-
-                      <label className="focus-within:border-tanaw-sky mb-3 flex items-center gap-2 rounded-lg border border-white/15 bg-black/15 px-3 py-2 text-white">
-                        <Search size={13} className="text-white/45" />
-                        <input
-                          value={barangaySearch}
-                          onChange={(event) => setBarangaySearch(event.target.value)}
-                          placeholder="Search barangay"
-                          className="min-w-0 flex-1 bg-transparent text-[10px] font-bold tracking-widest text-white uppercase outline-none placeholder:text-white/35"
-                        />
-                      </label>
-
-                      <div className="max-h-[calc(100vh-380px)] space-y-2 overflow-y-auto pr-1">
-                        {barangayDirectoryItems.map((item) => (
-                          <BarangayDirectoryCard
-                            key={item.label}
-                            title={item.label}
-                            subtitle={item.subtitle}
-                            enterpriseCount={item.enterpriseCount}
-                            visitorCount={item.visitorCount}
-                            onClick={() => selectBarangay(item.label)}
+                      <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
+                        {mapEnterprises.map((enterprise) => (
+                          <EnterpriseMapCard
+                            key={enterprise.id}
+                            enterprise={enterprise}
+                            selected={selectedEnterpriseId === enterprise.id}
+                            onClick={() => {
+                              selectBarangay(enterprise.barangay);
+                              setSelectedEnterpriseId(enterprise.id);
+                            }}
                           />
                         ))}
                       </div>
-                    </section>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -615,56 +706,6 @@ export function AdminEnterpriseMap() {
   );
 }
 
-function BarangayDirectoryCard({ title, subtitle, enterpriseCount, visitorCount, onClick }: { title: string; subtitle: string; enterpriseCount: number; visitorCount: number; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="focus:ring-tanaw-sky w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left transition hover:bg-white/10 focus:ring-2 focus:outline-none"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="truncate text-[11px] font-bold tracking-widest text-white uppercase">{title}</div>
-          <div className="mt-1 truncate text-[9px] font-semibold tracking-widest text-white/55 uppercase">{subtitle}</div>
-        </div>
-        <span className="shrink-0 rounded border border-white/10 bg-black/15 px-1.5 py-0.5 text-[9px] font-black tracking-widest text-white/70 uppercase">{enterpriseCount}</span>
-      </div>
-      <div className="mt-2 flex items-center justify-between border-t border-white/10 pt-2 text-[9px] font-bold tracking-widest text-white/50 uppercase">
-        <span>Registered Enterprises</span>
-        <span className="font-mono text-white/70">{visitorCount.toLocaleString()} visitors</span>
-      </div>
-    </button>
-  );
-}
-
-function BarangayAnalyticsCard({ analytics }: { analytics: BarangayAnalytics }) {
-  return (
-    <section className="rounded-lg border border-white/10 bg-white/5 p-3">
-      <div className="mb-3 flex items-center gap-2 text-[9px] font-black tracking-widest text-white/70 uppercase">
-        <BarChart3 size={13} className="text-tanaw-sky" />
-        Visitor Analytics
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <AnalyticsTile label="Total Visitors" value={analytics.totalVisitors.toLocaleString()} />
-        <AnalyticsTile label="Top Segment" value={analytics.topSegment} />
-        <AnalyticsTile label="Local / Non-Local" value={formatSplit(analytics.localVisitors, analytics.nonLocalVisitors)} />
-        <AnalyticsTile label="Male / Female" value={formatSplit(analytics.maleVisitors, analytics.femaleVisitors)} />
-        <AnalyticsTile label="Total Tourists" value={analytics.totalTourists.toLocaleString()} />
-        <AnalyticsTile label="Status" value={analytics.status} />
-      </div>
-    </section>
-  );
-}
-
-function AnalyticsTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-white/10 bg-black/10 p-2">
-      <div className="text-[8px] font-black tracking-widest text-white/45 uppercase">{label}</div>
-      <div className="mt-1 text-[12px] leading-tight font-black wrap-break-word text-white">{value}</div>
-    </div>
-  );
-}
 
 function EnterpriseMapCard({ enterprise, selected, onClick }: { enterprise: MapEnterprise; selected: boolean; onClick: () => void }) {
   return (
@@ -796,41 +837,6 @@ function getHighestStatus(enterprises: MapEnterprise[]) {
   return enterprises.reduce<EnterpriseStatus>((highest, enterprise) => (statusPriority[enterprise.status] > statusPriority[highest] ? enterprise.status : highest), enterprises[0].status);
 }
 
-function getTopSegment(enterprises: MapEnterprise[]) {
-  if (enterprises.length === 0) return "Unavailable";
-
-  const segmentTotals = enterprises.reduce<Record<string, number>>((totals, enterprise) => {
-    totals[enterprise.topSegment] = (totals[enterprise.topSegment] ?? 0) + enterprise.visitorCount;
-    return totals;
-  }, {});
-
-  return Object.entries(segmentTotals).sort((left, right) => right[1] - left[1])[0][0];
-}
-
-function calculateBarangayAnalytics(enterprises: MapEnterprise[]): BarangayAnalytics {
-  return enterprises.reduce<BarangayAnalytics>(
-    (analytics, enterprise) => ({
-      totalVisitors: analytics.totalVisitors + enterprise.visitorCount,
-      topSegment: getTopSegment(enterprises),
-      localVisitors: analytics.localVisitors + enterprise.localVisitors,
-      nonLocalVisitors: analytics.nonLocalVisitors + enterprise.nonLocalVisitors,
-      maleVisitors: analytics.maleVisitors + enterprise.maleVisitors,
-      femaleVisitors: analytics.femaleVisitors + enterprise.femaleVisitors,
-      totalTourists: analytics.totalTourists + enterprise.totalTourists,
-      status: getHighestStatus(enterprises),
-    }),
-    {
-      totalVisitors: 0,
-      topSegment: getTopSegment(enterprises),
-      localVisitors: 0,
-      nonLocalVisitors: 0,
-      maleVisitors: 0,
-      femaleVisitors: 0,
-      totalTourists: 0,
-      status: getHighestStatus(enterprises),
-    },
-  );
-}
 
 function fitMapToSanPedroBounds(map: L.Map, layer: L.GeoJSON | null) {
   if (!layer) return;
@@ -870,9 +876,6 @@ function getLightStatusBadgeClass(status: EnterpriseStatus) {
   return "border-green-200 bg-green-50 text-green-700";
 }
 
-function formatSplit(left: number, right: number) {
-  return `${left.toLocaleString()} / ${right.toLocaleString()}`;
-}
 
 function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (character) => {

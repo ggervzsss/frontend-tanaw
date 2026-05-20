@@ -7,7 +7,7 @@ import { useReportStore } from "../../../app/store/reportStore";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
-import { PageMotion } from "../../../shared/components/ui";
+import { PageMotion, ModalPortal } from "../../../shared/components/ui";
 import { reportEnterprises } from "../../../shared/data";
 import type { IntakeReport, ReportEnterprise, ReportStatus } from "../../../shared/types";
 import { ReportReviewModal, ReportStatusBadge } from "../components";
@@ -201,28 +201,30 @@ function EnterpriseReportsDrawer({
   const archivedReports = reports.filter((report) => report.month !== "October" || report.status === "Consolidated");
 
   return (
-    <div className="bg-charcoal-950/50 fixed inset-0 z-40 backdrop-blur-sm" onClick={onClose}>
-      <aside className="ml-auto flex h-full w-full max-w-3xl flex-col bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
-        <header className="border-b border-gray-200 bg-gray-50 p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">{enterprise.name}</h2>
-              <p className="mt-1 text-sm text-gray-500">
-                {enterprise.category} - {enterprise.barangay}
-              </p>
+    <ModalPortal>
+      <div className="bg-charcoal-950/50 fixed inset-0 z-40 backdrop-blur-sm" onClick={onClose}>
+        <aside className="ml-auto flex h-full w-full max-w-3xl flex-col bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
+          <header className="border-b border-gray-200 bg-gray-50 p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">{enterprise.name}</h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  {enterprise.category} - {enterprise.barangay}
+                </p>
+              </div>
+              <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-white hover:text-gray-900">
+                Close
+              </button>
             </div>
-            <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-white hover:text-gray-900">
-              Close
-            </button>
-          </div>
-        </header>
+          </header>
 
-        <div className="flex-1 overflow-y-auto p-6">
-          <ReportSection title="Current Reporting Period" reports={currentReports} empty="No current report is available." onOpenReport={onOpenReport} />
-          <ReportSection title="Archived Submissions" reports={archivedReports} empty="No archived submissions yet." onOpenReport={onOpenReport} />
-        </div>
-      </aside>
-    </div>
+          <div className="flex-1 overflow-y-auto p-6">
+            <ReportSection title="Current Reporting Period" reports={currentReports} empty="No current report is available." onOpenReport={onOpenReport} />
+            <ReportSection title="Archived Submissions" reports={archivedReports} empty="No archived submissions yet." onOpenReport={onOpenReport} />
+          </div>
+        </aside>
+      </div>
+    </ModalPortal>
   );
 }
 

@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
-import { PageMotion, stagger } from "../../../shared/components/ui";
+import { PageMotion, ModalPortal, stagger } from "../../../shared/components/ui";
 import { enterpriseAccounts } from "../../../shared/data";
 import type { CameraStatus, EnterpriseAccount, EnterpriseAccountStatus, GatewayStatus } from "../../../shared/types";
 
@@ -280,23 +280,25 @@ function RegisterEnterpriseModal({ onClose }: { onClose: () => void }) {
 
 function ModalFrame({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   return (
-    <motion.div className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      <motion.section
-        className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-2xl"
-        initial={{ opacity: 0, y: 12, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 12, scale: 0.98 }}
-        transition={{ duration: 0.18, ease: "easeOut" }}
-      >
-        <header className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
-          <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-          <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-white hover:text-gray-900">
-            Close
-          </button>
-        </header>
-        <div className="p-6">{children}</div>
-      </motion.section>
-    </motion.div>
+    <ModalPortal>
+      <motion.div className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        <motion.section
+          className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-2xl"
+          initial={{ opacity: 0, y: 12, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 12, scale: 0.98 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+        >
+          <header className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+            <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-white hover:text-gray-900">
+              Close
+            </button>
+          </header>
+          <div className="p-6">{children}</div>
+        </motion.section>
+      </motion.div>
+    </ModalPortal>
   );
 }
 

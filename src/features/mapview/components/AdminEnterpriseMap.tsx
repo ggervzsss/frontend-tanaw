@@ -467,20 +467,16 @@ export function AdminEnterpriseMap() {
             </div>
 
             {/* Dropdown Selector section (Fixed size, shrink-0, overflow-visible for dropdown menu) */}
-            <div className="relative shrink-0 z-20 border-b border-white/10 bg-black/10 px-4 py-3 overflow-visible">
-              <label className="mb-1 block text-[9px] font-black tracking-widest text-white/50 uppercase">
-                Select Barangay
-              </label>
+            <div className="relative z-20 shrink-0 overflow-visible border-b border-white/10 bg-black/10 px-4 py-3">
+              <label className="mb-1 block text-[9px] font-black tracking-widest text-white/50 uppercase">Select Barangay</label>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="focus:ring-tanaw-sky flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left transition hover:bg-white/10 focus:ring-2 focus:outline-none"
                 >
-                  <span className="truncate text-[10px] font-bold tracking-widest text-white uppercase">
-                    {selectedBarangayName ? `Barangay ${selectedBarangayName}` : "All Barangays"}
-                  </span>
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="truncate text-[10px] font-bold tracking-widest text-white uppercase">{selectedBarangayName ? `Barangay ${selectedBarangayName}` : "All Barangays"}</span>
+                  <div className="flex shrink-0 items-center gap-1.5">
                     {selectedBarangayName && (
                       <button
                         type="button"
@@ -488,11 +484,15 @@ export function AdminEnterpriseMap() {
                           e.stopPropagation();
                           clearSelectedBarangay();
                         }}
-                        className="rounded p-0.5 text-white/40 hover:bg-white/10 hover:text-white transition"
+                        className="rounded p-0.5 text-white/40 transition hover:bg-white/10 hover:text-white"
                         title="Clear selection"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                          <path
+                            fillRule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                       </button>
                     )}
@@ -504,18 +504,15 @@ export function AdminEnterpriseMap() {
                   {isDropdownOpen && (
                     <>
                       {/* Dropdown overlay/backdrop */}
-                      <div
-                        className="fixed inset-0 z-30"
-                        onClick={() => setIsDropdownOpen(false)}
-                      />
+                      <div className="fixed inset-0 z-30" onClick={() => setIsDropdownOpen(false)} />
                       <motion.div
                         initial={{ opacity: 0, y: -8 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute left-0 right-0 z-40 mt-1 flex max-h-64 flex-col overflow-hidden rounded-lg border border-white/10 bg-slate-950 shadow-2xl backdrop-blur-md"
+                        className="absolute right-0 left-0 z-40 mt-1 flex max-h-64 flex-col overflow-hidden rounded-lg border border-white/10 bg-slate-950 shadow-2xl backdrop-blur-md"
                       >
-                        <div className="p-2 border-b border-white/5 shrink-0 bg-black/20">
+                        <div className="shrink-0 border-b border-white/5 bg-black/20 p-2">
                           <label className="flex items-center gap-2 rounded-md border border-white/10 bg-black/25 px-2 py-1 text-white">
                             <Search size={11} className="text-white/40" />
                             <input
@@ -528,17 +525,20 @@ export function AdminEnterpriseMap() {
                           </label>
                         </div>
 
-                        <div className="min-h-0 flex-1 overflow-y-auto p-1.5 space-y-1">
+                        <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-1.5">
                           <button
                             type="button"
                             onClick={() => {
                               clearSelectedBarangay();
                               setIsDropdownOpen(false);
                             }}
-                            className={["focus:ring-tanaw-sky w-full rounded-md px-2 py-1.5 text-left text-[9px] font-black tracking-widest uppercase transition focus:ring-1 focus:outline-none flex justify-between items-center border border-transparent", !selectedBarangayName ? "bg-tanaw-sky/20 text-white border-tanaw-sky/30" : "text-white/60 hover:bg-white/5 hover:text-white"].join(" ")}
+                            className={[
+                              "focus:ring-tanaw-sky flex w-full items-center justify-between rounded-md border border-transparent px-2 py-1.5 text-left text-[9px] font-black tracking-widest uppercase transition focus:ring-1 focus:outline-none",
+                              !selectedBarangayName ? "bg-tanaw-sky/20 border-tanaw-sky/30 text-white" : "text-white/60 hover:bg-white/5 hover:text-white",
+                            ].join(" ")}
                           >
                             <span>All Barangays</span>
-                            <span className="text-[8px] opacity-60 font-mono font-bold bg-black/35 px-1.5 py-0.5 rounded-sm">{mapEnterprises.length}</span>
+                            <span className="rounded-sm bg-black/35 px-1.5 py-0.5 font-mono text-[8px] font-bold opacity-60">{mapEnterprises.length}</span>
                           </button>
                           {barangayDirectoryItems.map((item) => (
                             <button
@@ -548,17 +548,16 @@ export function AdminEnterpriseMap() {
                                 selectBarangay(item.label);
                                 setIsDropdownOpen(false);
                               }}
-                              className={["focus:ring-tanaw-sky w-full rounded-md px-2 py-1.5 text-left text-[9px] font-black tracking-widest uppercase transition focus:ring-1 focus:outline-none flex justify-between items-center border border-transparent", selectedBarangayName === item.label ? "bg-tanaw-sky/20 text-white border-tanaw-sky/30" : "text-white/60 hover:bg-white/5 hover:text-white"].join(" ")}
+                              className={[
+                                "focus:ring-tanaw-sky flex w-full items-center justify-between rounded-md border border-transparent px-2 py-1.5 text-left text-[9px] font-black tracking-widest uppercase transition focus:ring-1 focus:outline-none",
+                                selectedBarangayName === item.label ? "bg-tanaw-sky/20 border-tanaw-sky/30 text-white" : "text-white/60 hover:bg-white/5 hover:text-white",
+                              ].join(" ")}
                             >
                               <span className="truncate">Barangay {item.label}</span>
-                              <span className="text-[8px] opacity-60 font-mono font-bold bg-black/35 px-1.5 py-0.5 rounded-sm">{item.enterpriseCount}</span>
+                              <span className="rounded-sm bg-black/35 px-1.5 py-0.5 font-mono text-[8px] font-bold opacity-60">{item.enterpriseCount}</span>
                             </button>
                           ))}
-                          {barangayDirectoryItems.length === 0 && (
-                            <div className="py-4 text-center text-[9px] font-bold tracking-widest text-white/30 uppercase">
-                              No matching barangays
-                            </div>
-                          )}
+                          {barangayDirectoryItems.length === 0 && <div className="py-4 text-center text-[9px] font-bold tracking-widest text-white/30 uppercase">No matching barangays</div>}
                         </div>
                       </motion.div>
                     </>
@@ -568,7 +567,7 @@ export function AdminEnterpriseMap() {
             </div>
 
             {/* Scrollable details and enterprise list container */}
-            <div className="min-h-0 flex-1 flex flex-col overflow-hidden">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <AnimatePresence mode="wait" initial={false}>
                 {selectedBarangayName ? (
                   <motion.div
@@ -577,16 +576,14 @@ export function AdminEnterpriseMap() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 12 }}
                     transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="flex-1 min-h-0 flex flex-col gap-3 p-3 overflow-hidden"
+                    className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-3"
                   >
                     {/* Selected Barangay Info */}
                     <div className="shrink-0 rounded-lg border border-white/10 bg-white/5 p-3">
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <h3 className="text-sm font-black tracking-wide text-white uppercase">Barangay {selectedBarangayName}</h3>
-                          <p className="mt-1 text-[9px] font-bold tracking-widest text-white/55 uppercase">
-                            {selectedBarangayEnterprises.length} registered enterprises
-                          </p>
+                          <p className="mt-1 text-[9px] font-bold tracking-widest text-white/55 uppercase">{selectedBarangayEnterprises.length} registered enterprises</p>
                         </div>
                         <span className={`shrink-0 rounded border px-2 py-1 text-[9px] font-black tracking-widest uppercase ${getDarkStatusBadgeClass(barangayHighestStatus)}`}>
                           {barangayHighestStatus}
@@ -595,22 +592,17 @@ export function AdminEnterpriseMap() {
                     </div>
 
                     {/* Dedicated Enterprise List section at the bottom */}
-                    <div className="flex-1 min-h-0 flex flex-col rounded-lg border border-white/10 bg-white/5 p-3">
-                      <div className="mb-2 flex items-center justify-between gap-3 shrink-0">
+                    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/5 p-3">
+                      <div className="mb-2 flex shrink-0 items-center justify-between gap-3">
                         <h3 className="flex items-center gap-2 text-[9px] font-black tracking-widest text-white/70 uppercase">
                           <Building2 size={13} className="text-tanaw-sky" />
                           Enterprise List
                         </h3>
                         <span className="text-[9px] font-bold tracking-widest text-white/55 uppercase">{selectedBarangayEnterprises.length}</span>
                       </div>
-                      <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
+                      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                         {selectedBarangayEnterprises.map((enterprise) => (
-                          <EnterpriseMapCard
-                            key={enterprise.id}
-                            enterprise={enterprise}
-                            selected={selectedEnterpriseId === enterprise.id}
-                            onClick={() => setSelectedEnterpriseId(enterprise.id)}
-                          />
+                          <EnterpriseMapCard key={enterprise.id} enterprise={enterprise} selected={selectedEnterpriseId === enterprise.id} onClick={() => setSelectedEnterpriseId(enterprise.id)} />
                         ))}
                         {selectedBarangayEnterprises.length === 0 && (
                           <div className="rounded-lg border border-white/10 bg-black/10 p-6 text-center text-[10px] font-bold tracking-widest text-white/55 uppercase">
@@ -627,27 +619,25 @@ export function AdminEnterpriseMap() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -12 }}
                     transition={{ duration: 0.18, ease: "easeOut" }}
-                    className="flex-1 min-h-0 flex flex-col gap-3 p-3 overflow-hidden"
+                    className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-3"
                   >
                     {/* Prompt card */}
                     <div className="shrink-0 rounded-lg border border-white/10 bg-white/5 p-3 text-center">
-                      <MapPin size={18} className="mx-auto text-tanaw-sky mb-1.5 animate-bounce" style={{ animationDuration: "3s" }} />
+                      <MapPin size={18} className="text-tanaw-sky mx-auto mb-1.5 animate-bounce" style={{ animationDuration: "3s" }} />
                       <h4 className="text-[10px] font-black tracking-widest text-white uppercase">No Barangay Selected</h4>
-                      <p className="mt-1 text-[9px] font-bold tracking-widest text-white/55 uppercase leading-normal">
-                        Click a barangay boundary on the map or use the dropdown above to filter.
-                      </p>
+                      <p className="mt-1 text-[9px] leading-normal font-bold tracking-widest text-white/55 uppercase">Click a barangay boundary on the map or use the dropdown above to filter.</p>
                     </div>
 
                     {/* Dedicated Enterprise List section showing all enterprises */}
-                    <div className="flex-1 min-h-0 flex flex-col rounded-lg border border-white/10 bg-white/5 p-3">
-                      <div className="mb-2 flex items-center justify-between gap-3 shrink-0">
+                    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/5 p-3">
+                      <div className="mb-2 flex shrink-0 items-center justify-between gap-3">
                         <h3 className="flex items-center gap-2 text-[9px] font-black tracking-widest text-white/70 uppercase">
                           <Building2 size={13} className="text-tanaw-sky" />
                           All Enterprises
                         </h3>
                         <span className="text-[9px] font-bold tracking-widest text-white/55 uppercase">{mapEnterprises.length}</span>
                       </div>
-                      <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
+                      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                         {mapEnterprises.map((enterprise) => (
                           <EnterpriseMapCard
                             key={enterprise.id}
@@ -705,7 +695,6 @@ export function AdminEnterpriseMap() {
     </div>
   );
 }
-
 
 function EnterpriseMapCard({ enterprise, selected, onClick }: { enterprise: MapEnterprise; selected: boolean; onClick: () => void }) {
   return (
@@ -837,7 +826,6 @@ function getHighestStatus(enterprises: MapEnterprise[]) {
   return enterprises.reduce<EnterpriseStatus>((highest, enterprise) => (statusPriority[enterprise.status] > statusPriority[highest] ? enterprise.status : highest), enterprises[0].status);
 }
 
-
 function fitMapToSanPedroBounds(map: L.Map, layer: L.GeoJSON | null) {
   if (!layer) return;
 
@@ -875,7 +863,6 @@ function getLightStatusBadgeClass(status: EnterpriseStatus) {
   if (status === "Warning") return "border-orange-200 bg-orange-50 text-orange-700";
   return "border-green-200 bg-green-50 text-green-700";
 }
-
 
 function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (character) => {

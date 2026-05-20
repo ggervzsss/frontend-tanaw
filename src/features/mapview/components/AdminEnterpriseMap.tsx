@@ -353,7 +353,7 @@ export function AdminEnterpriseMap() {
 
     applyBoundarySelection(selectedBarangayNameRef.current);
     fitMapToSanPedroBounds(map, boundaryLayerRef.current);
-  }, [applyBoundarySelection, boundary, isDirectoryCollapsed, selectBarangay, showBoundaries]);
+  }, [applyBoundarySelection, boundary, selectBarangay, showBoundaries]);
 
   useEffect(() => {
     const map = mapRef.current;

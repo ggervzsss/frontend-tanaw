@@ -1,4 +1,4 @@
-import { Activity, AlertTriangle, BellRing, CheckCircle2, FileText, RadioTower, Server } from "lucide-react";
+import { Activity, AlertTriangle, BellRing, CheckCircle2, FileText, RadioTower } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -41,11 +41,6 @@ export function AdminAlertsMonitorPage() {
       <PageHeader
         title="Alerts & Monitor"
         description="Live infrastructure, threshold incidents, and escalation state across monitored enterprises."
-        action={
-          <span className="text-tanaw-green inline-flex items-center gap-2 rounded-lg border border-green-100 bg-green-50 px-3 py-2 text-xs font-bold">
-            <Server size={12} /> Node Ping: 12ms
-          </span>
-        }
       />
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">

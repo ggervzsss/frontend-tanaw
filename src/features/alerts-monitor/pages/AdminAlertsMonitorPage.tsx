@@ -38,10 +38,7 @@ export function AdminAlertsMonitorPage() {
 
   return (
     <PageMotion>
-      <PageHeader
-        title="Alerts & Monitor"
-        description="Live infrastructure, threshold incidents, and escalation state across monitored enterprises."
-      />
+      <PageHeader title="Alerts & Monitor" description="Live infrastructure, threshold incidents, and escalation state across monitored enterprises." />
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <MetricCard label="Actionable Incidents" value={activeAlerts.length} foot={`${notifiedAlerts.length} already notified`} color="#065f46" icon={BellRing} />

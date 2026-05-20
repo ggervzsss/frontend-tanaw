@@ -17,9 +17,5 @@ export function PageHeader({ title, description, action }: PageHeaderProps) {
 
   if (!action) return null;
 
-  return (
-    <div className="mb-6 flex justify-end max-md:justify-start">
-      {action}
-    </div>
-  );
+  return <div className="mb-6 flex justify-end max-md:justify-start">{action}</div>;
 }

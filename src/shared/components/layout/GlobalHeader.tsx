@@ -57,30 +57,17 @@ export function GlobalHeader({ role }: GlobalHeaderProps) {
     <>
       <header className="z-10 flex h-16 items-center justify-between border-b border-white/70 bg-slate-100/80 px-8 backdrop-blur max-sm:px-4">
         {/* Left Section: Page Title & Subtitle */}
-        <div className="flex flex-col min-w-0 pr-4">
+        <div className="flex min-w-0 flex-col pr-4">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={title}
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 4 }}
-              transition={{ duration: 0.15 }}
-              className="flex flex-col"
-            >
-              <h1 className="text-tanaw-navy font-display text-base font-bold leading-tight tracking-tight sm:text-lg truncate">
-                {title || "TANAW"}
-              </h1>
-              {description && (
-                <p className="mt-0.5 text-[10px] sm:text-xs text-gray-500 font-medium truncate max-md:hidden">
-                  {description}
-                </p>
-              )}
+            <motion.div key={title} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} transition={{ duration: 0.15 }} className="flex flex-col">
+              <h1 className="text-tanaw-navy font-display truncate text-base leading-tight font-bold tracking-tight sm:text-lg">{title || "TANAW"}</h1>
+              {description && <p className="mt-0.5 truncate text-[10px] font-medium text-gray-500 max-md:hidden sm:text-xs">{description}</p>}
             </motion.div>
           </AnimatePresence>
         </div>
 
         {/* Right Section: Actions & Profile Menu */}
-        <div className="flex items-center gap-6 max-sm:gap-3 shrink-0">
+        <div className="flex shrink-0 items-center gap-6 max-sm:gap-3">
           <button
             type="button"
             aria-label="Notifications"

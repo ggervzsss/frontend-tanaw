@@ -9,10 +9,13 @@ import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
 import { PageMotion, ModalPortal } from "../../../shared/components/ui";
 import { reportEnterprises } from "../../../shared/data";
-import type { IntakeReport, ReportEnterprise, ReportStatus } from "../../../shared/types";
+import type { IntakeReport, ReportEnterprise } from "../../../shared/types";
 import { ReportReviewModal, ReportStatusBadge } from "../components";
 
-type ComplianceFilter = "All" | ReportStatus | "Archived";
+const MONTH_ORDER = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
 
 export function StaffBatchReportsPage() {
   const authUser = useAuthStore((state) => state.user);
@@ -20,23 +23,65 @@ export function StaffBatchReportsPage() {
   const updateReportStatus = useReportStore((state) => state.updateReportStatus);
   const generateFinalReport = useReportStore((state) => state.generateFinalReport);
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<ComplianceFilter>("All");
+  const [monthFilter, setMonthFilter] = useState("All");
+  const [yearFilter, setYearFilter] = useState("All");
   const [selectedEnterprise, setSelectedEnterprise] = useState<ReportEnterprise | null>(null);
   const [selectedReport, setSelectedReport] = useState<IntakeReport | null>(null);
-  const [selectedReportIds, setSelectedReportIds] = useState<string[]>([]);
 
-  const currentReports = reports.filter((report) => report.month === "October");
-  const archivedReports = reports.filter((report) => report.month !== "October" || report.status === "Consolidated");
-  const readyReports = currentReports.filter((report) => report.status === "Ready to Consolidate");
-  const missingReports = currentReports.filter((report) => report.status === "Missing");
+
+  // Derive unique months and years dynamically from live intake report data
+  const availableMonths = useMemo(() => {
+    const months = Array.from(new Set(reports.map((r) => r.month)));
+    return months.sort((a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b));
+  }, [reports]);
+
+  const availableYears = useMemo(() => {
+    const years = Array.from(
+      new Set(
+        reports
+          .map((r) => {
+            const match = r.period.match(/\d{4}/);
+            return match ? match[0] : null;
+          })
+          .filter(Boolean) as string[],
+      ),
+    );
+    return years.sort((a, b) => Number(b) - Number(a));
+  }, [reports]);
+
+  // Reports matching the active month/year filters
+  const filteredByPeriod = useMemo(() => {
+    return reports.filter((r) => {
+      const yearMatch = r.period.match(/\d{4}/);
+      const reportYear = yearMatch ? yearMatch[0] : null;
+      const matchesMonth = monthFilter === "All" || r.month === monthFilter;
+      const matchesYear = yearFilter === "All" || reportYear === yearFilter;
+      return matchesMonth && matchesYear;
+    });
+  }, [reports, monthFilter, yearFilter]);
+
+  // Reports outside the filtered period (used for archived count)
+  const nonPeriodReports = useMemo(() => {
+    return reports.filter((r) => !filteredByPeriod.includes(r) || r.status === "Consolidated");
+  }, [reports, filteredByPeriod]);
+
+  const readyReports = filteredByPeriod.filter((r) => r.status === "Ready to Consolidate");
+  const missingReports = filteredByPeriod.filter((r) => r.status === "Missing");
+
+  // Generate is only enabled when every enterprise has a Ready to Consolidate report
+  const allReady =
+    filteredByPeriod.length > 0 &&
+    reportEnterprises.every((ent) => {
+      const report = filteredByPeriod.find((r) => r.enterpriseId === ent.id);
+      return report?.status === "Ready to Consolidate";
+    });
 
   const enterpriseRows = useMemo(
     () =>
       reportEnterprises
         .map((enterprise) => {
-          const currentReport = currentReports.find((report) => report.enterpriseId === enterprise.id);
-          const enterpriseArchives = archivedReports.filter((report) => report.enterpriseId === enterprise.id);
-
+          const currentReport = filteredByPeriod.find((r) => r.enterpriseId === enterprise.id);
+          const enterpriseArchives = nonPeriodReports.filter((r) => r.enterpriseId === enterprise.id);
           return {
             enterprise,
             currentReport,
@@ -46,29 +91,25 @@ export function StaffBatchReportsPage() {
         })
         .filter((row) => {
           const normalizedQuery = query.trim().toLowerCase();
-          const matchesQuery =
-            !normalizedQuery || [row.enterprise.name, row.enterprise.category, row.enterprise.barangay, row.currentReport?.id ?? ""].some((value) => value.toLowerCase().includes(normalizedQuery));
-          const matchesFilter = filter === "All" || (filter === "Archived" ? row.archivedReports.length > 0 : row.status === filter);
-          return matchesQuery && matchesFilter;
+          return (
+            !normalizedQuery ||
+            [row.enterprise.name, row.enterprise.category, row.enterprise.barangay, row.currentReport?.id ?? ""].some((v) =>
+              v.toLowerCase().includes(normalizedQuery),
+            )
+          );
         }),
-    [archivedReports, currentReports, filter, query],
+    [filteredByPeriod, nonPeriodReports, query],
   );
 
-  const toggleReportSelection = (reportId: string) => {
-    setSelectedReportIds((current) => (current.includes(reportId) ? current.filter((id) => id !== reportId) : [...current, reportId]));
-  };
+
 
   const handleGenerate = () => {
-    const selectedReadyReportIds = selectedReportIds.filter((id) => readyReports.some((report) => report.id === id));
-    const fallbackReadyReportIds = readyReports.map((report) => report.id);
-    const finalReport = generateFinalReport(selectedReadyReportIds.length > 0 ? selectedReadyReportIds : fallbackReadyReportIds, authUser?.displayName ?? "Staff User");
-
+    if (!allReady) return;
+    const finalReport = generateFinalReport(readyReports.map((r) => r.id), authUser?.displayName ?? "Staff User");
     if (!finalReport) {
       toast.error("No ready reports available for consolidation.");
       return;
     }
-
-    setSelectedReportIds([]);
     toast.success(`${finalReport.id} generated for Final Reports Audit.`);
   };
 
@@ -86,16 +127,13 @@ export function StaffBatchReportsPage() {
 
   return (
     <PageMotion>
-      <PageHeader
-        title="Batch Reports"
-        description="Enterprise-level compliance review before DOT report consolidation."
-      />
+      <PageHeader title="Batch Reports" description="Enterprise-level compliance review before DOT report consolidation." />
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <MetricCard label="Registered Enterprises" value={reportEnterprises.length} foot="Required to submit" color="#065f46" icon={Building2} />
         <MetricCard label="Ready Reports" value={readyReports.length} foot="Available for consolidation" color="#10b981" icon={CheckCircle2} />
         <MetricCard label="Missing Submissions" value={missingReports.length} foot="Needs follow-up" color="#dc2626" footClassName="text-red-600" icon={FileText} />
-        <MetricCard label="Archived Reports" value={archivedReports.length} foot="Past submissions" color="#2563eb" icon={Archive} />
+        <MetricCard label="Archived Reports" value={nonPeriodReports.length} foot="Past submissions" color="#2563eb" icon={Archive} />
       </section>
 
       <Panel className="mt-6 overflow-hidden">
@@ -110,27 +148,52 @@ export function StaffBatchReportsPage() {
             />
           </div>
           <select
-            value={filter}
-            onChange={(event) => setFilter(event.target.value as ComplianceFilter)}
+            value={monthFilter}
+            onChange={(e) => setMonthFilter(e.target.value)}
             className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none"
           >
-            {["All", "Pending Review", "Ready to Consolidate", "Returned", "Missing", "Archived"].map((value) => (
-              <option key={value}>{value}</option>
+            <option value="All">All Months</option>
+            {availableMonths.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+          <select
+            value={yearFilter}
+            onChange={(e) => setYearFilter(e.target.value)}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none"
+          >
+            <option value="All">All Years</option>
+            {availableYears.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
             ))}
           </select>
           <button
             onClick={handleGenerate}
-            className="bg-tgreen-dark hover:bg-tgreen-light inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition"
+            disabled={!allReady}
+            title={!allReady ? "All enterprises must be Ready to Consolidate before generating." : "Generate Final Report"}
+            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition ${
+              allReady ? "bg-tgreen-dark hover:bg-tgreen-light cursor-pointer text-white" : "cursor-not-allowed bg-gray-200 text-gray-400"
+            }`}
           >
             <FileSignature size={15} /> Generate Final Report
           </button>
         </div>
 
+        {!allReady && filteredByPeriod.length > 0 && (
+          <div className="flex items-center gap-2 border-b border-amber-100 bg-amber-50 px-5 py-2.5 text-xs text-amber-700">
+            <span className="font-semibold">Not ready to generate —</span>
+            {readyReports.length} of {reportEnterprises.length} enterprises are marked Ready to Consolidate. All must be ready before a final report can be generated.
+          </div>
+        )}
+
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-50 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
               <tr>
-                <th className="px-6 py-4">Consolidate</th>
                 <th className="px-6 py-4">Enterprise</th>
                 <th className="px-6 py-4">Barangay</th>
                 <th className="px-6 py-4">Current Submission</th>
@@ -140,18 +203,8 @@ export function StaffBatchReportsPage() {
             </thead>
             <tbody className="divide-y divide-gray-100 text-gray-800">
               {enterpriseRows.map(({ enterprise, currentReport, archivedReports: enterpriseArchives, status }) => {
-                const canConsolidate = currentReport?.status === "Ready to Consolidate";
                 return (
                   <tr key={enterprise.id} onClick={() => setSelectedEnterprise(enterprise)} className="group hover:bg-tgreen-dark/5 cursor-pointer transition">
-                    <td className="px-6 py-4" onClick={(event) => event.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        disabled={!canConsolidate}
-                        checked={Boolean(currentReport && selectedReportIds.includes(currentReport.id))}
-                        onChange={() => currentReport && toggleReportSelection(currentReport.id)}
-                        className="text-tgreen-dark h-4 w-4 cursor-pointer rounded border-gray-300 disabled:cursor-not-allowed disabled:opacity-30"
-                      />
-                    </td>
                     <td className="px-6 py-4 font-semibold">
                       {enterprise.name}
                       <div className="mt-1 text-[10px] font-normal text-gray-500">{enterprise.category}</div>
@@ -206,8 +259,8 @@ function EnterpriseReportsModal({
   onClose: () => void;
   onOpenReport: (report: IntakeReport) => void;
 }) {
-  const currentReports = reports.filter((report) => report.month === "October");
-  const archivedReports = reports.filter((report) => report.month !== "October" || report.status === "Consolidated");
+  const activeReports = reports.filter((r) => r.status !== "Consolidated");
+  const archivedReports = reports.filter((r) => r.status === "Consolidated");
 
   return (
     <ModalPortal>
@@ -228,7 +281,7 @@ function EnterpriseReportsModal({
             <div>
               <h2 className="text-xl font-bold text-gray-900">{enterprise.name}</h2>
               <p className="mt-1 text-sm text-gray-500">
-                {enterprise.category} - {enterprise.barangay}
+                {enterprise.category} — {enterprise.barangay}
               </p>
             </div>
             <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-white hover:text-gray-900">
@@ -237,7 +290,7 @@ function EnterpriseReportsModal({
           </header>
 
           <div className="grow overflow-y-auto p-6">
-            <ReportSection title="Current Reporting Period" reports={currentReports} empty="No current report is available." onOpenReport={onOpenReport} />
+            <ReportSection title="Current Submissions" reports={activeReports} empty="No active reports found." onOpenReport={onOpenReport} />
             <ReportSection title="Archived Submissions" reports={archivedReports} empty="No archived submissions yet." onOpenReport={onOpenReport} />
           </div>
         </motion.section>
@@ -246,7 +299,17 @@ function EnterpriseReportsModal({
   );
 }
 
-function ReportSection({ title, reports, empty, onOpenReport }: { title: string; reports: IntakeReport[]; empty: string; onOpenReport: (report: IntakeReport) => void }) {
+function ReportSection({
+  title,
+  reports,
+  empty,
+  onOpenReport,
+}: {
+  title: string;
+  reports: IntakeReport[];
+  empty: string;
+  onOpenReport: (report: IntakeReport) => void;
+}) {
   return (
     <section className="mb-8">
       <h3 className="mb-3 text-xs font-bold tracking-widest text-gray-500 uppercase">{title}</h3>

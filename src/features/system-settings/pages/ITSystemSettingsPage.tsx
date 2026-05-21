@@ -37,7 +37,7 @@ const settingSections: SettingSection[] = [
     id: "security",
     title: "Account & Security Settings",
     icon: ShieldCheck,
-    modified: "May 18, 2026 by Mike Santos",
+    modified: "May 18, 2026 by Mike",
     fields: [
       { label: "Session Timeout", type: "select", value: "30 minutes", options: ["15 minutes", "30 minutes", "60 minutes"] },
       { label: "Password Reset Required", type: "toggle", value: true },
@@ -77,7 +77,7 @@ const settingSections: SettingSection[] = [
     id: "logs",
     title: "Log Settings",
     icon: FileText,
-    modified: "May 16, 2026 by Mike Santos",
+    modified: "May 16, 2026 by Mike",
     fields: [
       { label: "Log Retention Period", type: "select", value: "180 days", options: ["90 days", "180 days", "365 days"] },
       { label: "Export Format", type: "select", value: "CSV", options: ["CSV", "PDF"] },
@@ -90,7 +90,7 @@ const settingSections: SettingSection[] = [
     id: "notifications",
     title: "Notification Settings",
     icon: Bell,
-    modified: "May 15, 2026 by Mike Santos",
+    modified: "May 15, 2026 by Mike",
     fields: [
       { label: "Notify Camera Offline", type: "toggle", value: true },
       { label: "Notify Gateway Offline", type: "toggle", value: true },

@@ -11,14 +11,14 @@ const IT_DEMO_USER: AuthUser = {
 
 const ADMIN_DEMO_USER: AuthUser = {
   id: "admin_001",
-  displayName: "Ricardo",
+  displayName: "Jherico",
   role: "admin",
   title: "LGU Administrator",
 };
 
 const STAFF_DEMO_USER: AuthUser = {
   id: "staff_001",
-  displayName: "Juan",
+  displayName: "Marianne",
   role: "staff",
   title: "Tourism Staff",
 };

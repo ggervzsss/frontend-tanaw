@@ -99,12 +99,12 @@ export function ITLguAccountsPage() {
           </button>
         </div>
 
-        <div className="overflow-x-auto">
+        <div>
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-50 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
               <tr>
                 {["Name", "Email", "Role", "Status", "Last Login", "Actions"].map((heading) => (
-                  <th key={heading} className="px-6 py-4">
+                  <th key={heading} className="px-4 py-4">
                     {heading}
                   </th>
                 ))}
@@ -113,29 +113,29 @@ export function ITLguAccountsPage() {
             <tbody className="divide-y divide-gray-100 text-gray-800">
               {filteredAccounts.map((account) => (
                 <tr key={account.id} className="hover:bg-tgreen-dark/5 transition">
-                  <td className="px-6 py-4">
+                  <td className="whitespace-nowrap px-4 py-3">
                     <button type="button" onClick={() => setSelectedAccount(account)} className="flex items-center gap-3 text-left">
-                      <span className="bg-tgreen-dark/10 text-tgreen-dark flex h-10 w-10 items-center justify-center rounded-lg text-xs font-black">
+                      <span className="bg-tgreen-dark/10 text-tgreen-dark flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-black">
                         {account.firstName[0]}
                         {account.lastName[0]}
                       </span>
                       <span>
                         <span className="block font-bold text-gray-900">
-                          {account.firstName} {account.lastName}
+                          {account.firstName}{account.lastName ? ` ${account.lastName[0]}.` : ""}
                         </span>
                         <span className="font-mono text-[10px] text-gray-500">{account.id}</span>
                       </span>
                     </button>
                   </td>
-                  <td className="px-6 py-4 text-xs text-gray-600">{account.email}</td>
-                  <td className="px-6 py-4">
+                  <td className="whitespace-nowrap px-4 py-3 text-xs text-gray-600">{account.email}</td>
+                  <td className="whitespace-nowrap px-4 py-3">
                     <RoleBadge role={account.role} />
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="whitespace-nowrap px-4 py-3">
                     <AccountStatusBadge status={account.status} />
                   </td>
-                  <td className="px-6 py-4 text-xs text-gray-500">{account.lastLogin}</td>
-                  <td className="px-6 py-4">
+                  <td className="whitespace-nowrap px-4 py-3 text-xs text-gray-500">{account.lastLogin}</td>
+                  <td className="whitespace-nowrap px-4 py-3">
                     <div className="flex gap-2">
                       <IconAction label="View account details" onClick={() => setSelectedAccount(account)} icon={<Eye size={15} />} />
                       <IconAction label="Reset password" onClick={() => setActionState({ type: "reset", account })} icon={<KeyRound size={15} />} />
@@ -486,7 +486,7 @@ function RoleBadge({ role }: { role: LguAccountRoleLabel }) {
     "IT Personnel": "bg-emerald-50 text-emerald-700",
     "LGU Staff": "bg-slate-100 text-slate-700",
   };
-  return <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${classes[role]}`}>{role}</span>;
+  return <span className={`whitespace-nowrap rounded-full px-3 py-1 text-[10px] font-bold uppercase ${classes[role]}`}>{role}</span>;
 }
 
 function AccountStatusBadge({ status }: { status: LguAccountStatus }) {
@@ -494,5 +494,5 @@ function AccountStatusBadge({ status }: { status: LguAccountStatus }) {
     Active: "bg-emerald-50 text-emerald-700",
     Inactive: "bg-slate-100 text-slate-600",
   };
-  return <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${classes[status]}`}>{status}</span>;
+  return <span className={`whitespace-nowrap rounded-full px-3 py-1 text-[10px] font-bold uppercase ${classes[status]}`}>{status}</span>;
 }

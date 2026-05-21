@@ -5,26 +5,43 @@ import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
 import { PageMotion } from "../../../shared/components/ui";
 import { useReportStore } from "../../../app/store/reportStore";
-import type { FinalReport, FinalReportStatus } from "../../../shared/types";
+import type { FinalReport } from "../../../shared/types";
 import { FinalReportViewer, ReportStatusBadge } from "../components";
 
-type AuditFilter = "All" | FinalReportStatus;
+const MONTH_ORDER = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
 
 export function StaffFinalReportsAuditPage() {
   const finalReports = useReportStore((state) => state.finalReports);
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<AuditFilter>("All");
+  const [monthFilter, setMonthFilter] = useState("All");
+  const [yearFilter, setYearFilter] = useState("All");
   const [selectedReport, setSelectedReport] = useState<FinalReport | null>(null);
+
+  // Derive unique months and years from the live store data
+  const availableMonths = useMemo(() => {
+    const months = Array.from(new Set(finalReports.map((r) => r.period.split(" ")[0])));
+    return months.sort((a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b));
+  }, [finalReports]);
+
+  const availableYears = useMemo(() => {
+    const years = Array.from(new Set(finalReports.map((r) => r.period.split(" ")[1]).filter(Boolean)));
+    return years.sort((a, b) => Number(b) - Number(a));
+  }, [finalReports]);
 
   const filteredReports = useMemo(
     () =>
       finalReports.filter((report) => {
+        const [reportMonth, reportYear] = report.period.split(" ");
         const normalizedQuery = query.trim().toLowerCase();
-        const matchesQuery = !normalizedQuery || [report.id, report.title, report.period, report.preparedBy].some((value) => value.toLowerCase().includes(normalizedQuery));
-        const matchesFilter = filter === "All" || report.status === filter;
-        return matchesQuery && matchesFilter;
+        const matchesQuery = !normalizedQuery || [report.id, report.title, report.period, report.preparedBy].some((v) => v.toLowerCase().includes(normalizedQuery));
+        const matchesMonth = monthFilter === "All" || reportMonth === monthFilter;
+        const matchesYear = yearFilter === "All" || reportYear === yearFilter;
+        return matchesQuery && matchesMonth && matchesYear;
       }),
-    [filter, finalReports, query],
+    [finalReports, query, monthFilter, yearFilter],
   );
 
   return (
@@ -42,9 +59,24 @@ export function StaffFinalReportsAuditPage() {
               className="focus:ring-tgreen-dark w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-9 text-sm text-gray-900 transition outline-none focus:ring-1"
             />
           </div>
-          <select value={filter} onChange={(event) => setFilter(event.target.value as AuditFilter)} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none">
-            {["All", "Draft", "Finalized", "Archived"].map((value) => (
-              <option key={value}>{value}</option>
+          <select
+            value={monthFilter}
+            onChange={(e) => setMonthFilter(e.target.value)}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none"
+          >
+            <option value="All">All Months</option>
+            {availableMonths.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+          <select
+            value={yearFilter}
+            onChange={(e) => setYearFilter(e.target.value)}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none"
+          >
+            <option value="All">All Years</option>
+            {availableYears.map((y) => (
+              <option key={y} value={y}>{y}</option>
             ))}
           </select>
         </div>

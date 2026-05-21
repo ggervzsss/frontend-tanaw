@@ -1,5 +1,7 @@
-import { Download, Printer, X } from "lucide-react";
+import { Archive, ArchiveRestore, Download, Printer, X } from "lucide-react";
 import { motion } from "motion/react";
+import toast from "react-hot-toast";
+import { useReportStore } from "../../../app/store/reportStore";
 import { ModalPortal } from "../../../shared/components/ui";
 import { CITY_SEAL } from "../../../shared/constants/branding";
 import type { FinalReport } from "../../../shared/types";
@@ -11,6 +13,7 @@ type FinalReportViewerProps = {
 };
 
 export function FinalReportViewer({ report, onClose }: FinalReportViewerProps) {
+  const updateFinalReportStatus = useReportStore((state) => state.updateFinalReportStatus);
   const downloadReport = () => {
     const html = `<!doctype html><html><head><title>${report.id}</title></head><body><h1>${report.title}</h1><p>${report.period}</p><p>Total Unique: ${report.totalUnique.toLocaleString()}</p></body></html>`;
     const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
@@ -19,6 +22,18 @@ export function FinalReportViewer({ report, onClose }: FinalReportViewerProps) {
     anchor.download = `${report.id}.html`;
     anchor.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleArchive = () => {
+    updateFinalReportStatus(report.id, "Archived");
+    toast.success(`${report.id} has been moved to Archives.`);
+    onClose();
+  };
+
+  const handleUnarchive = () => {
+    updateFinalReportStatus(report.id, "Draft");
+    toast.success(`${report.id} has been restored to Drafts.`);
+    onClose();
   };
 
   return (
@@ -42,6 +57,15 @@ export function FinalReportViewer({ report, onClose }: FinalReportViewerProps) {
               <p className="text-xs text-gray-500">LGU official format with data lineage.</p>
             </div>
             <div className="flex gap-2">
+              {report.status === "Archived" ? (
+                <button onClick={handleUnarchive} className="bg-emerald-600 hover:bg-emerald-700 text-white inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition cursor-pointer">
+                  <ArchiveRestore size={15} /> Unarchive
+                </button>
+              ) : (
+                <button onClick={handleArchive} className="bg-amber-600 hover:bg-amber-700 text-white inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition cursor-pointer">
+                  <Archive size={15} /> Archive
+                </button>
+              )}
               <button onClick={downloadReport} className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold transition hover:bg-gray-100">
                 <Download size={15} /> Download
               </button>

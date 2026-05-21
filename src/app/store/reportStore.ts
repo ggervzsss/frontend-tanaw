@@ -1,12 +1,13 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { finalReports as initialFinalReports, intakeReports as initialReports, reportEnterprises } from "../../shared/data";
-import type { FinalReport, IntakeReport, ReportStatus } from "../../shared/types";
+import type { FinalReport, FinalReportStatus, IntakeReport, ReportStatus } from "../../shared/types";
 
 type ReportState = {
   reports: IntakeReport[];
   finalReports: FinalReport[];
   updateReportStatus: (reportId: string, status: ReportStatus, remarks?: string) => void;
+  updateFinalReportStatus: (reportId: string, status: FinalReportStatus) => void;
   generateFinalReport: (reportIds: string[], preparedBy: string) => FinalReport | null;
 };
 
@@ -18,6 +19,10 @@ export const useReportStore = create<ReportState>()(
       updateReportStatus: (reportId, status, remarks) =>
         set((state) => ({
           reports: state.reports.map((report) => (report.id === reportId ? { ...report, status, remarks: remarks ?? report.remarks } : report)),
+        })),
+      updateFinalReportStatus: (reportId, status) =>
+        set((state) => ({
+          finalReports: state.finalReports.map((report) => (report.id === reportId ? { ...report, status } : report)),
         })),
       generateFinalReport: (reportIds, preparedBy) => {
         const selectedReports = get().reports.filter((report) => reportIds.includes(report.id));

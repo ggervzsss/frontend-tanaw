@@ -12,6 +12,7 @@ import { FinalReportViewer, ReportStatusBadge } from "../components";
 type AuditFilter = "All" | FinalReportStatus;
 
 export function StaffFinalReportsAuditPage() {
+  const reports = useReportStore((state) => state.reports);
   const finalReports = useReportStore((state) => state.finalReports);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<AuditFilter>("All");
@@ -30,7 +31,28 @@ export function StaffFinalReportsAuditPage() {
 
   const draftCount = finalReports.filter((report) => report.status === "Draft").length;
   const archivedCount = finalReports.filter((report) => report.status === "Archived").length;
-  const totalUnique = finalReports.reduce((total, report) => total + report.totalUnique, 0);
+
+  const latestMonth = useMemo(() => {
+    const monthOrder = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    const calendarMonth = new Date().toLocaleString("en-US", { month: "long" });
+
+    // Prioritize calendar month if there are reports matching it
+    if (reports.some((r) => r.month.toLowerCase() === calendarMonth.toLowerCase())) {
+      return calendarMonth;
+    }
+
+    const existingMonths = Array.from(new Set(reports.map((r) => r.month)));
+    existingMonths.sort((a, b) => monthOrder.indexOf(b) - monthOrder.indexOf(a));
+    return existingMonths[0] || calendarMonth;
+  }, [reports]);
+
+  const totalUniqueForLatestMonth = useMemo(() => {
+    const latestMonthReports = reports.filter((r) => r.month.toLowerCase() === latestMonth.toLowerCase());
+    return latestMonthReports.reduce((sum, r) => sum + r.metrics.unique, 0);
+  }, [reports, latestMonth]);
 
   return (
     <PageMotion>
@@ -40,7 +62,14 @@ export function StaffFinalReportsAuditPage() {
         <MetricCard label="Final Artifacts" value={finalReports.length} foot="Generated reports" color="#065f46" icon={FileCheck2} />
         <MetricCard label="Draft Reports" value={draftCount} foot="Awaiting review" color="#2563eb" icon={Printer} />
         <MetricCard label="Archived Reports" value={archivedCount} foot="Historical submissions" color="#9ca3af" icon={Archive} />
-        <MetricCard label="Aggregated Unique Pax" value={totalUnique.toLocaleString()} foot="Across all artifacts" color="#f59e0b" icon={Download} />
+        <MetricCard
+          label="Aggregated Unique Pax"
+          value={totalUniqueForLatestMonth.toLocaleString()}
+          foot={`${latestMonth} Active Telemetry`}
+          footClassName="text-amber-600 font-semibold"
+          color="#f59e0b"
+          icon={Download}
+        />
       </section>
 
       <Panel className="mt-6 overflow-hidden">

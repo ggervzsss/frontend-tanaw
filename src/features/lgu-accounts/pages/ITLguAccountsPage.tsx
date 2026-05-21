@@ -26,7 +26,7 @@ export function ITLguAccountsPage() {
   const filteredAccounts = useMemo(
     () =>
       lguAccounts.filter((account) => {
-        const haystack = `${account.firstName} ${account.lastName} ${account.email} ${account.department}`.toLowerCase();
+        const haystack = `${account.firstName} ${account.lastName} ${account.email}`.toLowerCase();
         const matchesQuery = haystack.includes(query.trim().toLowerCase());
         const matchesRole = role === "All Roles" || account.role === role;
         const matchesStatus = account.status === status;
@@ -80,7 +80,7 @@ export function ITLguAccountsPage() {
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search name, email, or department"
+              placeholder="Search name or email"
               className="focus:ring-tgreen-dark w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-9 text-sm text-gray-900 transition outline-none focus:ring-1"
             />
           </div>
@@ -98,7 +98,7 @@ export function ITLguAccountsPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-50 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
               <tr>
-                {["Name", "Email", "Role", "Status", "Department", "Last Login", "Actions"].map((heading) => (
+                {["Name", "Email", "Role", "Status", "Last Login", "Actions"].map((heading) => (
                   <th key={heading} className="px-6 py-4">
                     {heading}
                   </th>
@@ -129,7 +129,6 @@ export function ITLguAccountsPage() {
                   <td className="px-6 py-4">
                     <AccountStatusBadge status={account.status} />
                   </td>
-                  <td className="px-6 py-4 text-xs">{account.department}</td>
                   <td className="px-6 py-4 text-xs text-gray-500">{account.lastLogin}</td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
@@ -170,7 +169,6 @@ function AccountDetailsModal({ account, onClose }: { account: LguAccount; onClos
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Detail label="Role" value={account.role} />
           <Detail label="Status" value={account.status} />
-          <Detail label="Department" value={account.department} />
           <Detail label="Contact Number" value={account.phone} />
           <Detail label="Last Login" value={account.lastLogin} />
           <Detail label="Created At" value={account.createdAt} />
@@ -189,7 +187,7 @@ function CreateAccountModal({ onClose }: { onClose: () => void }) {
   return (
     <ModalFrame title="Create LGU Account" onClose={onClose}>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {["First Name", "Last Name", "Email Address", "Contact Number", "Department / Office"].map((label) => (
+        {["First Name", "Last Name", "Email Address", "Contact Number"].map((label) => (
           <FormField key={label} label={label} />
         ))}
         <label className="block">

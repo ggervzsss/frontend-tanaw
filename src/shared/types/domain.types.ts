@@ -112,7 +112,6 @@ export type LguAccount = {
   email: string;
   role: LguAccountRoleLabel;
   status: LguAccountStatus;
-  department: string;
   phone: string;
   lastLogin: string;
   createdAt: string;

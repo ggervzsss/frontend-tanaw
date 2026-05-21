@@ -1,6 +1,4 @@
 import type {
-  AnalyticsPeriod,
-  AnalyticsPeriodData,
   AuditLog,
   CameraNode,
   Enterprise,
@@ -433,39 +431,6 @@ export const technicalLogs: TechnicalLog[] = [
     time: "1h ago",
   },
 ];
-
-export const analyticsPeriods: Record<AnalyticsPeriod, AnalyticsPeriodData> = {
-  "October 2023": {
-    entries: "184,205",
-    trend: "+12% vs last period",
-    unique: "92,100",
-    compliance: "45 / 50",
-    complianceRate: "90% Submission Rate",
-    utilization: "78%",
-    chartData: [
-      { name: "SPL Market", entries: 4520, unique: 3100 },
-      { name: "Plaza Mall", entries: 12500, unique: 8900 },
-      { name: "City Hall", entries: 1200, unique: 950 },
-      { name: "Town Center", entries: 800, unique: 750 },
-      { name: "Public Library", entries: 540, unique: 400 },
-    ],
-  },
-  "September 2023": {
-    entries: "164,468",
-    trend: "+5% vs last period",
-    unique: "82,230",
-    compliance: "48 / 50",
-    complianceRate: "96% Submission Rate",
-    utilization: "72%",
-    chartData: [
-      { name: "SPL Market", entries: 4100, unique: 2900 },
-      { name: "Plaza Mall", entries: 11200, unique: 8100 },
-      { name: "City Hall", entries: 1050, unique: 850 },
-      { name: "Town Center", entries: 450, unique: 400 },
-      { name: "Public Library", entries: 200, unique: 150 },
-    ],
-  },
-};
 
 const baseAuditLogs = [
   {

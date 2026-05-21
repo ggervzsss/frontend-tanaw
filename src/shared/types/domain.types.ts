@@ -78,22 +78,6 @@ export type PipelineHealth = {
   warnings: PipelineAlert[];
 };
 
-export type AnalyticsPeriod = "October 2023" | "September 2023";
-
-export type AnalyticsPeriodData = {
-  entries: string;
-  trend: string;
-  unique: string;
-  compliance: string;
-  complianceRate: string;
-  utilization: string;
-  chartData: {
-    name: string;
-    entries: number;
-    unique: number;
-  }[];
-};
-
 export type AuditLog = {
   id: number;
   time: string;

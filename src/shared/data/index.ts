@@ -1,5 +1,4 @@
 export {
-  analyticsPeriods,
   auditLogs,
   enterpriseCameras,
   enterpriseAccounts,

@@ -1,4 +1,4 @@
-import { Eye, KeyRound, Search, UserCheck, UserPlus, Users } from "lucide-react";
+import { Eye, KeyRound, Search, Shield, UserCheck, UserPlus, Users } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
@@ -11,15 +11,15 @@ import { lguAccounts } from "../../../shared/data";
 import type { LguAccount, LguAccountRoleLabel, LguAccountStatus } from "../../../shared/types";
 
 type RoleFilter = "All Roles" | LguAccountRoleLabel;
-type StatusFilter = "All Statuses" | LguAccountStatus;
+type StatusFilter = "Active" | "Inactive";
 
 const roleOptions: RoleFilter[] = ["All Roles", "Admin", "IT Personnel", "LGU Staff"];
-const statusOptions: StatusFilter[] = ["All Statuses", "Active", "Inactive", "Suspended"];
+const statusOptions: StatusFilter[] = ["Active", "Inactive"];
 
 export function ITLguAccountsPage() {
   const [query, setQuery] = useState("");
   const [role, setRole] = useState<RoleFilter>("All Roles");
-  const [status, setStatus] = useState<StatusFilter>("All Statuses");
+  const [status, setStatus] = useState<StatusFilter>("Active");
   const [selectedAccount, setSelectedAccount] = useState<LguAccount | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -29,21 +29,48 @@ export function ITLguAccountsPage() {
         const haystack = `${account.firstName} ${account.lastName} ${account.email} ${account.department}`.toLowerCase();
         const matchesQuery = haystack.includes(query.trim().toLowerCase());
         const matchesRole = role === "All Roles" || account.role === role;
-        const matchesStatus = status === "All Statuses" || account.status === status;
+        const matchesStatus = account.status === status;
         return matchesQuery && matchesRole && matchesStatus;
       }),
     [query, role, status],
   );
+
+  const isInactive = status === "Inactive";
+  const metricBase = filteredAccounts;
 
   return (
     <PageMotion>
       <PageHeader title="LGU Accounts" description="Manage internal personnel profiles, access roles, and account recovery operations." />
 
       <motion.section className="grid grid-cols-1 gap-4 md:grid-cols-4" variants={stagger}>
-        <MetricCard label="Total Accounts" value={lguAccounts.length} foot="Internal users" color="#2563eb" icon={Users} />
-        <MetricCard label="Active Accounts" value={lguAccounts.filter((account) => account.status === "Active").length} foot="Allowed access" color="#065f46" icon={UserCheck} />
-        <MetricCard label="IT Personnel" value={lguAccounts.filter((account) => account.role === "IT Personnel").length} foot="Technical operators" color="#10b981" icon={KeyRound} />
-        <MetricCard label="Suspended" value={lguAccounts.filter((account) => account.status === "Suspended").length} foot="Needs review" color="#dc2626" footClassName="text-red-600" icon={Eye} />
+        <MetricCard
+          label={isInactive ? "Total Inactive Accounts" : "Active Accounts"}
+          value={metricBase.length}
+          foot={isInactive ? "Deactivated users" : "Allowed access"}
+          color={isInactive ? "#64748b" : "#065f46"}
+          icon={isInactive ? Users : UserCheck}
+        />
+        <MetricCard
+          label="Admin Accounts"
+          value={metricBase.filter((a) => a.role === "Admin").length}
+          foot="System administrators"
+          color="#2563eb"
+          icon={Shield}
+        />
+        <MetricCard
+          label="IT Accounts"
+          value={metricBase.filter((a) => a.role === "IT Personnel").length}
+          foot="Technical operators"
+          color="#10b981"
+          icon={KeyRound}
+        />
+        <MetricCard
+          label="Staff Accounts"
+          value={metricBase.filter((a) => a.role === "LGU Staff").length}
+          foot="LGU staff members"
+          color="#7c3aed"
+          icon={Users}
+        />
       </motion.section>
 
       <Panel className="mt-6 overflow-hidden">
@@ -178,7 +205,6 @@ function CreateAccountModal({ onClose }: { onClose: () => void }) {
           <select className="focus:ring-tgreen-dark w-full rounded-lg border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-1">
             <option>Active</option>
             <option>Inactive</option>
-            <option>Suspended</option>
           </select>
         </label>
         <label className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm font-semibold text-gray-700 md:col-span-2">
@@ -272,7 +298,6 @@ function AccountStatusBadge({ status }: { status: LguAccountStatus }) {
   const classes: Record<LguAccountStatus, string> = {
     Active: "bg-emerald-50 text-emerald-700",
     Inactive: "bg-slate-100 text-slate-600",
-    Suspended: "bg-red-50 text-red-700",
   };
   return <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${classes[status]}`}>{status}</span>;
 }

@@ -225,7 +225,7 @@ export const lguAccounts: LguAccount[] = [
     lastName: "Delicano",
     email: "kenneth.support@tanaw.gov.ph",
     role: "IT Personnel",
-    status: "Suspended",
+    status: "Inactive",
     department: "Field Support",
     phone: "+63 917 500 9900",
     lastLogin: "May 07, 2026 11:17 AM",

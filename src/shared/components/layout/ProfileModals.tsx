@@ -82,9 +82,7 @@ function ModalShell({ title, children, onClose }: ModalProps & { title: string; 
               <X size={18} />
             </button>
           </div>
-          <div className="grow overflow-y-auto pr-1 -mr-1">
-            {children}
-          </div>
+          <div className="-mr-1 grow overflow-y-auto pr-1">{children}</div>
         </motion.div>
       </motion.div>
     </ModalPortal>

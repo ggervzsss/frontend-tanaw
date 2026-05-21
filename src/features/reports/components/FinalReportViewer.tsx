@@ -64,17 +64,26 @@ export function FinalReportViewer({ report, onClose }: FinalReportViewerProps) {
             </div>
             <div className="flex gap-2">
               {report.status === "Archived" ? (
-                <button onClick={handleUnarchive} className="bg-emerald-600 hover:bg-emerald-700 text-white inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition cursor-pointer">
+                <button
+                  onClick={handleUnarchive}
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                >
                   <ArchiveRestore size={15} /> Unarchive
                 </button>
               ) : (
                 <>
                   {report.status === "Draft" && (
-                    <button onClick={handleFinalize} className="bg-teal-600 hover:bg-teal-700 text-white inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition cursor-pointer">
+                    <button
+                      onClick={handleFinalize}
+                      className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
+                    >
                       <CheckCircle size={15} /> Mark as Finalized
                     </button>
                   )}
-                  <button onClick={handleArchive} className="bg-amber-600 hover:bg-amber-700 text-white inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition cursor-pointer">
+                  <button
+                    onClick={handleArchive}
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-700"
+                  >
                     <Archive size={15} /> Archive
                   </button>
                 </>

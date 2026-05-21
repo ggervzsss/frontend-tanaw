@@ -12,10 +12,7 @@ import { reportEnterprises } from "../../../shared/data";
 import type { IntakeReport, ReportEnterprise } from "../../../shared/types";
 import { ReportReviewModal, ReportStatusBadge } from "../components";
 
-const MONTH_ORDER = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+const MONTH_ORDER = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 type SubmissionPeriod = {
   month: string;
@@ -77,7 +74,6 @@ export function StaffBatchReportsPage() {
   const [yearFilter, setYearFilter] = useState(defaultPeriod.year);
   const [selectedEnterprise, setSelectedEnterprise] = useState<ReportEnterprise | null>(null);
   const [selectedReport, setSelectedReport] = useState<IntakeReport | null>(null);
-
 
   // Derive unique months and years dynamically from live intake report data
   const availableMonths = useMemo(() => {
@@ -143,21 +139,17 @@ export function StaffBatchReportsPage() {
         })
         .filter((row) => {
           const normalizedQuery = query.trim().toLowerCase();
-          return (
-            !normalizedQuery ||
-            [row.enterprise.name, row.enterprise.category, row.enterprise.barangay, row.currentReport?.id ?? ""].some((v) =>
-              v.toLowerCase().includes(normalizedQuery),
-            )
-          );
+          return !normalizedQuery || [row.enterprise.name, row.enterprise.category, row.enterprise.barangay, row.currentReport?.id ?? ""].some((v) => v.toLowerCase().includes(normalizedQuery));
         }),
     [filteredByPeriod, nonPeriodReports, query],
   );
 
-
-
   const handleGenerate = () => {
     if (!allReady) return;
-    const finalReport = generateFinalReport(readyReports.map((r) => r.id), authUser?.displayName ?? "Staff User");
+    const finalReport = generateFinalReport(
+      readyReports.map((r) => r.id),
+      authUser?.displayName ?? "Staff User",
+    );
     if (!finalReport) {
       toast.error("No ready reports available for consolidation.");
       return;
@@ -199,22 +191,14 @@ export function StaffBatchReportsPage() {
               className="focus:ring-tgreen-dark w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-9 text-sm text-gray-900 transition outline-none focus:ring-1"
             />
           </div>
-          <select
-            value={monthFilter}
-            onChange={(e) => setMonthFilter(e.target.value)}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none"
-          >
+          <select value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none">
             {availableMonths.map((m) => (
               <option key={m} value={m}>
                 {m}
               </option>
             ))}
           </select>
-          <select
-            value={yearFilter}
-            onChange={(e) => setYearFilter(e.target.value)}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none"
-          >
+          <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none">
             {availableYears.map((y) => (
               <option key={y} value={y}>
                 {y}
@@ -292,14 +276,7 @@ export function StaffBatchReportsPage() {
             onOpenReport={setSelectedReport}
           />
         )}
-        {selectedReport && (
-          <ReportReviewModal
-            report={selectedReport}
-            onClose={() => setSelectedReport(null)}
-            onAccept={handleAccept}
-            onReturn={handleReturn}
-          />
-        )}
+        {selectedReport && <ReportReviewModal report={selectedReport} onClose={() => setSelectedReport(null)} onAccept={handleAccept} onReturn={handleReturn} />}
       </AnimatePresence>
     </PageMotion>
   );
@@ -330,12 +307,7 @@ function EnterpriseReportsModal({
 
   return (
     <ModalPortal>
-      <motion.div
-        className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
+      <motion.div className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
         <motion.section
           className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl"
           initial={{ opacity: 0, y: 12, scale: 0.98 }}
@@ -356,9 +328,7 @@ function EnterpriseReportsModal({
                   onClick={handleNotify}
                   disabled={notified}
                   className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                    notified
-                      ? "cursor-default bg-gray-100 text-gray-400"
-                      : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
+                    notified ? "cursor-default bg-gray-100 text-gray-400" : "border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
                   }`}
                 >
                   <Bell size={14} />
@@ -381,17 +351,7 @@ function EnterpriseReportsModal({
   );
 }
 
-function ReportSection({
-  title,
-  reports,
-  empty,
-  onOpenReport,
-}: {
-  title: string;
-  reports: IntakeReport[];
-  empty: string;
-  onOpenReport: (report: IntakeReport) => void;
-}) {
+function ReportSection({ title, reports, empty, onOpenReport }: { title: string; reports: IntakeReport[]; empty: string; onOpenReport: (report: IntakeReport) => void }) {
   return (
     <section className="mb-8">
       <h3 className="mb-3 text-xs font-bold tracking-widest text-gray-500 uppercase">{title}</h3>

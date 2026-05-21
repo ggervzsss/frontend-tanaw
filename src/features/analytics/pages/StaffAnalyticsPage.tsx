@@ -8,10 +8,7 @@ import { PageHeader } from "../../../shared/components/layout";
 import { PageMotion, stagger } from "../../../shared/components/ui";
 import type { IntakeReport } from "../../../shared/types";
 
-const MONTH_ORDER = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+const MONTH_ORDER = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 type AnalyticsPeriod = {
   key: string;
@@ -93,25 +90,36 @@ export function StaffAnalyticsPage() {
 
   return (
     <PageMotion>
-      <PageHeader
-        title="Comparative Analytics & Anomalies"
-        description="Compare enterprise performance to identify discrepancies before consolidation."
-      />
+      <PageHeader title="Comparative Analytics & Anomalies" description="Compare enterprise performance to identify discrepancies before consolidation." />
 
       <motion.section className="grid grid-cols-1 gap-4 md:grid-cols-4" variants={stagger}>
-        <MetricCard color="#065f46" label="Total Aggregated Entries" value={sumMetric(activeReports, "entry")} foot={getTrendLabel(activeReports, comparisonPeriod)} footClassName="text-tgreen-light" icon={Activity} />
+        <MetricCard
+          color="#065f46"
+          label="Total Aggregated Entries"
+          value={sumMetric(activeReports, "entry")}
+          foot={getTrendLabel(activeReports, comparisonPeriod)}
+          footClassName="text-tgreen-light"
+          icon={Activity}
+        />
         <MetricCard color="#2563eb" label="Est. Unique People" value={sumMetric(activeReports, "unique")} foot="From reporting submissions" icon={Users} />
-        <MetricCard color="#f59e0b" label="Reports Compliance" value={`${submittedReports.length} / ${totalReports}`} foot={`${submissionRate}% Submission Rate`} footClassName="text-yellow-600" icon={ClipboardCheck} />
+        <MetricCard
+          color="#f59e0b"
+          label="Reports Compliance"
+          value={`${submittedReports.length} / ${totalReports}`}
+          foot={`${submissionRate}% Submission Rate`}
+          footClassName="text-yellow-600"
+          icon={ClipboardCheck}
+        />
         <div className="flex flex-col justify-between rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Reporting Period</span>
-            <p className="mt-1 text-[11px] text-gray-500 leading-snug">Filter comparative data and telemetry logs by calendar month.</p>
+            <span className="text-xs font-semibold tracking-wider text-gray-500 uppercase">Reporting Period</span>
+            <p className="mt-1 text-[11px] leading-snug text-gray-500">Filter comparative data and telemetry logs by calendar month.</p>
           </div>
           <div className="mt-4">
             <select
               value={activePeriod?.key ?? ""}
               onChange={(event) => setSelectedPeriodKey(event.target.value)}
-              className="w-full cursor-pointer rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition outline-none hover:border-gray-400 focus:ring-1 focus:ring-tgreen-dark focus:border-tgreen-dark"
+              className="focus:ring-tgreen-dark focus:border-tgreen-dark w-full cursor-pointer rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition outline-none hover:border-gray-400 focus:ring-1"
             >
               {periods.map((period) => (
                 <option key={period.key} value={period.key}>
@@ -150,15 +158,15 @@ export function StaffAnalyticsPage() {
           </div>
         </section>
 
-        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col">
+        <section className="flex flex-col rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-900">Submission Log</h3>
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
             </span>
           </div>
-          <div className="space-y-4 overflow-y-auto max-h-75 pr-1">
+          <div className="max-h-75 space-y-4 overflow-y-auto pr-1">
             {submissionLog.map((report) => (
               <SubmissionLogItem key={report.id} enterprise={report.enterprise} timestamp={report.submitted} />
             ))}
@@ -178,12 +186,12 @@ function SubmissionLogItem({ enterprise, timestamp }: { enterprise: string; time
   return (
     <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-3.5 transition hover:shadow-sm">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-bold tracking-wide uppercase text-emerald-800">{enterprise}</span>
-        <span className="text-[10px] text-gray-500 font-mono flex items-center gap-1">
+        <span className="text-xs font-bold tracking-wide text-emerald-800 uppercase">{enterprise}</span>
+        <span className="flex items-center gap-1 font-mono text-[10px] text-gray-500">
           <Clock size={10} /> {timestamp}
         </span>
       </div>
-      <p className="mt-1 text-xs text-emerald-700 leading-normal">Submitted monthly report.</p>
+      <p className="mt-1 text-xs leading-normal text-emerald-700">Submitted monthly report.</p>
     </div>
   );
 }

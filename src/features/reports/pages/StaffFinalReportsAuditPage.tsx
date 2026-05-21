@@ -8,10 +8,7 @@ import { useReportStore } from "../../../app/store/reportStore";
 import type { FinalReport } from "../../../shared/types";
 import { FinalReportViewer, ReportStatusBadge } from "../components";
 
-const MONTH_ORDER = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+const MONTH_ORDER = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export function StaffFinalReportsAuditPage() {
   const finalReports = useReportStore((state) => state.finalReports);
@@ -59,24 +56,20 @@ export function StaffFinalReportsAuditPage() {
               className="focus:ring-tgreen-dark w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-9 text-sm text-gray-900 transition outline-none focus:ring-1"
             />
           </div>
-          <select
-            value={monthFilter}
-            onChange={(e) => setMonthFilter(e.target.value)}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none"
-          >
+          <select value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none">
             <option value="All">All Months</option>
             {availableMonths.map((m) => (
-              <option key={m} value={m}>{m}</option>
+              <option key={m} value={m}>
+                {m}
+              </option>
             ))}
           </select>
-          <select
-            value={yearFilter}
-            onChange={(e) => setYearFilter(e.target.value)}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none"
-          >
+          <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none">
             <option value="All">All Years</option>
             {availableYears.map((y) => (
-              <option key={y} value={y}>{y}</option>
+              <option key={y} value={y}>
+                {y}
+              </option>
             ))}
           </select>
         </div>

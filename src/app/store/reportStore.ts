@@ -12,10 +12,7 @@ type ReportState = {
   syncCurrentSubmissionPeriod: () => void;
 };
 
-const REPORT_MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+const REPORT_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 type SubmissionPeriod = {
   month: string;

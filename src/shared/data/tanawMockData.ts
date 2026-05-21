@@ -1,17 +1,4 @@
-import type {
-  AuditLog,
-  CameraNode,
-  Enterprise,
-  EnterpriseAccount,
-  FinalReport,
-  IntakeReport,
-  LguAccount,
-  MapEnterprise,
-  PipelineHealth,
-  ReportEnterprise,
-  SystemAlert,
-  TechnicalLog,
-} from "../types";
+import type { AuditLog, CameraNode, Enterprise, EnterpriseAccount, FinalReport, IntakeReport, LguAccount, MapEnterprise, PipelineHealth, ReportEnterprise, SystemAlert, TechnicalLog } from "../types";
 
 export const mapEnterprises: MapEnterprise[] = [
   {
@@ -575,10 +562,7 @@ export const reportEnterprises: ReportEnterprise[] = [
   { id: "ENT-005", name: "SPL Public Library", category: "Government", barangay: "Poblacion", complianceOwner: "J. Reyes" },
 ];
 
-const REPORT_MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+const REPORT_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 type ReportTimelinePeriod = {
   month: string;

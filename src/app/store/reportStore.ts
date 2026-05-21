@@ -79,7 +79,7 @@ export const useReportStore = create<ReportState>()(
     }),
     {
       name: "tanaw-report-workflow",
-      version: 1,
+      version: 2,
       migrate: () => ({
         reports: includeCurrentSubmissionPeriod(initialReports),
         finalReports: initialFinalReports,

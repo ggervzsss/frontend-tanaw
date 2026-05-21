@@ -116,9 +116,9 @@ export function AdminAlertsMonitorPage() {
           <Panel className="flex min-h-0 flex-col overflow-hidden border-slate-200/80 bg-linear-to-br from-white via-red-50/30 to-red-100/50 shadow-xl ring-1 shadow-slate-900/5">
             <PanelHeader title="Critical Top Thresholds" icon={Activity} />
             <div className="admin-scrollbar flex flex-col gap-4 overflow-y-auto p-4">
-              <TechnicalGauge label="San Pedro Town Center" value={470} max={500} unit="PAX" status="Critical" />
-              <TechnicalGauge label="Lakeside Park" value={176} max={200} unit="PAX" status="Warning" />
-              <TechnicalGauge label="Plaza Pacita Hub" value={280} max={400} unit="PAX" status="Info" />
+              <TechnicalGauge label="San Pedro Apostol Parish Church" value={470} max={500} unit="PAX" status="Critical" />
+              <TechnicalGauge label="Lolo Uweng Shrine" value={176} max={200} unit="PAX" status="Warning" />
+              <TechnicalGauge label="Balaon ni Lolo Uweng" value={280} max={400} unit="PAX" status="Info" />
             </div>
           </Panel>
 

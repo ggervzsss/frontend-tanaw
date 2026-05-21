@@ -70,19 +70,21 @@ function ModalShell({ title, children, onClose }: ModalProps & { title: string; 
     <ModalPortal>
       <motion.div className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
         <motion.div
-          className="w-full max-w-xl rounded-2xl border border-white/70 bg-white p-6 shadow-2xl"
+          className="flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-white/70 bg-white p-6 shadow-2xl"
           initial={{ opacity: 0, y: 12, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 12, scale: 0.98 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
         >
-          <div className="mb-5 flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div className="mb-5 flex shrink-0 items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <h2 className="text-tanaw-navy text-lg font-bold">{title}</h2>
             <button type="button" onClick={onClose} aria-label="Close modal" className="rounded-full p-2 text-slate-400 transition hover:bg-slate-50 hover:text-slate-700">
               <X size={18} />
             </button>
           </div>
-          {children}
+          <div className="grow overflow-y-auto pr-1 -mr-1">
+            {children}
+          </div>
         </motion.div>
       </motion.div>
     </ModalPortal>

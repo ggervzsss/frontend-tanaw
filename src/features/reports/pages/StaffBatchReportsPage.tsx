@@ -1,5 +1,5 @@
 import { Archive, Building2, CheckCircle2, FileSignature, FileText, Search } from "lucide-react";
-import { AnimatePresence } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../../app/store/authStore";
@@ -172,21 +172,29 @@ export function StaffBatchReportsPage() {
         </div>
       </Panel>
 
-      {selectedEnterprise && (
-        <EnterpriseReportsDrawer
-          enterprise={selectedEnterprise}
-          reports={reports.filter((report) => report.enterpriseId === selectedEnterprise.id)}
-          onClose={() => setSelectedEnterprise(null)}
-          onOpenReport={setSelectedReport}
-        />
-      )}
-
-      <AnimatePresence>{selectedReport && <ReportReviewModal report={selectedReport} onClose={() => setSelectedReport(null)} onAccept={handleAccept} onReturn={handleReturn} />}</AnimatePresence>
+      <AnimatePresence>
+        {selectedEnterprise && (
+          <EnterpriseReportsModal
+            enterprise={selectedEnterprise}
+            reports={reports.filter((report) => report.enterpriseId === selectedEnterprise.id)}
+            onClose={() => setSelectedEnterprise(null)}
+            onOpenReport={setSelectedReport}
+          />
+        )}
+        {selectedReport && (
+          <ReportReviewModal
+            report={selectedReport}
+            onClose={() => setSelectedReport(null)}
+            onAccept={handleAccept}
+            onReturn={handleReturn}
+          />
+        )}
+      </AnimatePresence>
     </PageMotion>
   );
 }
 
-function EnterpriseReportsDrawer({
+function EnterpriseReportsModal({
   enterprise,
   reports,
   onClose,
@@ -202,28 +210,37 @@ function EnterpriseReportsDrawer({
 
   return (
     <ModalPortal>
-      <div className="bg-charcoal-950/50 fixed inset-0 z-40 backdrop-blur-sm" onClick={onClose}>
-        <aside className="ml-auto flex h-full w-full max-w-3xl flex-col bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
-          <header className="border-b border-gray-200 bg-gray-50 p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">{enterprise.name}</h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  {enterprise.category} - {enterprise.barangay}
-                </p>
-              </div>
-              <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-white hover:text-gray-900">
-                Close
-              </button>
+      <motion.div
+        className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.section
+          className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl"
+          initial={{ opacity: 0, y: 12, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 12, scale: 0.98 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+        >
+          <header className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-5">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">{enterprise.name}</h2>
+              <p className="mt-1 text-sm text-gray-500">
+                {enterprise.category} - {enterprise.barangay}
+              </p>
             </div>
+            <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-white hover:text-gray-900">
+              Close
+            </button>
           </header>
 
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="grow overflow-y-auto p-6">
             <ReportSection title="Current Reporting Period" reports={currentReports} empty="No current report is available." onOpenReport={onOpenReport} />
             <ReportSection title="Archived Submissions" reports={archivedReports} empty="No archived submissions yet." onOpenReport={onOpenReport} />
           </div>
-        </aside>
-      </div>
+        </motion.section>
+      </motion.div>
     </ModalPortal>
   );
 }

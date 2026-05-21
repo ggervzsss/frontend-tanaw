@@ -156,13 +156,13 @@ function TechnicalLogModal({ log, onClose }: { log: TechnicalLog; onClose: () =>
     <ModalPortal>
       <motion.div className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
         <motion.section
-          className="w-full max-w-3xl overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl"
+          className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl"
           initial={{ opacity: 0, y: 12, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 12, scale: 0.98 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
         >
-          <header className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
+          <header className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
             <div>
               <p className="font-mono text-[10px] font-bold text-gray-400">{log.id}</p>
               <h2 className="text-lg font-bold text-gray-900">Technical Log Detail</h2>
@@ -171,15 +171,17 @@ function TechnicalLogModal({ log, onClose }: { log: TechnicalLog; onClose: () =>
               Close
             </button>
           </header>
-          <div className="grid gap-4 p-6 md:grid-cols-2">
-            <Detail label="Severity" value={log.severity} />
-            <Detail label="Event Type" value={log.eventType} />
-            <Detail label="Time" value={log.time} />
-            <Detail label="Performed By" value={log.performedBy} />
-            <Detail label="Enterprise" value={log.enterprise ?? "Not applicable"} />
-            <Detail label="Device" value={log.device ?? "Not applicable"} />
-            <div className="md:col-span-2">
-              <Detail label="Technical Description" value={log.desc} />
+          <div className="grow overflow-y-auto p-6">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Detail label="Severity" value={log.severity} />
+              <Detail label="Event Type" value={log.eventType} />
+              <Detail label="Time" value={log.time} />
+              <Detail label="Performed By" value={log.performedBy} />
+              <Detail label="Enterprise" value={log.enterprise ?? "Not applicable"} />
+              <Detail label="Device" value={log.device ?? "Not applicable"} />
+              <div className="md:col-span-2">
+                <Detail label="Technical Description" value={log.desc} />
+              </div>
             </div>
           </div>
         </motion.section>

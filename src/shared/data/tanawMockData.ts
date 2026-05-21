@@ -82,7 +82,7 @@ const monitoredEstablishments = [
     account: {
       id: "EA-003",
       enterpriseName: "Balaon ni Lolo Uweng",
-      category: "Cultural Dining",
+      category: "Faith Tourism",
       managerName: "M. Garcia",
       email: "balaon@lolouweng.example",
       contactNumber: "+63 49 555 0103",

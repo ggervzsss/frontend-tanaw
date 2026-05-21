@@ -89,11 +89,6 @@ export function StaffBatchReportsPage() {
       <PageHeader
         title="Batch Reports"
         description="Enterprise-level compliance review before DOT report consolidation."
-        action={
-          <button onClick={handleGenerate} className="bg-tgreen-dark hover:bg-tgreen-light inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-md transition">
-            <FileSignature size={16} /> Generate Final Report
-          </button>
-        }
       />
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -123,6 +118,12 @@ export function StaffBatchReportsPage() {
               <option key={value}>{value}</option>
             ))}
           </select>
+          <button
+            onClick={handleGenerate}
+            className="bg-tgreen-dark hover:bg-tgreen-light inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition"
+          >
+            <FileSignature size={15} /> Generate Final Report
+          </button>
         </div>
 
         <div className="overflow-x-auto">

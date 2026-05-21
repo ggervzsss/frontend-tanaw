@@ -9,6 +9,7 @@ type ReportState = {
   updateReportStatus: (reportId: string, status: ReportStatus, remarks?: string) => void;
   updateFinalReportStatus: (reportId: string, status: FinalReportStatus) => void;
   generateFinalReport: (reportIds: string[], preparedBy: string) => FinalReport | null;
+  openNewSubmissionPeriod: (month: string, year: string) => boolean;
 };
 
 export const useReportStore = create<ReportState>()(
@@ -59,6 +60,38 @@ export const useReportStore = create<ReportState>()(
         }));
 
         return finalReport;
+      },
+      openNewSubmissionPeriod: (month, year) => {
+        // Guard: check if reports already exist for this month/year
+        const existing = get().reports.some((r) => {
+          const yearMatch = r.period.match(/\d{4}/);
+          return r.month === month && yearMatch?.[0] === year;
+        });
+        if (existing) return false;
+
+        const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
+        const lastDay = new Date(Number(year), monthIndex + 1, 0).getDate();
+        const shortMonth = month.slice(0, 3);
+        const period = `${shortMonth} 1 - ${shortMonth} ${lastDay}, ${year}`;
+        const timestamp = Date.now().toString().slice(-4);
+
+        const newReports: IntakeReport[] = reportEnterprises.map((ent, idx) => ({
+          id: `REP-${timestamp}${idx}`,
+          enterpriseId: ent.id,
+          enterprise: ent.name,
+          category: ent.category,
+          barangay: ent.barangay,
+          month,
+          period,
+          submitted: "Not submitted",
+          status: "Missing" as const,
+          code: `AT-${String(idx + 1).padStart(3, "0")}`,
+          remarks: "Pending enterprise submission.",
+          metrics: { entry: 0, exit: 0, unique: 0, peak: "N/A" },
+        }));
+
+        set((state) => ({ reports: [...state.reports, ...newReports] }));
+        return true;
       },
     }),
     {

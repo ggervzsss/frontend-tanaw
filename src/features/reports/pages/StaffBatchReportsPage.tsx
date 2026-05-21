@@ -1,4 +1,4 @@
-import { Archive, Building2, CheckCircle2, FileSignature, FileText, Search } from "lucide-react";
+import { Archive, Bell, Building2, CheckCircle2, FileSignature, FileText, FolderPlus, Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
@@ -22,11 +22,13 @@ export function StaffBatchReportsPage() {
   const reports = useReportStore((state) => state.reports);
   const updateReportStatus = useReportStore((state) => state.updateReportStatus);
   const generateFinalReport = useReportStore((state) => state.generateFinalReport);
+  const openNewSubmissionPeriod = useReportStore((state) => state.openNewSubmissionPeriod);
   const [query, setQuery] = useState("");
   const [monthFilter, setMonthFilter] = useState("All");
   const [yearFilter, setYearFilter] = useState("All");
   const [selectedEnterprise, setSelectedEnterprise] = useState<ReportEnterprise | null>(null);
   const [selectedReport, setSelectedReport] = useState<IntakeReport | null>(null);
+  const [showCycleModal, setShowCycleModal] = useState(false);
 
 
   // Derive unique months and years dynamically from live intake report data
@@ -74,6 +76,14 @@ export function StaffBatchReportsPage() {
     reportEnterprises.every((ent) => {
       const report = filteredByPeriod.find((r) => r.enterpriseId === ent.id);
       return report?.status === "Ready to Consolidate";
+    });
+
+  // All consolidated — cycle is complete
+  const allConsolidated =
+    filteredByPeriod.length > 0 &&
+    reportEnterprises.every((ent) => {
+      const report = filteredByPeriod.find((r) => r.enterpriseId === ent.id);
+      return report?.status === "Consolidated";
     });
 
   const enterpriseRows = useMemo(
@@ -171,24 +181,38 @@ export function StaffBatchReportsPage() {
               </option>
             ))}
           </select>
-          <button
-            onClick={handleGenerate}
-            disabled={!allReady}
-            title={!allReady ? "All enterprises must be Ready to Consolidate before generating." : "Generate Final Report"}
-            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition ${
-              allReady ? "bg-tgreen-dark hover:bg-tgreen-light cursor-pointer text-white" : "cursor-not-allowed bg-gray-200 text-gray-400"
-            }`}
-          >
-            <FileSignature size={15} /> Generate Final Report
-          </button>
+          {allConsolidated ? (
+            <button
+              onClick={() => setShowCycleModal(true)}
+              className="bg-indigo-600 hover:bg-indigo-700 inline-flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition"
+            >
+              <FolderPlus size={15} /> Open New Submission Period
+            </button>
+          ) : (
+            <button
+              onClick={handleGenerate}
+              disabled={!allReady}
+              title={!allReady ? "All enterprises must be Ready to Consolidate before generating." : "Generate Final Report"}
+              className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition ${
+                allReady ? "bg-tgreen-dark hover:bg-tgreen-light cursor-pointer text-white" : "cursor-not-allowed bg-gray-200 text-gray-400"
+              }`}
+            >
+              <FileSignature size={15} /> Generate Final Report
+            </button>
+          )}
         </div>
 
-        {!allReady && filteredByPeriod.length > 0 && (
+        {allConsolidated ? (
+          <div className="flex items-center gap-2 border-b border-emerald-100 bg-emerald-50 px-5 py-2.5 text-xs text-emerald-700">
+            <CheckCircle2 size={14} className="shrink-0" />
+            <span><span className="font-semibold">Reporting cycle complete —</span> All reports have been consolidated and the final report has been generated. You may now open a new submission period.</span>
+          </div>
+        ) : !allReady && filteredByPeriod.length > 0 ? (
           <div className="flex items-center gap-2 border-b border-amber-100 bg-amber-50 px-5 py-2.5 text-xs text-amber-700">
             <span className="font-semibold">Not ready to generate —</span>
             {readyReports.length} of {reportEnterprises.length} enterprises are marked Ready to Consolidate. All must be ready before a final report can be generated.
           </div>
-        )}
+        ) : null}
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -243,6 +267,23 @@ export function StaffBatchReportsPage() {
             onReturn={handleReturn}
           />
         )}
+        {showCycleModal && (
+          <NewCycleModal
+            currentMonth={monthFilter !== "All" ? monthFilter : undefined}
+            onConfirm={(month, year) => {
+              const success = openNewSubmissionPeriod(month, year);
+              if (!success) {
+                toast.error(`A submission period for ${month} ${year} already exists.`);
+                return;
+              }
+              setShowCycleModal(false);
+              setMonthFilter(month);
+              setYearFilter(year);
+              toast.success(`New submission period opened for ${month} ${year}.`);
+            }}
+            onClose={() => setShowCycleModal(false)}
+          />
+        )}
       </AnimatePresence>
     </PageMotion>
   );
@@ -259,8 +300,17 @@ function EnterpriseReportsModal({
   onClose: () => void;
   onOpenReport: (report: IntakeReport) => void;
 }) {
+  const [notified, setNotified] = useState(false);
   const activeReports = reports.filter((r) => r.status !== "Consolidated");
   const archivedReports = reports.filter((r) => r.status === "Consolidated");
+
+  // Notify is relevant when enterprise has no ready report yet
+  const needsNotification = !activeReports.some((r) => r.status === "Ready to Consolidate");
+
+  const handleNotify = () => {
+    setNotified(true);
+    toast.success(`${enterprise.name} has been notified to submit their compliance report.`);
+  };
 
   return (
     <ModalPortal>
@@ -284,9 +334,25 @@ function EnterpriseReportsModal({
                 {enterprise.category} — {enterprise.barangay}
               </p>
             </div>
-            <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-white hover:text-gray-900">
-              Close
-            </button>
+            <div className="flex items-center gap-2">
+              {needsNotification && (
+                <button
+                  onClick={handleNotify}
+                  disabled={notified}
+                  className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                    notified
+                      ? "cursor-default bg-gray-100 text-gray-400"
+                      : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
+                  }`}
+                >
+                  <Bell size={14} />
+                  {notified ? "Notified" : "Notify"}
+                </button>
+              )}
+              <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-white hover:text-gray-900">
+                Close
+              </button>
+            </div>
           </header>
 
           <div className="grow overflow-y-auto p-6">
@@ -333,5 +399,97 @@ function ReportSection({
         {reports.length === 0 && <div className="rounded-xl border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">{empty}</div>}
       </div>
     </section>
+  );
+}
+
+function NewCycleModal({
+  currentMonth,
+  onConfirm,
+  onClose,
+}: {
+  currentMonth?: string;
+  onConfirm: (month: string, year: string) => void;
+  onClose: () => void;
+}) {
+  const currentMonthIndex = currentMonth ? MONTH_ORDER.indexOf(currentMonth) : new Date().getMonth();
+  const nextMonthIndex = (currentMonthIndex + 1) % 12;
+  const nextYear = currentMonthIndex === 11 ? new Date().getFullYear() + 1 : new Date().getFullYear();
+
+  const [month, setMonth] = useState(MONTH_ORDER[nextMonthIndex]);
+  const [year, setYear] = useState(String(nextYear));
+
+  const currentYear = new Date().getFullYear();
+  const yearOptions = [currentYear - 1, currentYear, currentYear + 1].map(String);
+
+  return (
+    <ModalPortal>
+      <motion.div
+        className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.section
+          className="w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl"
+          initial={{ opacity: 0, y: 12, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 12, scale: 0.98 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+        >
+          <header className="border-b border-gray-200 bg-gray-50 px-6 py-5">
+            <h2 className="text-lg font-bold text-gray-900">Open New Submission Period</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Create placeholder reports for all registered enterprises. They will appear as "Missing" until each enterprise submits.
+            </p>
+          </header>
+
+          <div className="space-y-4 px-6 py-5">
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold tracking-wide text-gray-600 uppercase">Month</label>
+              <select
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-indigo-500"
+              >
+                {MONTH_ORDER.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold tracking-wide text-gray-600 uppercase">Year</label>
+              <select
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-indigo-500"
+              >
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <footer className="flex items-center justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4">
+            <button
+              onClick={onClose}
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => onConfirm(month, year)}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+            >
+              <FolderPlus size={15} /> Open Period
+            </button>
+          </footer>
+        </motion.section>
+      </motion.div>
+    </ModalPortal>
   );
 }

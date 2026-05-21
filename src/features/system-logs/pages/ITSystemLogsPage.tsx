@@ -1,63 +1,59 @@
-import { AlertTriangle, Download, FileText, Search, ShieldCheck, X } from "lucide-react";
+import { AlertTriangle, Bell, Building2, FileText, Search, Users, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
-import { PageMotion, ModalPortal, stagger } from "../../../shared/components/ui";
-import { technicalLogs } from "../../../shared/data";
-import type { AlertSeverity, TechnicalLog } from "../../../shared/types";
+import { ModalPortal, PageMotion, stagger } from "../../../shared/components/ui";
+import { enterpriseAccounts, systemActivities } from "../../../shared/data";
+import type { AlertSeverity, SystemActivity, SystemActivityStatus, SystemActivityType } from "../../../shared/types";
 
 type SeverityFilter = "All Severities" | AlertSeverity;
-type EventFilter = "All Event Types" | string;
+type ActivityFilter = "All Activities" | "Account Activity" | "Enterprise Setup" | "Technical Incident" | "System Settings" | "Notifications" | "Sync Events";
 
 const severityFilters: SeverityFilter[] = ["All Severities", "Info", "Warning", "Critical"];
+const activityFilters: ActivityFilter[] = ["All Activities", "Account Activity", "Enterprise Setup", "Technical Incident", "System Settings", "Notifications", "Sync Events"];
+const unresolvedStatuses = new Set<SystemActivityStatus>(["Open", "Pending", "Acknowledged"]);
 
 export function ITSystemLogsPage() {
   const [search, setSearch] = useState("");
   const [severity, setSeverity] = useState<SeverityFilter>("All Severities");
-  const [eventType, setEventType] = useState<EventFilter>("All Event Types");
+  const [activityType, setActivityType] = useState<ActivityFilter>("All Activities");
   const [enterprise, setEnterprise] = useState("All Enterprises");
-  const [selectedLog, setSelectedLog] = useState<TechnicalLog | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<SystemActivity | null>(null);
 
-  const eventTypes = useMemo(() => ["All Event Types", ...new Set(technicalLogs.map((log) => log.eventType))], []);
-  const enterprises = useMemo(() => ["All Enterprises", ...new Set(technicalLogs.map((log) => log.enterprise).filter(Boolean) as string[])], []);
-  const filteredLogs = useMemo(
+  const enterpriseFilters = useMemo(() => ["All Enterprises", ...new Set(enterpriseAccounts.map((account) => account.enterpriseName))], []);
+  const filteredActivities = useMemo(
     () =>
-      technicalLogs.filter((log) => {
-        const haystack = `${log.desc} ${log.performedBy} ${log.enterprise ?? ""} ${log.device ?? ""} ${log.eventType}`.toLowerCase();
+      systemActivities.filter((activity) => {
+        const haystack =
+          `${activity.summary} ${activity.accountName ?? ""} ${activity.initiatedBy} ${activity.enterprise ?? ""} ${activity.device ?? ""} ${activity.type}`.toLowerCase();
         const matchesSearch = haystack.includes(search.trim().toLowerCase());
-        const matchesSeverity = severity === "All Severities" || log.severity === severity;
-        const matchesType = eventType === "All Event Types" || log.eventType === eventType;
-        const matchesEnterprise = enterprise === "All Enterprises" || log.enterprise === enterprise;
+        const matchesSeverity = severity === "All Severities" || activity.severity === severity;
+        const matchesType = matchesActivityTypeFilter(activity.type, activityType);
+        const matchesEnterprise = enterprise === "All Enterprises" || activity.enterprise === enterprise;
         return matchesSearch && matchesSeverity && matchesType && matchesEnterprise;
       }),
-    [enterprise, eventType, search, severity],
+    [activityType, enterprise, search, severity],
   );
+  const openAlerts = systemActivities.filter((activity) => isUnresolved(activity.status) && isTechnicalAlert(activity)).length;
+  const offlineDevices = new Set(
+    systemActivities
+      .filter((activity) => isUnresolved(activity.status) && activity.device && activity.deviceState === "Offline")
+      .map((activity) => activity.device),
+  ).size;
+  const accountChangesToday = systemActivities.filter((activity) => activity.type === "Account Activity" && activity.timePeriod === "Today").length;
+  const pendingEnterpriseAttention = systemActivities.filter((activity) => isUnresolved(activity.status) && activity.requiresEnterpriseAttention).length;
 
   return (
     <PageMotion>
-      <PageHeader title="System Logs" description="Review technical events across accounts, gateways, cameras, sync jobs, and edge services." />
+      <PageHeader title="System Activity" description="Review recent operational events, account activities, and technical incidents requiring attention." />
 
       <motion.section className="grid grid-cols-1 gap-4 md:grid-cols-4" variants={stagger}>
-        <MetricCard label="Filtered Logs" value={filteredLogs.length} foot="Matching current view" color="#2563eb" icon={FileText} />
-        <MetricCard
-          label="Critical"
-          value={filteredLogs.filter((log) => log.severity === "Critical").length}
-          foot="Immediate attention"
-          color="#dc2626"
-          footClassName="text-red-600"
-          icon={AlertTriangle}
-        />
-        <MetricCard
-          label="Camera Events"
-          value={filteredLogs.filter((log) => log.eventType === "Camera").length}
-          foot="Device health trail"
-          color="#f59e0b"
-          footClassName="text-yellow-600"
-          icon={ShieldCheck}
-        />
-        <MetricCard label="Sync Events" value={filteredLogs.filter((log) => log.eventType === "Sync").length} foot="Gateway transfer trail" color="#065f46" icon={Download} />
+        <MetricCard label="Open Alerts" value={openAlerts} foot="Unresolved technical issues" color="#dc2626" footClassName="text-red-600" icon={Bell} />
+        <MetricCard label="Offline Devices" value={offlineDevices} foot="Cameras and gateways" color="#f59e0b" footClassName="text-yellow-600" icon={AlertTriangle} />
+        <MetricCard label="Account Changes Today" value={accountChangesToday} foot="Recent access updates" color="#2563eb" icon={Users} />
+        <MetricCard label="Pending Enterprise Attention" value={pendingEnterpriseAttention} foot="Coordination still needed" color="#065f46" icon={Building2} />
       </motion.section>
 
       <Panel className="mt-6 overflow-hidden">
@@ -67,19 +63,19 @@ export function ITSystemLogsPage() {
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search logs, operators, enterprise, or device"
+              placeholder="Search activities, enterprises, accounts..."
               className="focus:ring-tgreen-dark w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-9 text-sm text-gray-900 transition outline-none focus:ring-1"
             />
           </div>
           <FilterSelect value={severity} onChange={(value) => setSeverity(value as SeverityFilter)} options={severityFilters} />
-          <FilterSelect value={eventType} onChange={setEventType} options={eventTypes} />
-          <FilterSelect value={enterprise} onChange={setEnterprise} options={enterprises} />
+          <FilterSelect value={activityType} onChange={(value) => setActivityType(value as ActivityFilter)} options={activityFilters} />
+          <FilterSelect value={enterprise} onChange={setEnterprise} options={enterpriseFilters} />
           <button
             type="button"
             onClick={() => {
               setSearch("");
               setSeverity("All Severities");
-              setEventType("All Event Types");
+              setActivityType("All Activities");
               setEnterprise("All Enterprises");
             }}
             className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-bold text-gray-600 transition hover:bg-gray-50"
@@ -92,7 +88,7 @@ export function ITSystemLogsPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-50 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
               <tr>
-                {["Time", "Severity", "Event Type", "Enterprise", "Device", "Description", "Performed By", "Action"].map((heading) => (
+                {["Time", "Severity", "Activity Type", "Enterprise", "Affected Device", "Summary", "Initiated By", "Status", "Action"].map((heading) => (
                   <th key={heading} className="px-5 py-4">
                     {heading}
                   </th>
@@ -100,20 +96,23 @@ export function ITSystemLogsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-gray-800">
-              {filteredLogs.map((log) => (
-                <tr key={log.id} className="hover:bg-tgreen-dark/5 transition">
-                  <td className="px-5 py-4 font-mono text-xs text-gray-500">{log.time}</td>
+              {filteredActivities.map((activity) => (
+                <tr key={activity.id} className="hover:bg-tgreen-dark/5 transition">
+                  <td className="px-5 py-4 font-mono text-xs text-gray-500">{activity.time}</td>
                   <td className="px-5 py-4">
-                    <SeverityBadge severity={log.severity} />
+                    <SeverityBadge severity={activity.severity} />
                   </td>
-                  <td className="px-5 py-4 text-xs font-bold text-gray-900">{log.eventType}</td>
-                  <td className="px-5 py-4 text-xs">{log.enterprise ?? "Not applicable"}</td>
-                  <td className="px-5 py-4 text-xs">{log.device ?? "Not applicable"}</td>
-                  <td className="max-w-md px-5 py-4 text-xs leading-relaxed text-gray-600">{log.desc}</td>
-                  <td className="px-5 py-4 text-xs">{log.performedBy}</td>
+                  <td className="px-5 py-4 text-xs font-bold text-gray-900">{activity.type}</td>
+                  <td className="px-5 py-4 text-xs">{activity.enterprise ?? "N/A"}</td>
+                  <td className="px-5 py-4 text-xs">{activity.device ?? "N/A"}</td>
+                  <td className="max-w-md px-5 py-4 text-xs leading-relaxed text-gray-600">{activity.summary}</td>
+                  <td className="px-5 py-4 text-xs">{activity.initiatedBy}</td>
+                  <td className="px-5 py-4">
+                    <StatusBadge status={activity.status} />
+                  </td>
                   <td className="px-5 py-4">
                     <button
-                      onClick={() => setSelectedLog(log)}
+                      onClick={() => setSelectedActivity(activity)}
                       className="text-tgreen-dark hover:bg-tgreen-dark/5 inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-[10px] font-bold transition"
                     >
                       <FileText size={13} /> View
@@ -121,10 +120,10 @@ export function ITSystemLogsPage() {
                   </td>
                 </tr>
               ))}
-              {filteredLogs.length === 0 && (
+              {filteredActivities.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-5 py-8 text-center text-gray-500">
-                    No technical logs match the current filters.
+                  <td colSpan={9} className="px-5 py-8 text-center text-gray-500">
+                    No activities match the current filters.
                   </td>
                 </tr>
               )}
@@ -133,12 +132,12 @@ export function ITSystemLogsPage() {
         </div>
       </Panel>
 
-      <AnimatePresence>{selectedLog && <TechnicalLogModal log={selectedLog} onClose={() => setSelectedLog(null)} />}</AnimatePresence>
+      <AnimatePresence>{selectedActivity && <ActivityDetailsModal activity={selectedActivity} onClose={() => setSelectedActivity(null)} />}</AnimatePresence>
     </PageMotion>
   );
 }
 
-function TechnicalLogModal({ log, onClose }: { log: TechnicalLog; onClose: () => void }) {
+function ActivityDetailsModal({ activity, onClose }: { activity: SystemActivity; onClose: () => void }) {
   return (
     <ModalPortal>
       <motion.div className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -151,8 +150,8 @@ function TechnicalLogModal({ log, onClose }: { log: TechnicalLog; onClose: () =>
         >
           <header className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
             <div>
-              <p className="font-mono text-[10px] font-bold text-gray-400">{log.id}</p>
-              <h2 className="text-lg font-bold text-gray-900">Technical Log Detail</h2>
+              <p className="font-mono text-[10px] font-bold text-gray-400">{activity.id}</p>
+              <h2 className="text-lg font-bold text-gray-900">Activity Details</h2>
             </div>
             <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-white hover:text-gray-900">
               Close
@@ -160,14 +159,19 @@ function TechnicalLogModal({ log, onClose }: { log: TechnicalLog; onClose: () =>
           </header>
           <div className="grow overflow-y-auto p-6">
             <div className="grid gap-4 md:grid-cols-2">
-              <Detail label="Severity" value={log.severity} />
-              <Detail label="Event Type" value={log.eventType} />
-              <Detail label="Time" value={log.time} />
-              <Detail label="Performed By" value={log.performedBy} />
-              <Detail label="Enterprise" value={log.enterprise ?? "Not applicable"} />
-              <Detail label="Device" value={log.device ?? "Not applicable"} />
+              <Detail label="Activity ID" value={activity.id} />
+              <Detail label="Severity" value={activity.severity} />
+              <Detail label="Activity Type" value={activity.type} />
+              <Detail label="Time" value={activity.time} />
+              <Detail label="Initiated By" value={activity.initiatedBy} />
+              <Detail label="Status" value={activity.status} />
+              <Detail label="Enterprise" value={activity.enterprise ?? "N/A"} />
+              <Detail label="Affected Device" value={activity.device ?? "N/A"} />
               <div className="md:col-span-2">
-                <Detail label="Technical Description" value={log.desc} />
+                <Detail label="Summary" value={activity.summary} />
+              </div>
+              <div className="md:col-span-2">
+                <Detail label="Recommended Action" value={activity.recommendedAction} />
               </div>
             </div>
           </div>
@@ -196,6 +200,17 @@ function SeverityBadge({ severity }: { severity: AlertSeverity }) {
   return <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${classes[severity]}`}>{severity}</span>;
 }
 
+function StatusBadge({ status }: { status: SystemActivityStatus }) {
+  const classes: Record<SystemActivityStatus, string> = {
+    Open: "bg-red-50 text-red-700",
+    Resolved: "bg-emerald-50 text-emerald-700",
+    Completed: "bg-blue-50 text-blue-700",
+    Pending: "bg-yellow-50 text-yellow-700",
+    Acknowledged: "bg-slate-100 text-slate-700",
+  };
+  return <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${classes[status]}`}>{status}</span>;
+}
+
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
@@ -203,4 +218,21 @@ function Detail({ label, value }: { label: string; value: string }) {
       <p className="text-sm font-semibold text-gray-900">{value}</p>
     </div>
   );
+}
+
+function matchesActivityTypeFilter(type: SystemActivityType, filter: ActivityFilter) {
+  return (
+    filter === "All Activities" ||
+    (filter === "Notifications" && type === "Notification") ||
+    (filter === "Sync Events" && type === "Sync Event") ||
+    type === filter
+  );
+}
+
+function isTechnicalAlert(activity: SystemActivity) {
+  return activity.type === "Technical Incident" || activity.type === "Sync Event";
+}
+
+function isUnresolved(status: SystemActivityStatus) {
+  return unresolvedStatuses.has(status);
 }

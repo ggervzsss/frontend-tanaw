@@ -33,15 +33,26 @@ export type Enterprise = {
   gatewayStatus: GatewayStatus;
 };
 
-export type TechnicalLog = {
+export type SystemActivityType = "Account Activity" | "Enterprise Setup" | "Technical Incident" | "System Settings" | "Notification" | "Sync Event";
+export type SystemActivityStatus = "Open" | "Resolved" | "Completed" | "Pending" | "Acknowledged";
+export type SystemActivityTimePeriod = "Today" | "Earlier";
+export type SystemActivityDeviceState = "Offline" | "Delayed" | "Healthy";
+
+export type SystemActivity = {
   id: string;
   severity: AlertSeverity;
-  eventType: string;
+  type: SystemActivityType;
+  time: string;
+  initiatedBy: string;
   enterprise?: string;
   device?: string;
-  desc: string;
-  performedBy: string;
-  time: string;
+  accountName?: string;
+  summary: string;
+  status: SystemActivityStatus;
+  recommendedAction: string;
+  timePeriod: SystemActivityTimePeriod;
+  deviceState?: SystemActivityDeviceState;
+  requiresEnterpriseAttention?: boolean;
 };
 
 export type PipelineAlert = {

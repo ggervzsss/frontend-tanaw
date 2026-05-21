@@ -72,7 +72,7 @@ export const roleNavigation: Record<UserRole, NavigationItem[]> = {
     },
     {
       id: "system-logs",
-      label: "System Logs",
+      label: "System Activity",
       path: routes.it.systemLogs,
       icon: FileText,
     },

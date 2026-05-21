@@ -24,6 +24,10 @@ export type {
   PipelineHealth,
   ReportEnterprise,
   ReportStatus,
-  TechnicalLog,
+  SystemActivity,
+  SystemActivityDeviceState,
+  SystemActivityStatus,
+  SystemActivityTimePeriod,
+  SystemActivityType,
   SystemAlert,
 } from "./domain.types";

@@ -45,7 +45,7 @@ const monitoredEstablishments = [
       id: "EA-002",
       enterpriseName: "Lolo Uweng Shrine",
       category: "Faith Tourism",
-      managerName: "I. Arabaca",
+      managerName: "Irish Arabaca",
       email: "shrine@lolouweng.example",
       contactNumber: "+63 49 555 0102",
       barangay: "Landayan",
@@ -72,7 +72,7 @@ const monitoredEstablishments = [
       femaleVisitors: 1050,
       totalTourists: 980,
     },
-    complianceOwner: "I. Arabaca",
+    complianceOwner: "Irish Arabaca",
   },
   {
     enterpriseId: "E3",
@@ -81,7 +81,7 @@ const monitoredEstablishments = [
       id: "EA-003",
       enterpriseName: "Balaon ni Lolo Uweng",
       category: "Faith Tourism",
-      managerName: "D. Vallejera",
+      managerName: "David Vallejera",
       email: "balaon@lolouweng.example",
       contactNumber: "+63 49 555 0103",
       barangay: "Landayan",
@@ -105,7 +105,7 @@ const monitoredEstablishments = [
       femaleVisitors: 325,
       totalTourists: 210,
     },
-    complianceOwner: "D. Vallejera",
+    complianceOwner: "David Vallejera",
   },
   {
     enterpriseId: "E4",
@@ -114,7 +114,7 @@ const monitoredEstablishments = [
       id: "EA-004",
       enterpriseName: "San Pedro Apostol Parish Church",
       category: "Faith Tourism",
-      managerName: "R. Javier",
+      managerName: "Regine Javier",
       email: "parish@sanpedroapostol.example",
       contactNumber: "+63 49 555 0104",
       barangay: "Nueva",
@@ -141,7 +141,7 @@ const monitoredEstablishments = [
       femaleVisitors: 740,
       totalTourists: 510,
     },
-    complianceOwner: "R. Javier",
+    complianceOwner: "Regine Javier",
   },
 ] satisfies Array<{
   enterpriseId: string;

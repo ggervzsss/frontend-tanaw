@@ -43,18 +43,7 @@ export function ITEnterpriseAccountsPage() {
 
   return (
     <PageMotion>
-      <PageHeader
-        title="Enterprise Accounts"
-        description="Manage establishment accounts, gateway links, and assigned camera nodes."
-        action={
-          <button
-            onClick={() => setRegisterOpen(true)}
-            className="bg-tgreen-dark hover:bg-tgreen-light inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-md transition"
-          >
-            <Building2 size={16} /> Register Enterprise
-          </button>
-        }
-      />
+      <PageHeader title="Enterprise Accounts" description="Manage establishment accounts, gateway links, and assigned camera nodes." />
 
       <motion.section className="grid grid-cols-1 gap-4 md:grid-cols-4" variants={stagger}>
         <MetricCard label="Enterprise Accounts" value={enterpriseAccounts.length} foot="Registered entities" color="#2563eb" icon={Building2} />
@@ -77,7 +66,7 @@ export function ITEnterpriseAccountsPage() {
       </motion.section>
 
       <Panel className="mt-6 overflow-hidden">
-        <div className="grid grid-cols-1 gap-3 border-b border-gray-200 bg-gray-50 p-4 xl:grid-cols-[minmax(260px,1fr)_auto_auto_auto]">
+        <div className="grid grid-cols-1 gap-3 border-b border-gray-200 bg-gray-50 p-4 xl:grid-cols-[minmax(260px,1fr)_auto_auto_auto_auto]">
           <div className="relative">
             <Search size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
             <input
@@ -90,6 +79,12 @@ export function ITEnterpriseAccountsPage() {
           <FilterSelect value={accountStatus} onChange={(value) => setAccountStatus(value as AccountFilter)} options={accountFilters} />
           <FilterSelect value={barangay} onChange={setBarangay} options={barangays} />
           <FilterSelect value={gatewayStatus} onChange={(value) => setGatewayStatus(value as GatewayFilter)} options={gatewayFilters} />
+          <button
+            onClick={() => setRegisterOpen(true)}
+            className="bg-tgreen-dark hover:bg-tgreen-light inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition"
+          >
+            <Building2 size={16} /> Register Enterprise
+          </button>
         </div>
 
         <div className="overflow-x-auto">

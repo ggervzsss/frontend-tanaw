@@ -37,18 +37,7 @@ export function ITLguAccountsPage() {
 
   return (
     <PageMotion>
-      <PageHeader
-        title="LGU Accounts"
-        description="Manage internal personnel profiles, access roles, and account recovery operations."
-        action={
-          <button
-            onClick={() => setCreateOpen(true)}
-            className="bg-tgreen-dark hover:bg-tgreen-light inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-md transition"
-          >
-            <UserPlus size={16} /> Create LGU Account
-          </button>
-        }
-      />
+      <PageHeader title="LGU Accounts" description="Manage internal personnel profiles, access roles, and account recovery operations." />
 
       <motion.section className="grid grid-cols-1 gap-4 md:grid-cols-4" variants={stagger}>
         <MetricCard label="Total Accounts" value={lguAccounts.length} foot="Internal users" color="#2563eb" icon={Users} />
@@ -70,6 +59,12 @@ export function ITLguAccountsPage() {
           </div>
           <FilterSelect value={role} onChange={(value) => setRole(value as RoleFilter)} options={roleOptions} />
           <FilterSelect value={status} onChange={(value) => setStatus(value as StatusFilter)} options={statusOptions} />
+          <button
+            onClick={() => setCreateOpen(true)}
+            className="bg-tgreen-dark hover:bg-tgreen-light inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition"
+          >
+            <UserPlus size={16} /> Create LGU Account
+          </button>
         </div>
 
         <div className="overflow-x-auto">

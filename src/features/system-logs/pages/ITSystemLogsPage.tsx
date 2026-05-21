@@ -1,7 +1,6 @@
 import { AlertTriangle, Download, FileText, Search, ShieldCheck, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
-import toast from "react-hot-toast";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
@@ -38,19 +37,7 @@ export function ITSystemLogsPage() {
 
   return (
     <PageMotion>
-      <PageHeader
-        title="System Logs"
-        description="Review technical events across accounts, gateways, cameras, sync jobs, and edge services."
-        action={
-          <button
-            type="button"
-            onClick={() => toast.success("Filtered technical logs export prepared.")}
-            className="bg-tgreen-dark hover:bg-tgreen-light inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-md transition"
-          >
-            <Download size={16} /> Export Logs
-          </button>
-        }
-      />
+      <PageHeader title="System Logs" description="Review technical events across accounts, gateways, cameras, sync jobs, and edge services." />
 
       <motion.section className="grid grid-cols-1 gap-4 md:grid-cols-4" variants={stagger}>
         <MetricCard label="Filtered Logs" value={filteredLogs.length} foot="Matching current view" color="#2563eb" icon={FileText} />

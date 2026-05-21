@@ -107,26 +107,7 @@ export function ITSystemSettingsPage() {
 
   return (
     <PageMotion>
-      <PageHeader
-        title="System Settings"
-        description="Configure account security, camera integration, synchronization, logs, and technical notifications."
-        action={
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => toast.success("Selected settings reset to defaults.")}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-            >
-              <RotateCcw size={15} /> Reset Defaults
-            </button>
-            <button
-              onClick={() => toast.success("Configuration change recorded in System Logs.")}
-              className="bg-tgreen-dark hover:bg-tgreen-light inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-md transition"
-            >
-              <Save size={15} /> Save Changes
-            </button>
-          </div>
-        }
-      />
+      <PageHeader title="System Settings" description="Configure account security, camera integration, synchronization, logs, and technical notifications." />
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
         <Panel className="overflow-hidden p-3">
@@ -179,6 +160,21 @@ export function ITSystemSettingsPage() {
           <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-5">
             <h4 className="text-sm font-bold text-gray-900">Change Logging</h4>
             <p className="mt-2 text-sm text-gray-500">Saving changes creates a System Logs entry with the setting name, previous value, new value, timestamp, and IT operator.</p>
+          </div>
+
+          <div className="mt-6 flex flex-wrap justify-end gap-3 border-t border-gray-200 pt-5">
+            <button
+              onClick={() => toast.success("Selected settings reset to defaults.")}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+            >
+              <RotateCcw size={15} /> Reset Defaults
+            </button>
+            <button
+              onClick={() => toast.success("Configuration change recorded in System Logs.")}
+              className="bg-tgreen-dark hover:bg-tgreen-light inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-md transition"
+            >
+              <Save size={15} /> Save Changes
+            </button>
           </div>
         </Panel>
       </div>

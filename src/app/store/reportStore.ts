@@ -9,13 +9,26 @@ type ReportState = {
   updateReportStatus: (reportId: string, status: ReportStatus, remarks?: string) => void;
   updateFinalReportStatus: (reportId: string, status: FinalReportStatus) => void;
   generateFinalReport: (reportIds: string[], preparedBy: string) => FinalReport | null;
-  openNewSubmissionPeriod: () => boolean;
+  syncCurrentSubmissionPeriod: () => void;
+};
+
+const REPORT_MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+type SubmissionPeriod = {
+  month: string;
+  monthIndex: number;
+  period: string;
+  periodKey: string;
+  year: string;
 };
 
 export const useReportStore = create<ReportState>()(
   persist(
     (set, get) => ({
-      reports: initialReports,
+      reports: includeCurrentSubmissionPeriod(initialReports),
       finalReports: initialFinalReports,
       updateReportStatus: (reportId, status, remarks) =>
         set((state) => ({
@@ -61,45 +74,19 @@ export const useReportStore = create<ReportState>()(
 
         return finalReport;
       },
-      openNewSubmissionPeriod: () => {
-        const currentDate = new Date();
-        const month = currentDate.toLocaleString("en-US", { month: "long" });
-        const year = currentDate.getFullYear().toString();
-
-        // Guard against duplicate reports for the actual current submission period.
-        const existing = get().reports.some((r) => {
-          const yearMatch = r.period.match(/\d{4}/);
-          return r.month === month && yearMatch?.[0] === year;
-        });
-        if (existing) return false;
-
-        const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
-        const lastDay = new Date(Number(year), monthIndex + 1, 0).getDate();
-        const shortMonth = month.slice(0, 3);
-        const period = `${shortMonth} 1 - ${shortMonth} ${lastDay}, ${year}`;
-        const timestamp = Date.now().toString().slice(-4);
-
-        const newReports: IntakeReport[] = reportEnterprises.map((ent, idx) => ({
-          id: `REP-${timestamp}${idx}`,
-          enterpriseId: ent.id,
-          enterprise: ent.name,
-          category: ent.category,
-          barangay: ent.barangay,
-          month,
-          period,
-          submitted: "Not submitted",
-          status: "Missing" as const,
-          code: `AT-${String(idx + 1).padStart(3, "0")}`,
-          remarks: "Pending enterprise submission.",
-          metrics: { entry: 0, exit: 0, unique: 0, peak: "N/A" },
-        }));
-
-        set((state) => ({ reports: [...state.reports, ...newReports] }));
-        return true;
-      },
+      syncCurrentSubmissionPeriod: () =>
+        set((state) => {
+          const reports = includeCurrentSubmissionPeriod(state.reports);
+          return reports === state.reports ? state : { reports };
+        }),
     }),
     {
       name: "tanaw-report-workflow",
+      version: 1,
+      migrate: () => ({
+        reports: includeCurrentSubmissionPeriod(initialReports),
+        finalReports: initialFinalReports,
+      }),
       partialize: (state) => ({
         reports: mergeReportsWithBaseline(state.reports),
         finalReports: state.finalReports,
@@ -115,6 +102,46 @@ function mergeReportsWithBaseline(reports: IntakeReport[]) {
   const openedPeriodReports = reports.filter((report) => !baselineIds.has(report.id));
 
   return [...baselineReports, ...openedPeriodReports];
+}
+
+function includeCurrentSubmissionPeriod(reports: IntakeReport[]) {
+  const currentPeriod = getCurrentSubmissionPeriod();
+  const periodExists = reports.some((report) => report.month === currentPeriod.month && report.period.match(/\d{4}/)?.[0] === currentPeriod.year);
+
+  return periodExists ? reports : [...reports, ...createMissingReports(currentPeriod)];
+}
+
+function getCurrentSubmissionPeriod(date = new Date()): SubmissionPeriod {
+  const monthIndex = date.getMonth();
+  const month = REPORT_MONTHS[monthIndex];
+  const year = String(date.getFullYear());
+  const lastDay = new Date(date.getFullYear(), monthIndex + 1, 0).getDate();
+  const shortMonth = month.slice(0, 3);
+
+  return {
+    month,
+    monthIndex,
+    period: `${shortMonth} 1 - ${shortMonth} ${lastDay}, ${year}`,
+    periodKey: `${year}${String(monthIndex + 1).padStart(2, "0")}`,
+    year,
+  };
+}
+
+function createMissingReports(period: SubmissionPeriod): IntakeReport[] {
+  return reportEnterprises.map((enterprise, index) => ({
+    id: `REP-${period.periodKey}-${String(index + 1).padStart(2, "0")}`,
+    enterpriseId: enterprise.id,
+    enterprise: enterprise.name,
+    category: enterprise.category,
+    barangay: enterprise.barangay,
+    month: period.month,
+    period: period.period,
+    submitted: "Not submitted",
+    status: "Missing",
+    code: `AT-${String(index + 1).padStart(3, "0")}`,
+    remarks: "Pending enterprise submission.",
+    metrics: { entry: 0, exit: 0, unique: 0, peak: "N/A" },
+  }));
 }
 
 export function getReportEnterpriseName(enterpriseId: string) {

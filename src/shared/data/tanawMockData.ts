@@ -610,203 +610,110 @@ export const reportEnterprises: ReportEnterprise[] = [
   { id: "ENT-005", name: "SPL Public Library", category: "Government", barangay: "Poblacion", complianceOwner: "J. Reyes" },
 ];
 
-export const intakeReports: IntakeReport[] = [
-  {
-    id: "REP-201",
-    enterpriseId: "ENT-001",
-    enterprise: "SPL Market Branch",
-    category: "Commercial",
-    barangay: "Poblacion",
-    month: "May",
-    period: "May 1 - May 31, 2026",
-    submitted: "2026-06-01 09:15 AM",
-    status: "Pending Review",
-    code: "AT-001",
-    metrics: { entry: 5120, exit: 5080, unique: 3400, peak: "11:00 AM" },
-  },
-  {
-    id: "REP-202",
-    enterpriseId: "ENT-002",
-    enterprise: "Plaza Mall San Pedro",
-    category: "Commercial",
-    barangay: "San Antonio",
-    month: "May",
-    period: "May 1 - May 31, 2026",
-    submitted: "2026-06-02 10:30 AM",
-    status: "Ready to Consolidate",
-    code: "AT-002",
-    remarks: "Validated by staff reviewer.",
-    metrics: { entry: 13200, exit: 13150, unique: 9400, peak: "5:00 PM" },
-  },
-  {
-    id: "REP-203",
-    enterpriseId: "ENT-003",
-    enterprise: "City Hall Lobby",
-    category: "Government",
-    barangay: "Poblacion",
-    month: "May",
-    period: "May 1 - May 31, 2026",
-    submitted: "2026-06-01 08:00 AM",
-    status: "Ready to Consolidate",
-    code: "AT-003",
-    remarks: "Reviewed by Staff A.",
-    metrics: { entry: 1400, exit: 1390, unique: 1100, peak: "9:00 AM" },
-  },
-  {
-    id: "REP-204",
-    enterpriseId: "ENT-004",
-    enterprise: "Town Center Park",
-    category: "Recreational",
-    barangay: "San Vicente",
-    month: "May",
-    period: "May 1 - May 31, 2026",
-    submitted: "2026-06-03 11:20 AM",
-    status: "Returned",
-    code: "AT-004",
-    remarks: "Data for May 5 is missing.",
-    metrics: { entry: 900, exit: 250, unique: 850, peak: "N/A" },
-  },
-  {
-    id: "REP-205",
-    enterpriseId: "ENT-005",
-    enterprise: "SPL Public Library",
-    category: "Government",
-    barangay: "Poblacion",
-    month: "May",
-    period: "May 1 - May 31, 2026",
-    submitted: "Not submitted",
-    status: "Missing",
-    code: "AT-005",
-    remarks: "Pending enterprise submission.",
-    metrics: { entry: 0, exit: 0, unique: 0, peak: "N/A" },
-  },
-  {
-    id: "REP-001",
-    enterpriseId: "ENT-001",
-    enterprise: "SPL Market Branch",
-    category: "Commercial",
-    barangay: "Poblacion",
-    month: "October",
-    period: "Oct 1 - Oct 31, 2023",
-    submitted: "2023-11-01 09:15 AM",
-    status: "Pending Review",
-    code: "AT-001",
-    metrics: { entry: 4520, exit: 4490, unique: 3100, peak: "11:00 AM" },
-  },
-  {
-    id: "REP-002",
-    enterpriseId: "ENT-002",
-    enterprise: "Plaza Mall San Pedro",
-    category: "Commercial",
-    barangay: "San Antonio",
-    month: "October",
-    period: "Oct 1 - Oct 31, 2023",
-    submitted: "2023-11-02 10:30 AM",
-    status: "Ready to Consolidate",
-    code: "AT-002",
-    remarks: "Validated by staff reviewer.",
-    metrics: { entry: 12500, exit: 12450, unique: 8900, peak: "5:00 PM" },
-  },
-  {
-    id: "REP-003",
-    enterpriseId: "ENT-003",
-    enterprise: "City Hall Lobby",
-    category: "Government",
-    barangay: "Poblacion",
-    month: "October",
-    period: "Oct 1 - Oct 31, 2023",
-    submitted: "2023-11-01 08:00 AM",
-    status: "Ready to Consolidate",
-    code: "AT-003",
-    remarks: "Reviewed by Staff A.",
-    metrics: { entry: 1200, exit: 1195, unique: 950, peak: "9:00 AM" },
-  },
-  {
-    id: "REP-004",
-    enterpriseId: "ENT-004",
-    enterprise: "Town Center Park",
-    category: "Recreational",
-    barangay: "San Vicente",
-    month: "October",
-    period: "Oct 1 - Oct 31, 2023",
-    submitted: "2023-11-03 11:20 AM",
-    status: "Returned",
-    code: "AT-004",
-    remarks: "Data for Oct 5 is missing.",
-    metrics: { entry: 800, exit: 200, unique: 750, peak: "N/A" },
-  },
-  {
-    id: "REP-005",
-    enterpriseId: "ENT-005",
-    enterprise: "SPL Public Library",
-    category: "Government",
-    barangay: "Poblacion",
-    month: "October",
-    period: "Oct 1 - Oct 31, 2023",
-    submitted: "Not submitted",
-    status: "Missing",
-    code: "AT-005",
-    remarks: "Pending enterprise submission.",
-    metrics: { entry: 0, exit: 0, unique: 0, peak: "N/A" },
-  },
-  {
-    id: "REP-101",
-    enterpriseId: "ENT-001",
-    enterprise: "SPL Market Branch",
-    category: "Commercial",
-    barangay: "Poblacion",
-    month: "September",
-    period: "Sep 1 - Sep 30, 2023",
-    submitted: "2023-10-01 09:00 AM",
-    status: "Consolidated",
-    code: "AT-001",
-    metrics: { entry: 4100, exit: 4060, unique: 2900, peak: "10:30 AM" },
-  },
-  {
-    id: "REP-102",
-    enterpriseId: "ENT-002",
-    enterprise: "Plaza Mall San Pedro",
-    category: "Commercial",
-    barangay: "San Antonio",
-    month: "September",
-    period: "Sep 1 - Sep 30, 2023",
-    submitted: "2023-10-02 10:30 AM",
-    status: "Consolidated",
-    code: "AT-002",
-    metrics: { entry: 11200, exit: 11110, unique: 8100, peak: "4:30 PM" },
-  },
-  {
-    id: "REP-103",
-    enterpriseId: "ENT-003",
-    enterprise: "City Hall Lobby",
-    category: "Government",
-    barangay: "Poblacion",
-    month: "September",
-    period: "Sep 1 - Sep 30, 2023",
-    submitted: "2023-10-01 08:15 AM",
-    status: "Consolidated",
-    code: "AT-003",
-    metrics: { entry: 1050, exit: 1040, unique: 850, peak: "9:30 AM" },
-  },
+const REPORT_MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
+
+type ReportTimelinePeriod = {
+  month: string;
+  monthIndex: number;
+  period: string;
+  shortMonth: string;
+  year: number;
+};
+
+const ARCHIVED_REPORT_METRICS: IntakeReport["metrics"][] = [
+  { entry: 4100, exit: 4060, unique: 2900, peak: "10:30 AM" },
+  { entry: 11200, exit: 11110, unique: 8100, peak: "4:30 PM" },
+  { entry: 1050, exit: 1040, unique: 850, peak: "9:30 AM" },
+  { entry: 760, exit: 720, unique: 620, peak: "5:15 PM" },
+  { entry: 980, exit: 965, unique: 710, peak: "2:00 PM" },
+];
+
+const READY_REPORT_METRICS: IntakeReport["metrics"][] = [
+  { entry: 4520, exit: 4490, unique: 3100, peak: "11:00 AM" },
+  { entry: 12500, exit: 12450, unique: 8900, peak: "5:00 PM" },
+  { entry: 1200, exit: 1195, unique: 950, peak: "9:00 AM" },
+  { entry: 820, exit: 790, unique: 760, peak: "4:45 PM" },
+  { entry: 1080, exit: 1065, unique: 820, peak: "1:30 PM" },
+];
+
+const SUBMISSION_TIMES = ["09:15 AM", "10:30 AM", "08:00 AM", "11:20 AM", "09:45 AM"];
+
+function getReportTimelinePeriod(monthOffset: number): ReportTimelinePeriod {
+  const currentDate = new Date();
+  const periodStart = new Date(currentDate.getFullYear(), currentDate.getMonth() + monthOffset, 1);
+  const month = REPORT_MONTHS[periodStart.getMonth()];
+  const shortMonth = month.slice(0, 3);
+  const lastDay = new Date(periodStart.getFullYear(), periodStart.getMonth() + 1, 0).getDate();
+
+  return {
+    month,
+    monthIndex: periodStart.getMonth(),
+    period: `${shortMonth} 1 - ${shortMonth} ${lastDay}, ${periodStart.getFullYear()}`,
+    shortMonth,
+    year: periodStart.getFullYear(),
+  };
+}
+
+function formatReportDate(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function createTimelineReports(period: ReportTimelinePeriod, status: "Ready to Consolidate" | "Consolidated", metrics: IntakeReport["metrics"][]) {
+  const periodKey = `${period.year}${String(period.monthIndex + 1).padStart(2, "0")}`;
+
+  return reportEnterprises.map((enterprise, index) => {
+    const submittedDate = new Date(period.year, period.monthIndex + 1, index < 3 ? 1 : 2);
+
+    return {
+      id: `REP-${periodKey}-${String(index + 1).padStart(2, "0")}`,
+      enterpriseId: enterprise.id,
+      enterprise: enterprise.name,
+      category: enterprise.category,
+      barangay: enterprise.barangay,
+      month: period.month,
+      period: period.period,
+      submitted: `${formatReportDate(submittedDate)} ${SUBMISSION_TIMES[index]}`,
+      status,
+      code: `AT-${String(index + 1).padStart(3, "0")}`,
+      remarks: status === "Consolidated" ? "Included in archived final report." : "Validated by staff reviewer.",
+      metrics: metrics[index],
+    };
+  });
+}
+
+// The current month is generated by the report store. Static fixtures hold only history.
+const archivedReportPeriod = getReportTimelinePeriod(-2);
+const readyReportPeriod = getReportTimelinePeriod(-1);
+const archivedIntakeReports = createTimelineReports(archivedReportPeriod, "Consolidated", ARCHIVED_REPORT_METRICS);
+const readyIntakeReports = createTimelineReports(readyReportPeriod, "Ready to Consolidate", READY_REPORT_METRICS);
+
+export const intakeReports: IntakeReport[] = [...archivedIntakeReports, ...readyIntakeReports];
 
 export const finalReports: FinalReport[] = [
   {
-    id: "CON-SEP-2023",
+    id: `CON-${archivedReportPeriod.shortMonth.toUpperCase()}-${archivedReportPeriod.year}`,
     title: "Citywide Tourism Aggregation",
-    period: "September 2023",
-    generatedOn: "2023-10-04",
+    period: `${archivedReportPeriod.month} ${archivedReportPeriod.year}`,
+    generatedOn: formatReportDate(new Date(archivedReportPeriod.year, archivedReportPeriod.monthIndex + 1, 4)),
     preparedBy: "Admin Staff User",
     preparedRole: "Staff Processing Division",
     status: "Archived",
-    totalEntry: 16350,
-    totalExit: 16210,
-    totalUnique: 11850,
-    enterpriseCount: 3,
-    sources: [
-      { id: "REP-101", enterprise: "SPL Market Branch", code: "AT-001", unique: 2900, entry: 4100, exit: 4060 },
-      { id: "REP-102", enterprise: "Plaza Mall San Pedro", code: "AT-002", unique: 8100, entry: 11200, exit: 11110 },
-      { id: "REP-103", enterprise: "City Hall Lobby", code: "AT-003", unique: 850, entry: 1050, exit: 1040 },
-    ],
+    totalEntry: archivedIntakeReports.reduce((total, report) => total + report.metrics.entry, 0),
+    totalExit: archivedIntakeReports.reduce((total, report) => total + report.metrics.exit, 0),
+    totalUnique: archivedIntakeReports.reduce((total, report) => total + report.metrics.unique, 0),
+    enterpriseCount: archivedIntakeReports.length,
+    sources: archivedIntakeReports.map((report) => ({
+      id: report.id,
+      enterprise: report.enterprise,
+      code: report.code,
+      unique: report.metrics.unique,
+      entry: report.metrics.entry,
+      exit: report.metrics.exit,
+    })),
   },
 ];

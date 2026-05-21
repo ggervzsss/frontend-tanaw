@@ -1,4 +1,4 @@
-import { Archive, Bell, Building2, CheckCircle2, FileSignature, FileText, FolderPlus, Search } from "lucide-react";
+import { Archive, Bell, Building2, CheckCircle2, FileSignature, FileText, Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
@@ -70,7 +70,6 @@ export function StaffBatchReportsPage() {
   const reports = useReportStore((state) => state.reports);
   const updateReportStatus = useReportStore((state) => state.updateReportStatus);
   const generateFinalReport = useReportStore((state) => state.generateFinalReport);
-  const openNewSubmissionPeriod = useReportStore((state) => state.openNewSubmissionPeriod);
   const currentPeriod = getCurrentSubmissionPeriod();
   const defaultPeriod = getDefaultSubmissionPeriod(reports, currentPeriod);
   const [query, setQuery] = useState("");
@@ -78,7 +77,6 @@ export function StaffBatchReportsPage() {
   const [yearFilter, setYearFilter] = useState(defaultPeriod.year);
   const [selectedEnterprise, setSelectedEnterprise] = useState<ReportEnterprise | null>(null);
   const [selectedReport, setSelectedReport] = useState<IntakeReport | null>(null);
-  const [showCycleModal, setShowCycleModal] = useState(false);
 
 
   // Derive unique months and years dynamically from live intake report data
@@ -105,8 +103,6 @@ export function StaffBatchReportsPage() {
   const filteredByPeriod = useMemo(() => {
     return reports.filter((report) => reportMatchesPeriod(report, monthFilter, yearFilter));
   }, [reports, monthFilter, yearFilter]);
-
-  const hasCurrentSubmissionPeriod = reports.some((report) => reportMatchesPeriod(report, currentPeriod.month, currentPeriod.year));
 
   // Reports outside the filtered period (used for archived count)
   const nonPeriodReports = useMemo(() => {
@@ -225,25 +221,16 @@ export function StaffBatchReportsPage() {
               </option>
             ))}
           </select>
-          {!hasCurrentSubmissionPeriod ? (
-            <button
-              onClick={() => setShowCycleModal(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 inline-flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition"
-            >
-              <FolderPlus size={15} /> Open New Submission Period
-            </button>
-          ) : (
-            <button
-              onClick={handleGenerate}
-              disabled={!allReady}
-              title={!allReady ? "All enterprises must be Ready to Consolidate before generating." : "Generate Final Report"}
-              className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition ${
-                allReady ? "bg-tgreen-dark hover:bg-tgreen-light cursor-pointer text-white" : "cursor-not-allowed bg-gray-200 text-gray-400"
-              }`}
-            >
-              <FileSignature size={15} /> Generate Final Report
-            </button>
-          )}
+          <button
+            onClick={handleGenerate}
+            disabled={!allReady}
+            title={!allReady ? "All enterprises must be Ready to Consolidate before generating." : "Generate Final Report"}
+            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition ${
+              allReady ? "bg-tgreen-dark hover:bg-tgreen-light cursor-pointer text-white" : "cursor-not-allowed bg-gray-200 text-gray-400"
+            }`}
+          >
+            <FileSignature size={15} /> Generate Final Report
+          </button>
         </div>
 
         {allConsolidated ? (
@@ -251,7 +238,6 @@ export function StaffBatchReportsPage() {
             <CheckCircle2 size={14} className="shrink-0" />
             <span>
               <span className="font-semibold">Selected reporting cycle complete -</span> All reports have been consolidated and the final report has been generated.
-              {!hasCurrentSubmissionPeriod ? ` Open the ${currentPeriod.month} ${currentPeriod.year} submission period when ready.` : ""}
             </span>
           </div>
         ) : !allReady && filteredByPeriod.length > 0 ? (
@@ -312,24 +298,6 @@ export function StaffBatchReportsPage() {
             onClose={() => setSelectedReport(null)}
             onAccept={handleAccept}
             onReturn={handleReturn}
-          />
-        )}
-        {showCycleModal && (
-          <NewCycleModal
-            currentPeriod={currentPeriod}
-            onConfirm={() => {
-              const periodToOpen = getCurrentSubmissionPeriod();
-              const success = openNewSubmissionPeriod();
-              if (!success) {
-                toast.error(`A submission period for ${periodToOpen.month} ${periodToOpen.year} already exists.`);
-                return;
-              }
-              setShowCycleModal(false);
-              setMonthFilter(periodToOpen.month);
-              setYearFilter(periodToOpen.year);
-              toast.success(`New submission period opened for ${periodToOpen.month} ${periodToOpen.year}.`);
-            }}
-            onClose={() => setShowCycleModal(false)}
           />
         )}
       </AnimatePresence>
@@ -447,65 +415,5 @@ function ReportSection({
         {reports.length === 0 && <div className="rounded-xl border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">{empty}</div>}
       </div>
     </section>
-  );
-}
-
-function NewCycleModal({
-  currentPeriod,
-  onConfirm,
-  onClose,
-}: {
-  currentPeriod: SubmissionPeriod;
-  onConfirm: () => void;
-  onClose: () => void;
-}) {
-  return (
-    <ModalPortal>
-      <motion.div
-        className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
-        <motion.section
-          className="w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl"
-          initial={{ opacity: 0, y: 12, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 12, scale: 0.98 }}
-          transition={{ duration: 0.18, ease: "easeOut" }}
-        >
-          <header className="border-b border-gray-200 bg-gray-50 px-6 py-5">
-            <h2 className="text-lg font-bold text-gray-900">Open New Submission Period</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Create placeholder reports for all registered enterprises. They will appear as "Missing" until each enterprise submits.
-            </p>
-          </header>
-
-          <div className="space-y-4 px-6 py-5">
-            <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3">
-              <p className="text-xs font-semibold tracking-wide text-indigo-700 uppercase">Submission Period</p>
-              <p className="mt-1 text-base font-bold text-gray-900">
-                {currentPeriod.month} {currentPeriod.year}
-              </p>
-            </div>
-          </div>
-
-          <footer className="flex items-center justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4">
-            <button
-              onClick={onClose}
-              className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={onConfirm}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
-            >
-              <FolderPlus size={15} /> Open Period
-            </button>
-          </footer>
-        </motion.section>
-      </motion.div>
-    </ModalPortal>
   );
 }

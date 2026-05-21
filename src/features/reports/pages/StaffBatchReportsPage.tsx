@@ -17,15 +17,65 @@ const MONTH_ORDER = [
   "July", "August", "September", "October", "November", "December",
 ];
 
+type SubmissionPeriod = {
+  month: string;
+  year: string;
+};
+
+function getReportYear(report: IntakeReport) {
+  return report.period.match(/\d{4}/)?.[0] ?? null;
+}
+
+function reportMatchesPeriod(report: IntakeReport, month: string, year: string) {
+  return report.month === month && getReportYear(report) === year;
+}
+
+function getCurrentSubmissionPeriod(): SubmissionPeriod {
+  const currentDate = new Date();
+  return {
+    month: MONTH_ORDER[currentDate.getMonth()],
+    year: String(currentDate.getFullYear()),
+  };
+}
+
+function getLatestSubmissionPeriod(reports: IntakeReport[]) {
+  return reports.reduce<SubmissionPeriod | null>((latestPeriod, report) => {
+    const year = getReportYear(report);
+    const monthIndex = MONTH_ORDER.indexOf(report.month);
+    if (!year || monthIndex === -1) return latestPeriod;
+
+    if (!latestPeriod) {
+      return { month: report.month, year };
+    }
+
+    const latestMonthIndex = MONTH_ORDER.indexOf(latestPeriod.month);
+    if (Number(year) > Number(latestPeriod.year) || (year === latestPeriod.year && monthIndex > latestMonthIndex)) {
+      return { month: report.month, year };
+    }
+
+    return latestPeriod;
+  }, null);
+}
+
+function getDefaultSubmissionPeriod(reports: IntakeReport[], currentPeriod: SubmissionPeriod) {
+  if (reports.some((report) => reportMatchesPeriod(report, currentPeriod.month, currentPeriod.year))) {
+    return currentPeriod;
+  }
+
+  return getLatestSubmissionPeriod(reports) ?? currentPeriod;
+}
+
 export function StaffBatchReportsPage() {
   const authUser = useAuthStore((state) => state.user);
   const reports = useReportStore((state) => state.reports);
   const updateReportStatus = useReportStore((state) => state.updateReportStatus);
   const generateFinalReport = useReportStore((state) => state.generateFinalReport);
   const openNewSubmissionPeriod = useReportStore((state) => state.openNewSubmissionPeriod);
+  const currentPeriod = getCurrentSubmissionPeriod();
+  const defaultPeriod = getDefaultSubmissionPeriod(reports, currentPeriod);
   const [query, setQuery] = useState("");
-  const [monthFilter, setMonthFilter] = useState("All");
-  const [yearFilter, setYearFilter] = useState("All");
+  const [monthFilter, setMonthFilter] = useState(defaultPeriod.month);
+  const [yearFilter, setYearFilter] = useState(defaultPeriod.year);
   const [selectedEnterprise, setSelectedEnterprise] = useState<ReportEnterprise | null>(null);
   const [selectedReport, setSelectedReport] = useState<IntakeReport | null>(null);
   const [showCycleModal, setShowCycleModal] = useState(false);
@@ -51,16 +101,12 @@ export function StaffBatchReportsPage() {
     return years.sort((a, b) => Number(b) - Number(a));
   }, [reports]);
 
-  // Reports matching the active month/year filters
+  // Reports matching the selected period. The filters are history viewers only.
   const filteredByPeriod = useMemo(() => {
-    return reports.filter((r) => {
-      const yearMatch = r.period.match(/\d{4}/);
-      const reportYear = yearMatch ? yearMatch[0] : null;
-      const matchesMonth = monthFilter === "All" || r.month === monthFilter;
-      const matchesYear = yearFilter === "All" || reportYear === yearFilter;
-      return matchesMonth && matchesYear;
-    });
+    return reports.filter((report) => reportMatchesPeriod(report, monthFilter, yearFilter));
   }, [reports, monthFilter, yearFilter]);
+
+  const hasCurrentSubmissionPeriod = reports.some((report) => reportMatchesPeriod(report, currentPeriod.month, currentPeriod.year));
 
   // Reports outside the filtered period (used for archived count)
   const nonPeriodReports = useMemo(() => {
@@ -162,7 +208,6 @@ export function StaffBatchReportsPage() {
             onChange={(e) => setMonthFilter(e.target.value)}
             className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none"
           >
-            <option value="All">All Months</option>
             {availableMonths.map((m) => (
               <option key={m} value={m}>
                 {m}
@@ -174,14 +219,13 @@ export function StaffBatchReportsPage() {
             onChange={(e) => setYearFilter(e.target.value)}
             className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none"
           >
-            <option value="All">All Years</option>
             {availableYears.map((y) => (
               <option key={y} value={y}>
                 {y}
               </option>
             ))}
           </select>
-          {allConsolidated ? (
+          {!hasCurrentSubmissionPeriod ? (
             <button
               onClick={() => setShowCycleModal(true)}
               className="bg-indigo-600 hover:bg-indigo-700 inline-flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition"
@@ -205,11 +249,14 @@ export function StaffBatchReportsPage() {
         {allConsolidated ? (
           <div className="flex items-center gap-2 border-b border-emerald-100 bg-emerald-50 px-5 py-2.5 text-xs text-emerald-700">
             <CheckCircle2 size={14} className="shrink-0" />
-            <span><span className="font-semibold">Reporting cycle complete —</span> All reports have been consolidated and the final report has been generated. You may now open a new submission period.</span>
+            <span>
+              <span className="font-semibold">Selected reporting cycle complete -</span> All reports have been consolidated and the final report has been generated.
+              {!hasCurrentSubmissionPeriod ? ` Open the ${currentPeriod.month} ${currentPeriod.year} submission period when ready.` : ""}
+            </span>
           </div>
         ) : !allReady && filteredByPeriod.length > 0 ? (
           <div className="flex items-center gap-2 border-b border-amber-100 bg-amber-50 px-5 py-2.5 text-xs text-amber-700">
-            <span className="font-semibold">Not ready to generate —</span>
+            <span className="font-semibold">Not ready to generate -</span>
             {readyReports.length} of {reportEnterprises.length} enterprises are marked Ready to Consolidate. All must be ready before a final report can be generated.
           </div>
         ) : null}
@@ -269,17 +316,18 @@ export function StaffBatchReportsPage() {
         )}
         {showCycleModal && (
           <NewCycleModal
-            currentMonth={monthFilter !== "All" ? monthFilter : undefined}
-            onConfirm={(month, year) => {
-              const success = openNewSubmissionPeriod(month, year);
+            currentPeriod={currentPeriod}
+            onConfirm={() => {
+              const periodToOpen = getCurrentSubmissionPeriod();
+              const success = openNewSubmissionPeriod();
               if (!success) {
-                toast.error(`A submission period for ${month} ${year} already exists.`);
+                toast.error(`A submission period for ${periodToOpen.month} ${periodToOpen.year} already exists.`);
                 return;
               }
               setShowCycleModal(false);
-              setMonthFilter(month);
-              setYearFilter(year);
-              toast.success(`New submission period opened for ${month} ${year}.`);
+              setMonthFilter(periodToOpen.month);
+              setYearFilter(periodToOpen.year);
+              toast.success(`New submission period opened for ${periodToOpen.month} ${periodToOpen.year}.`);
             }}
             onClose={() => setShowCycleModal(false)}
           />
@@ -403,24 +451,14 @@ function ReportSection({
 }
 
 function NewCycleModal({
-  currentMonth,
+  currentPeriod,
   onConfirm,
   onClose,
 }: {
-  currentMonth?: string;
-  onConfirm: (month: string, year: string) => void;
+  currentPeriod: SubmissionPeriod;
+  onConfirm: () => void;
   onClose: () => void;
 }) {
-  const currentMonthIndex = currentMonth ? MONTH_ORDER.indexOf(currentMonth) : new Date().getMonth();
-  const nextMonthIndex = (currentMonthIndex + 1) % 12;
-  const nextYear = currentMonthIndex === 11 ? new Date().getFullYear() + 1 : new Date().getFullYear();
-
-  const [month, setMonth] = useState(MONTH_ORDER[nextMonthIndex]);
-  const [year, setYear] = useState(String(nextYear));
-
-  const currentYear = new Date().getFullYear();
-  const yearOptions = [currentYear - 1, currentYear, currentYear + 1].map(String);
-
   return (
     <ModalPortal>
       <motion.div
@@ -444,33 +482,11 @@ function NewCycleModal({
           </header>
 
           <div className="space-y-4 px-6 py-5">
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold tracking-wide text-gray-600 uppercase">Month</label>
-              <select
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-indigo-500"
-              >
-                {MONTH_ORDER.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold tracking-wide text-gray-600 uppercase">Year</label>
-              <select
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-indigo-500"
-              >
-                {yearOptions.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
+            <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3">
+              <p className="text-xs font-semibold tracking-wide text-indigo-700 uppercase">Submission Period</p>
+              <p className="mt-1 text-base font-bold text-gray-900">
+                {currentPeriod.month} {currentPeriod.year}
+              </p>
             </div>
           </div>
 
@@ -482,7 +498,7 @@ function NewCycleModal({
               Cancel
             </button>
             <button
-              onClick={() => onConfirm(month, year)}
+              onClick={onConfirm}
               className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
             >
               <FolderPlus size={15} /> Open Period

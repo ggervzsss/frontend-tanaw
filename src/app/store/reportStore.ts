@@ -9,7 +9,7 @@ type ReportState = {
   updateReportStatus: (reportId: string, status: ReportStatus, remarks?: string) => void;
   updateFinalReportStatus: (reportId: string, status: FinalReportStatus) => void;
   generateFinalReport: (reportIds: string[], preparedBy: string) => FinalReport | null;
-  openNewSubmissionPeriod: (month: string, year: string) => boolean;
+  openNewSubmissionPeriod: () => boolean;
 };
 
 export const useReportStore = create<ReportState>()(
@@ -61,8 +61,12 @@ export const useReportStore = create<ReportState>()(
 
         return finalReport;
       },
-      openNewSubmissionPeriod: (month, year) => {
-        // Guard: check if reports already exist for this month/year
+      openNewSubmissionPeriod: () => {
+        const currentDate = new Date();
+        const month = currentDate.toLocaleString("en-US", { month: "long" });
+        const year = currentDate.getFullYear().toString();
+
+        // Guard against duplicate reports for the actual current submission period.
         const existing = get().reports.some((r) => {
           const yearMatch = r.period.match(/\d{4}/);
           return r.month === month && yearMatch?.[0] === year;
@@ -106,7 +110,11 @@ export const useReportStore = create<ReportState>()(
 
 function mergeReportsWithBaseline(reports: IntakeReport[]) {
   const reportMap = new Map(reports.map((report) => [report.id, report]));
-  return initialReports.map((report) => reportMap.get(report.id) ?? report);
+  const baselineIds = new Set(initialReports.map((report) => report.id));
+  const baselineReports = initialReports.map((report) => reportMap.get(report.id) ?? report);
+  const openedPeriodReports = reports.filter((report) => !baselineIds.has(report.id));
+
+  return [...baselineReports, ...openedPeriodReports];
 }
 
 export function getReportEnterpriseName(enterpriseId: string) {

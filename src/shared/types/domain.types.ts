@@ -24,18 +24,6 @@ export type MapEnterprise = {
   totalTourists: number;
 };
 
-export type CameraNode = {
-  id: string;
-  enterpriseId: string;
-  enterpriseName: string;
-  name: string;
-  status: CameraStatus;
-  connectivity: number;
-  fps: number;
-  latencyMs: number;
-  lastChecked: string;
-};
-
 export type Enterprise = {
   id: string;
   enterpriseName: string;
@@ -43,7 +31,6 @@ export type Enterprise = {
   status: "Active" | "Archived";
   category: string;
   gatewayStatus: GatewayStatus;
-  pendingSync: number;
 };
 
 export type TechnicalLog = {
@@ -71,10 +58,6 @@ export type PipelineHealth = {
   name: string;
   barangay: string;
   gatewayStatus: GatewayStatus;
-  cameraFeed: {
-    activeCams: number;
-    totalCams: number;
-  };
   warnings: PipelineAlert[];
 };
 

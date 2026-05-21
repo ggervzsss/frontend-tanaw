@@ -1,16 +1,14 @@
-import { AlertTriangle, Building2, Camera, ClipboardList, DatabaseZap, ShieldCheck, Users, Wifi } from "lucide-react";
+import { AlertTriangle, Building2, ClipboardList, Users, Wifi } from "lucide-react";
 import { motion } from "motion/react";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { PageMotion, stagger } from "../../../shared/components/ui";
-import { enterpriseCameras, enterprises, pipelineHealth, technicalLogs } from "../../../shared/data";
+import { enterpriseAccounts, enterprises, pipelineHealth, technicalLogs } from "../../../shared/data";
 import type { AlertSeverity } from "../../../shared/types";
 
 export function ITDashboardPage() {
-  const connectedCameras = enterpriseCameras.filter((camera) => camera.status === "Online").length;
-  const offlineCameras = enterpriseCameras.filter((camera) => camera.status === "Offline").length;
+  const offlineCameras = enterpriseAccounts.reduce((total, enterprise) => total + enterprise.cameras.filter((camera) => camera.status === "Offline").length, 0);
   const gatewaysOnline = enterprises.filter((enterprise) => enterprise.gatewayStatus === "Connected").length;
-  const pendingSync = enterprises.reduce((total, enterprise) => total + enterprise.pendingSync, 0);
   const alerts = pipelineHealth.flatMap((enterprise) =>
     enterprise.warnings.map((warning) => ({
       ...warning,
@@ -18,8 +16,6 @@ export function ITDashboardPage() {
       gatewayStatus: enterprise.gatewayStatus,
     })),
   );
-  const criticalAlerts = alerts.filter((alert) => alert.severity === "Critical" && alert.status !== "Resolved").length;
-
   return (
     <PageMotion>
       <PageHeader title="Dashboard" description="Operational overview for accounts, enterprise connectivity, camera health, and recent system activity." />
@@ -27,11 +23,8 @@ export function ITDashboardPage() {
       <motion.section className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4" variants={stagger}>
         <MetricCard label="LGU Accounts" value={4} foot="Active account registry" color="#065f46" icon={Users} />
         <MetricCard label="Active Enterprises" value={enterprises.filter((enterprise) => enterprise.status === "Active").length} foot="Currently monitored" color="#2563eb" icon={Building2} />
-        <MetricCard label="Connected Cameras" value={connectedCameras} foot="Online telemetry nodes" color="#065f46" icon={Camera} />
-        <MetricCard label="Offline Cameras" value={offlineCameras} foot="Needs diagnosis" color="#dc2626" footClassName="text-red-600" icon={AlertTriangle} />
         <MetricCard label="Gateways Online" value={gatewaysOnline} foot="Synced edge gateways" color="#10b981" icon={Wifi} />
-        <MetricCard label="Pending Sync Records" value={pendingSync} foot="Queued for cloud sync" color="#f59e0b" footClassName="text-yellow-600" icon={DatabaseZap} />
-        <MetricCard label="Critical Alerts" value={criticalAlerts} foot="Open high-priority events" color="#a40e0e" footClassName="text-red-600" icon={ShieldCheck} />
+        <MetricCard label="Offline Cameras" value={offlineCameras} foot="Needs diagnosis" color="#dc2626" footClassName="text-red-600" icon={AlertTriangle} />
       </motion.section>
 
       <div className="mt-6 grid grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-6 max-xl:grid-cols-1">

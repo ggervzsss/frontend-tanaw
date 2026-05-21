@@ -5,7 +5,6 @@ export type {
   AuditEvent,
   AuditLog,
   AuditRole,
-  CameraNode,
   CameraStatus,
   Enterprise,
   EnterpriseAccount,

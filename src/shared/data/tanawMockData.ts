@@ -1,4 +1,4 @@
-import type { AuditLog, CameraNode, Enterprise, EnterpriseAccount, FinalReport, IntakeReport, LguAccount, MapEnterprise, PipelineHealth, ReportEnterprise, SystemAlert, TechnicalLog } from "../types";
+import type { AuditLog, Enterprise, EnterpriseAccount, FinalReport, IntakeReport, LguAccount, MapEnterprise, PipelineHealth, ReportEnterprise, SystemAlert, TechnicalLog } from "../types";
 
 const monitoredEstablishments = [
   {
@@ -37,7 +37,6 @@ const monitoredEstablishments = [
       totalTourists: 240,
     },
     complianceOwner: "S. Bercasio",
-    pendingSync: 34,
   },
   {
     enterpriseId: "E2",
@@ -74,7 +73,6 @@ const monitoredEstablishments = [
       totalTourists: 980,
     },
     complianceOwner: "I. Arabaca",
-    pendingSync: 0,
   },
   {
     enterpriseId: "E3",
@@ -108,7 +106,6 @@ const monitoredEstablishments = [
       totalTourists: 210,
     },
     complianceOwner: "D. Vallejera",
-    pendingSync: 0,
   },
   {
     enterpriseId: "E4",
@@ -145,7 +142,6 @@ const monitoredEstablishments = [
       totalTourists: 510,
     },
     complianceOwner: "R. Javier",
-    pendingSync: 118,
   },
 ] satisfies Array<{
   enterpriseId: string;
@@ -153,7 +149,6 @@ const monitoredEstablishments = [
   account: EnterpriseAccount;
   map: Omit<MapEnterprise, "name" | "barangay" | "type" | "address">;
   complianceOwner: string;
-  pendingSync: number;
 }>;
 
 export const mapEnterprises: MapEnterprise[] = monitoredEstablishments.map(({ account, map }) => ({
@@ -166,28 +161,13 @@ export const mapEnterprises: MapEnterprise[] = monitoredEstablishments.map(({ ac
 
 export const enterpriseAccounts: EnterpriseAccount[] = monitoredEstablishments.map(({ account }) => account);
 
-export const enterpriseCameras: CameraNode[] = monitoredEstablishments.flatMap(({ account, enterpriseId }) =>
-  account.cameras.map((camera) => ({
-    id: camera.id,
-    enterpriseId,
-    enterpriseName: account.enterpriseName,
-    name: camera.name,
-    status: camera.status,
-    connectivity: camera.status === "Online" ? 96.8 : camera.status === "Unstable" ? 54.1 : 0,
-    fps: camera.status === "Online" ? 29.4 : camera.status === "Unstable" ? 10.2 : 0,
-    latencyMs: camera.status === "Online" ? 48 : camera.status === "Unstable" ? 260 : 0,
-    lastChecked: camera.lastChecked,
-  })),
-);
-
-export const enterprises: Enterprise[] = monitoredEstablishments.map(({ account, enterpriseId, pendingSync }) => ({
+export const enterprises: Enterprise[] = monitoredEstablishments.map(({ account, enterpriseId }) => ({
   id: enterpriseId,
   enterpriseName: account.enterpriseName,
   barangay: account.barangay,
   status: "Active",
   category: account.category,
   gatewayStatus: account.gatewayStatus,
-  pendingSync,
 }));
 
 export const lguAccounts: LguAccount[] = [
@@ -259,7 +239,6 @@ export const pipelineHealth: PipelineHealth[] = [
     name: "Archie's Events Place",
     barangay: "San Antonio",
     gatewayStatus: "Sync Delayed",
-    cameraFeed: { activeCams: 2, totalCams: 3 },
     warnings: [
       { id: "ALERT-001", severity: "Warning", device: "CAM-03", msg: "Garden Stage camera has high occlusion and reduced detection confidence.", status: "New", time: "May 14, 2026 08:09 AM" },
       { id: "ALERT-002", severity: "Warning", device: "GW-ARCHIES-01", msg: "Gateway has 34 records pending cloud sync.", status: "Acknowledged", time: "May 14, 2026 07:40 AM" },
@@ -270,7 +249,6 @@ export const pipelineHealth: PipelineHealth[] = [
     name: "Lolo Uweng Shrine",
     barangay: "Landayan",
     gatewayStatus: "Connected",
-    cameraFeed: { activeCams: 2, totalCams: 2 },
     warnings: [],
   },
   {
@@ -278,7 +256,6 @@ export const pipelineHealth: PipelineHealth[] = [
     name: "Balaon ni Lolo Uweng",
     barangay: "Landayan",
     gatewayStatus: "Connected",
-    cameraFeed: { activeCams: 1, totalCams: 1 },
     warnings: [],
   },
   {
@@ -286,7 +263,6 @@ export const pipelineHealth: PipelineHealth[] = [
     name: "San Pedro Apostol Parish Church",
     barangay: "Poblacion",
     gatewayStatus: "Offline",
-    cameraFeed: { activeCams: 0, totalCams: 2 },
     warnings: [
       { id: "ALERT-003", severity: "Critical", device: "CAM-07", msg: "Parish Gate camera is offline and has failed RTSP testing.", status: "New", time: "May 14, 2026 07:52 AM" },
       { id: "ALERT-004", severity: "Warning", device: "CAM-08", msg: "Nave View camera is online but unstable.", status: "New", time: "May 14, 2026 07:59 AM" },

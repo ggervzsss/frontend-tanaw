@@ -1,7 +1,6 @@
-import { Archive, Download, FileCheck2, Printer, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useMemo, useState } from "react";
-import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
 import { PageMotion } from "../../../shared/components/ui";
@@ -12,7 +11,6 @@ import { FinalReportViewer, ReportStatusBadge } from "../components";
 type AuditFilter = "All" | FinalReportStatus;
 
 export function StaffFinalReportsAuditPage() {
-  const reports = useReportStore((state) => state.reports);
   const finalReports = useReportStore((state) => state.finalReports);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<AuditFilter>("All");
@@ -29,50 +27,11 @@ export function StaffFinalReportsAuditPage() {
     [filter, finalReports, query],
   );
 
-  const draftCount = finalReports.filter((report) => report.status === "Draft").length;
-  const archivedCount = finalReports.filter((report) => report.status === "Archived").length;
-
-  const latestMonth = useMemo(() => {
-    const monthOrder = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
-    ];
-    const calendarMonth = new Date().toLocaleString("en-US", { month: "long" });
-
-    // Prioritize calendar month if there are reports matching it
-    if (reports.some((r) => r.month.toLowerCase() === calendarMonth.toLowerCase())) {
-      return calendarMonth;
-    }
-
-    const existingMonths = Array.from(new Set(reports.map((r) => r.month)));
-    existingMonths.sort((a, b) => monthOrder.indexOf(b) - monthOrder.indexOf(a));
-    return existingMonths[0] || calendarMonth;
-  }, [reports]);
-
-  const totalUniqueForLatestMonth = useMemo(() => {
-    const latestMonthReports = reports.filter((r) => r.month.toLowerCase() === latestMonth.toLowerCase());
-    return latestMonthReports.reduce((sum, r) => sum + r.metrics.unique, 0);
-  }, [reports, latestMonth]);
-
   return (
     <PageMotion>
       <PageHeader title="Final Reports Audit" description="Review, print, and download official consolidated reports for DOT submission." />
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <MetricCard label="Final Artifacts" value={finalReports.length} foot="Generated reports" color="#065f46" icon={FileCheck2} />
-        <MetricCard label="Draft Reports" value={draftCount} foot="Awaiting review" color="#2563eb" icon={Printer} />
-        <MetricCard label="Archived Reports" value={archivedCount} foot="Historical submissions" color="#9ca3af" icon={Archive} />
-        <MetricCard
-          label="Aggregated Unique Pax"
-          value={totalUniqueForLatestMonth.toLocaleString()}
-          foot={`${latestMonth} Active Telemetry`}
-          footClassName="text-amber-600 font-semibold"
-          color="#f59e0b"
-          icon={Download}
-        />
-      </section>
-
-      <Panel className="mt-6 overflow-hidden">
+      <Panel className="overflow-hidden">
         <div className="flex flex-wrap items-center gap-3 border-b border-gray-200 bg-gray-50 p-4">
           <div className="relative min-w-65 flex-1">
             <Search size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
@@ -84,7 +43,7 @@ export function StaffFinalReportsAuditPage() {
             />
           </div>
           <select value={filter} onChange={(event) => setFilter(event.target.value as AuditFilter)} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none">
-            {["All", "Draft", "Approved", "Archived"].map((value) => (
+            {["All", "Draft", "Finalized", "Archived"].map((value) => (
               <option key={value}>{value}</option>
             ))}
           </select>

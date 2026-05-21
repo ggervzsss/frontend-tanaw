@@ -1,4 +1,4 @@
-import { Archive, ArchiveRestore, Download, Printer, X } from "lucide-react";
+import { Archive, ArchiveRestore, CheckCircle, Download, Printer, X } from "lucide-react";
 import { motion } from "motion/react";
 import toast from "react-hot-toast";
 import { useReportStore } from "../../../app/store/reportStore";
@@ -27,6 +27,12 @@ export function FinalReportViewer({ report, onClose }: FinalReportViewerProps) {
   const handleArchive = () => {
     updateFinalReportStatus(report.id, "Archived");
     toast.success(`${report.id} has been moved to Archives.`);
+    onClose();
+  };
+
+  const handleFinalize = () => {
+    updateFinalReportStatus(report.id, "Finalized");
+    toast.success(`${report.id} marked as Finalized. Ready for DOT handoff.`);
     onClose();
   };
 
@@ -62,9 +68,16 @@ export function FinalReportViewer({ report, onClose }: FinalReportViewerProps) {
                   <ArchiveRestore size={15} /> Unarchive
                 </button>
               ) : (
-                <button onClick={handleArchive} className="bg-amber-600 hover:bg-amber-700 text-white inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition cursor-pointer">
-                  <Archive size={15} /> Archive
-                </button>
+                <>
+                  {report.status === "Draft" && (
+                    <button onClick={handleFinalize} className="bg-teal-600 hover:bg-teal-700 text-white inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition cursor-pointer">
+                      <CheckCircle size={15} /> Mark as Finalized
+                    </button>
+                  )}
+                  <button onClick={handleArchive} className="bg-amber-600 hover:bg-amber-700 text-white inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition cursor-pointer">
+                    <Archive size={15} /> Archive
+                  </button>
+                </>
               )}
               <button onClick={downloadReport} className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold transition hover:bg-gray-100">
                 <Download size={15} /> Download

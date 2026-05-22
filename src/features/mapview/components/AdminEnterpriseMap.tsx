@@ -1,9 +1,28 @@
 import L, { type GeoJSONOptions, type Layer } from "leaflet";
-import { Building2, ChevronDown, Map as MapIcon, MapPin, PanelRightClose, PanelRightOpen, Search, Users } from "lucide-react";
+import { Activity, ArrowLeft, Building2, ChevronDown, Clock, Map as MapIcon, MapPin, PanelLeftClose, PanelLeftOpen, Phone, Radio, Search, TrendingUp, Users, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { mapEnterprises } from "../../../shared/data";
-import type { EnterpriseStatus, MapEnterprise } from "../../../shared/types";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+type EnterpriseStatus = "Normal" | "Warning" | "Critical";
+type GatewayStatus = "Connected" | "Sync Delayed" | "Offline" | "Not Linked";
+
+type MapEnterprise = {
+  id: number;
+  name: string;
+  barangay: string;
+  category: string;
+  fullAddress: string;
+  lat: number;
+  lng: number;
+  totalLiveOccupancy: number;
+  estimatedUniqueCount: number;
+  status: EnterpriseStatus;
+  operatingHours?: string;
+  contact?: string;
+  trend?: "Up" | "Stable" | "Down";
+  lastSync?: string;
+  gatewayStatus?: GatewayStatus;
+};
 
 type GeoJsonFeatureCollection = GeoJSON.FeatureCollection;
 
@@ -11,9 +30,9 @@ const SAN_PEDRO_BARANGAYS_URL = "/data/san_pedro_barangays_clean_v4.geojson";
 
 const sanPedroFallbackCenter: L.LatLngTuple = [14.3413, 121.0446];
 
-const sanPedroFallbackBounds: L.LatLngBoundsExpression = [
-  [14.274, 120.985],
-  [14.379, 121.091],
+const sanPedroRelaxedFallbackBounds: L.LatLngBoundsExpression = [
+  [14.235, 120.945],
+  [14.418, 121.131],
 ];
 
 const barangayColors: Record<string, string> = {
@@ -59,29 +78,240 @@ const barangayFilterAliases: Record<string, string> = {
   sanlorenzoruiz: "sanlorenzo",
 };
 
-const statusPriority: Record<EnterpriseStatus, number> = {
-  Normal: 1,
-  Warning: 2,
-  Critical: 3,
-};
+// Coordinates are validated against the San Pedro barangay GeoJSON used by this map.
+const mapEnterprises: MapEnterprise[] = [
+  {
+    id: 101,
+    name: "Archie's Events Place",
+    barangay: "San Antonio",
+    category: "Events Venue",
+    fullAddress: "Sapphire Street, Barangay San Antonio, San Pedro City, Laguna",
+    lat: 14.3525904,
+    lng: 121.0314825,
+    totalLiveOccupancy: 84,
+    estimatedUniqueCount: 268,
+    status: "Normal",
+    operatingHours: "10:00 AM - 5:00 PM",
+    contact: "+63 917 172 4437",
+    trend: "Stable",
+    lastSync: "May 22, 2026 09:14 AM",
+    gatewayStatus: "Connected",
+  },
+  {
+    id: 102,
+    name: "Alaska Milk San Pedro Facility",
+    barangay: "San Antonio",
+    category: "Industrial Facility",
+    fullAddress: "San Antonio Industrial Area, Barangay San Antonio, San Pedro City, Laguna",
+    lat: 14.3494,
+    lng: 121.0348,
+    totalLiveOccupancy: 126,
+    estimatedUniqueCount: 412,
+    status: "Warning",
+    operatingHours: "24 hours",
+    trend: "Up",
+    lastSync: "May 22, 2026 09:08 AM",
+    gatewayStatus: "Sync Delayed",
+  },
+  {
+    id: 103,
+    name: "Lolo Uweng Shrine",
+    barangay: "Landayan",
+    category: "Faith Tourism",
+    fullAddress: "San Luis Street, Barangay Landayan, San Pedro City, Laguna",
+    lat: 14.3506439,
+    lng: 121.0653219,
+    totalLiveOccupancy: 212,
+    estimatedUniqueCount: 940,
+    status: "Warning",
+    operatingHours: "6:00 AM - 8:00 PM",
+    trend: "Up",
+    lastSync: "May 22, 2026 09:11 AM",
+    gatewayStatus: "Connected",
+  },
+  {
+    id: 104,
+    name: "theRITS Event Location",
+    barangay: "Landayan",
+    category: "Events Venue",
+    fullAddress: "Hernandez Street, Barangay Landayan, San Pedro City, Laguna",
+    lat: 14.3518,
+    lng: 121.0664,
+    totalLiveOccupancy: 52,
+    estimatedUniqueCount: 176,
+    status: "Normal",
+    operatingHours: "By reservation",
+    contact: "+63 917 839 8747",
+    trend: "Stable",
+    lastSync: "May 22, 2026 09:05 AM",
+    gatewayStatus: "Connected",
+  },
+  {
+    id: 105,
+    name: "Jollibee - New Pacita",
+    barangay: "Pacita I",
+    category: "Food",
+    fullAddress: "National Highway, Pacita Complex, Barangay Pacita I, San Pedro City, Laguna",
+    lat: 14.3466,
+    lng: 121.0613,
+    totalLiveOccupancy: 68,
+    estimatedUniqueCount: 610,
+    status: "Normal",
+    operatingHours: "6:00 AM - 10:00 PM",
+    trend: "Up",
+    lastSync: "May 22, 2026 09:18 AM",
+    gatewayStatus: "Connected",
+  },
+  {
+    id: 106,
+    name: "Pacita Wet Market",
+    barangay: "Pacita I",
+    category: "Market",
+    fullAddress: "Pacita Complex, Barangay Pacita I, San Pedro City, Laguna",
+    lat: 14.3449,
+    lng: 121.0606,
+    totalLiveOccupancy: 184,
+    estimatedUniqueCount: 720,
+    status: "Warning",
+    operatingHours: "6:00 AM - 3:00 PM",
+    trend: "Up",
+    lastSync: "May 22, 2026 09:03 AM",
+    gatewayStatus: "Sync Delayed",
+  },
+  {
+    id: 107,
+    name: "Rina's Dry Goods & Money Changer",
+    barangay: "Pacita II",
+    category: "Retail / Services",
+    fullAddress: "Pacita Complex, Barangay Pacita II, San Pedro City, Laguna",
+    lat: 14.349,
+    lng: 121.0576,
+    totalLiveOccupancy: 16,
+    estimatedUniqueCount: 135,
+    status: "Normal",
+    operatingHours: "9:00 AM - 6:00 PM",
+    trend: "Stable",
+    lastSync: "May 22, 2026 08:57 AM",
+    gatewayStatus: "Connected",
+  },
+  {
+    id: 108,
+    name: "San Pedro Public Market",
+    barangay: "Nueva",
+    category: "Market",
+    fullAddress: "Barangay Nueva, San Pedro City, Laguna",
+    lat: 14.3621,
+    lng: 121.0564,
+    totalLiveOccupancy: 236,
+    estimatedUniqueCount: 880,
+    status: "Critical",
+    operatingHours: "5:00 AM - 7:00 PM",
+    trend: "Up",
+    lastSync: "May 22, 2026 08:49 AM",
+    gatewayStatus: "Sync Delayed",
+  },
+  {
+    id: 109,
+    name: "Robinsons Galleria South",
+    barangay: "Nueva",
+    category: "Mall",
+    fullAddress: "Barangay Nueva, San Pedro City, Laguna",
+    lat: 14.3558,
+    lng: 121.061,
+    totalLiveOccupancy: 318,
+    estimatedUniqueCount: 1240,
+    status: "Normal",
+    operatingHours: "10:00 AM - 9:00 PM",
+    trend: "Stable",
+    lastSync: "May 22, 2026 09:10 AM",
+    gatewayStatus: "Connected",
+  },
+  {
+    id: 110,
+    name: "MAGIE Store",
+    barangay: "United Better Living",
+    category: "Sari-sari Store",
+    fullAddress: "Southern Heights I Subdivision, Barangay United Better Living, San Pedro City, Laguna",
+    lat: 14.3373,
+    lng: 121.0238,
+    totalLiveOccupancy: 9,
+    estimatedUniqueCount: 82,
+    status: "Normal",
+    operatingHours: "7:00 AM - 8:00 PM",
+    contact: "+63 918 431 9918",
+    trend: "Stable",
+    lastSync: "May 22, 2026 09:01 AM",
+    gatewayStatus: "Connected",
+  },
+  {
+    id: 111,
+    name: "JOVI Commercial Space",
+    barangay: "United Better Living",
+    category: "Commercial Space",
+    fullAddress: "Mt. Mayon Street, Southern Heights II, Barangay United Better Living, San Pedro City, Laguna",
+    lat: 14.3386,
+    lng: 121.0243,
+    totalLiveOccupancy: 21,
+    estimatedUniqueCount: 118,
+    status: "Normal",
+    operatingHours: "8:00 AM - 6:00 PM",
+    trend: "Stable",
+    lastSync: "May 22, 2026 08:54 AM",
+    gatewayStatus: "Connected",
+  },
+  {
+    id: 112,
+    name: "Ribsarap - Langgam",
+    barangay: "Langgam",
+    category: "Food",
+    fullAddress: "Magsaysay Avenue, Barangay Langgam, San Pedro City, Laguna",
+    lat: 14.3261,
+    lng: 121.0179,
+    totalLiveOccupancy: 44,
+    estimatedUniqueCount: 210,
+    status: "Normal",
+    operatingHours: "10:00 AM - 9:00 PM",
+    trend: "Up",
+    lastSync: "May 22, 2026 09:17 AM",
+    gatewayStatus: "Connected",
+  },
+  {
+    id: 113,
+    name: "Well Spring of Grace School",
+    barangay: "Langgam",
+    category: "Education",
+    fullAddress: "Lot 11-13 Block 46, Southern Heights I Subdivision, Barangay Langgam, San Pedro City, Laguna",
+    lat: 14.3253,
+    lng: 121.0211,
+    totalLiveOccupancy: 156,
+    estimatedUniqueCount: 430,
+    status: "Normal",
+    operatingHours: "7:00 AM - 5:00 PM",
+    trend: "Stable",
+    lastSync: "May 22, 2026 08:58 AM",
+    gatewayStatus: "Connected",
+  },
+];
 
 const activeBoundaryStyle: L.PathOptions = {
-  color: "#2d5eff",
-  fillOpacity: 0.82,
-  weight: 3.2,
+  color: "#4f7cff",
+  fillOpacity: 0.62,
+  opacity: 0.94,
+  weight: 2.6,
 };
 
 const dimmedBoundaryStyle: L.PathOptions = {
   color: "#2a3063",
-  fillOpacity: 0.18,
-  opacity: 0.55,
-  weight: 1,
+  fillOpacity: 0.26,
+  opacity: 0.68,
+  weight: 1.05,
 };
 
 const hoverBoundaryStyle: L.PathOptions = {
-  color: "#ffffff",
-  fillOpacity: 0.74,
-  weight: 2.4,
+  color: "#d7e4ff",
+  fillOpacity: 0.58,
+  opacity: 0.92,
+  weight: 2,
 };
 
 export function AdminEnterpriseMap() {
@@ -91,6 +321,7 @@ export function AdminEnterpriseMap() {
   const activeBoundaryRef = useRef<L.Path | null>(null);
   const markersRef = useRef<Record<number, L.Marker>>({});
   const selectedBarangayNameRef = useRef<string | null>(null);
+  const hasInitialOverviewFitRef = useRef(false);
 
   const [boundary, setBoundary] = useState<GeoJsonFeatureCollection | null>(null);
   const [isBoundaryLoading, setIsBoundaryLoading] = useState(true);
@@ -105,15 +336,11 @@ export function AdminEnterpriseMap() {
   const boundaryFeatureCount = useMemo(() => boundary?.features.filter(isBoundaryPolygonFeature).length ?? 0, [boundary]);
 
   const enterpriseCountsByBarangay = useMemo(() => {
-    const counts = new Map<string, { count: number; visitors: number }>();
+    const counts = new Map<string, number>();
 
     mapEnterprises.forEach((enterprise) => {
       const key = normalizeBarangayName(enterprise.barangay);
-      const current = counts.get(key) ?? { count: 0, visitors: 0 };
-      counts.set(key, {
-        count: current.count + 1,
-        visitors: current.visitors + enterprise.visitorCount,
-      });
+      counts.set(key, (counts.get(key) ?? 0) + 1);
     });
 
     return counts;
@@ -127,15 +354,14 @@ export function AdminEnterpriseMap() {
       .map((featureItem) => {
         const label = getBarangayLabel(featureItem);
         const key = normalizeBarangayName(label);
-        const enterpriseSummary = enterpriseCountsByBarangay.get(key) ?? { count: 0, visitors: 0 };
+        const enterpriseCount = enterpriseCountsByBarangay.get(key) ?? 0;
 
         return {
           feature: featureItem,
           label,
           key,
           subtitle: getFeatureValue(featureItem, ["official_barangay", "name"]),
-          enterpriseCount: enterpriseSummary.count,
-          visitorCount: enterpriseSummary.visitors,
+          enterpriseCount,
         };
       })
       .filter((item) => item.key.includes(searchKey))
@@ -143,9 +369,8 @@ export function AdminEnterpriseMap() {
   }, [barangaySearch, boundary, enterpriseCountsByBarangay]);
 
   const selectedBarangayEnterprises = useMemo(() => (selectedBarangayName ? getEnterprisesByBarangay(selectedBarangayName) : []), [selectedBarangayName]);
-  const barangayHighestStatus = useMemo(() => getHighestStatus(selectedBarangayEnterprises), [selectedBarangayEnterprises]);
   const visibleEnterprises = selectedBarangayName ? selectedBarangayEnterprises : mapEnterprises;
-  const selectedEnterprise = mapEnterprises.find((enterprise) => enterprise.id === selectedEnterpriseId);
+  const selectedEnterprise = selectedEnterpriseId === null ? null : (mapEnterprises.find((enterprise) => enterprise.id === selectedEnterpriseId) ?? null);
 
   const applyBoundarySelection = useCallback((barangayName: string | null) => {
     const selectedKey = barangayName ? normalizeBarangayName(barangayName) : "";
@@ -186,9 +411,9 @@ export function AdminEnterpriseMap() {
   const selectBarangay = useCallback(
     (barangayName: string, layer?: L.Path) => {
       const targetLayer = layer ?? findBoundaryLayerByName(barangayName);
-      const enterprises = getEnterprisesByBarangay(barangayName);
+      selectedBarangayNameRef.current = barangayName;
       setSelectedBarangayName(barangayName);
-      setSelectedEnterpriseId(enterprises[0]?.id ?? null);
+      setSelectedEnterpriseId(null);
       applyBoundarySelection(barangayName);
 
       const map = mapRef.current;
@@ -197,16 +422,25 @@ export function AdminEnterpriseMap() {
       const bounds = targetLayer.getBounds();
       if (!bounds?.isValid()) return;
 
-      map.fitBounds(bounds.pad(0.24), {
-        maxZoom: 15.4,
-        padding: [28, 28],
+      const mapSize = map.getSize();
+      const shouldOffsetForSidebar = !isDirectoryCollapsed && mapSize.x >= 820;
+
+      map.stop();
+      map.flyToBounds(bounds.pad(0.38), {
+        animate: true,
+        duration: 0.95,
+        easeLinearity: 0.18,
+        maxZoom: 14.35,
+        paddingTopLeft: shouldOffsetForSidebar ? [410, 56] : [36, 36],
+        paddingBottomRight: [56, 56],
       });
       targetLayer.openTooltip();
     },
-    [applyBoundarySelection, findBoundaryLayerByName],
+    [applyBoundarySelection, findBoundaryLayerByName, isDirectoryCollapsed],
   );
 
   const clearSelectedBarangay = useCallback(() => {
+    selectedBarangayNameRef.current = null;
     setSelectedBarangayName(null);
     setSelectedEnterpriseId(null);
     applyBoundarySelection(null);
@@ -215,6 +449,11 @@ export function AdminEnterpriseMap() {
       fitMapToSanPedroBounds(mapRef.current, boundaryLayerRef.current);
     }
   }, [applyBoundarySelection]);
+
+  const closeEnterpriseDetails = useCallback(() => {
+    setSelectedEnterpriseId(null);
+    mapRef.current?.closePopup();
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -252,8 +491,8 @@ export function AdminEnterpriseMap() {
     if (mapRef.current) return undefined;
 
     const map = L.map(mapContainerId, {
-      maxBounds: sanPedroFallbackBounds,
-      maxBoundsViscosity: 0.95,
+      maxBounds: sanPedroRelaxedFallbackBounds,
+      maxBoundsViscosity: 0.35,
       maxZoom: 18,
       minZoom: 11.2,
       zoomControl: false,
@@ -296,9 +535,9 @@ export function AdminEnterpriseMap() {
         weight: 1.15,
         opacity: 0.86,
         fillColor: getGeoJsonColor(name),
-        fillOpacity: 0.5,
+        fillOpacity: 0.48,
         pane: "boundaryPane",
-        className: "outline-none",
+        className: "tanaw-boundary-path outline-none",
       };
     };
 
@@ -342,7 +581,10 @@ export function AdminEnterpriseMap() {
     }
 
     applyBoundarySelection(selectedBarangayNameRef.current);
-    fitMapToSanPedroBounds(map, boundaryLayerRef.current);
+    if (!selectedBarangayNameRef.current && !hasInitialOverviewFitRef.current) {
+      fitMapToSanPedroBounds(map, boundaryLayerRef.current);
+      hasInitialOverviewFitRef.current = true;
+    }
   }, [applyBoundarySelection, boundary, selectBarangay, showBoundaries]);
 
   useEffect(() => {
@@ -352,7 +594,12 @@ export function AdminEnterpriseMap() {
     const timers = [0, 120, 280].map((delay) =>
       window.setTimeout(() => {
         map.invalidateSize({ pan: false });
-        fitMapToSanPedroBounds(map, boundaryLayerRef.current);
+        const boundaryLayer = boundaryLayerRef.current;
+
+        if (!selectedBarangayNameRef.current && boundaryLayer) {
+          fitMapToSanPedroBounds(map, boundaryLayer);
+          hasInitialOverviewFitRef.current = true;
+        }
         applyBoundarySelection(selectedBarangayNameRef.current);
       }, delay),
     );
@@ -411,7 +658,25 @@ export function AdminEnterpriseMap() {
 
   return (
     <div className="border-tanaw-gray bg-tanaw-gray relative min-h-0 flex-1 overflow-hidden rounded-xl border shadow-sm max-sm:min-h-140">
-      <div className={["absolute top-0 bottom-0 left-0 z-0 transition-[right] duration-300 ease-out", isDirectoryCollapsed ? "right-0" : "right-0 lg:right-103"].join(" ")}>
+      <style>
+        {`
+          #${mapContainerId} .tanaw-boundary-path {
+            transition:
+              fill-opacity 280ms cubic-bezier(0.22, 1, 0.36, 1),
+              stroke-opacity 280ms cubic-bezier(0.22, 1, 0.36, 1),
+              stroke-width 280ms cubic-bezier(0.22, 1, 0.36, 1),
+              stroke 280ms cubic-bezier(0.22, 1, 0.36, 1);
+          }
+
+          #${mapContainerId} .leaflet-marker-icon,
+          #${mapContainerId} .leaflet-popup {
+            transition:
+              opacity 220ms ease-out,
+              transform 220ms ease-out;
+          }
+        `}
+      </style>
+      <div className="absolute inset-0 z-0">
         <div id={mapContainerId} className="h-full w-full" />
       </div>
 
@@ -419,20 +684,20 @@ export function AdminEnterpriseMap() {
         {!isDirectoryCollapsed && (
           <motion.aside
             id="spatial-directory-panel"
-            initial={{ opacity: 0, x: 24 }}
+            initial={{ opacity: 0, x: -24 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 24 }}
+            exit={{ opacity: 0, x: -24 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
-            className="absolute top-4 right-4 bottom-4 z-420 flex w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-white/10 bg-slate-950/40 shadow-2xl backdrop-blur-md"
+            className="absolute top-4 bottom-4 left-4 z-420 flex w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-white/15 bg-slate-950/65 shadow-[0_24px_70px_rgba(2,6,23,0.48)] backdrop-blur-md"
           >
             {/* Header section (Fixed size, shrink-0) */}
-            <div className="flex shrink-0 flex-col gap-3 border-b border-white/10 bg-black/20 px-4 py-3">
+            <div className="flex shrink-0 flex-col gap-3 border-b border-white/15 bg-black/30 px-4 py-3">
               <div className="relative z-10 flex items-start justify-between gap-3">
                 <div>
-                  <span className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-white uppercase">
+                  <span className="flex items-center gap-2 text-[10px] font-black tracking-widest text-white uppercase">
                     <MapIcon size={14} className="text-tanaw-sky" /> Spatial Directory
                   </span>
-                  <p className="mt-1 text-[9px] font-semibold tracking-widest text-white/55 uppercase">
+                  <p className="mt-1 text-[9px] font-bold tracking-widest text-white/65 uppercase">
                     {selectedBarangayName
                       ? `${selectedBarangayEnterprises.length} registered enterprises`
                       : isBoundaryLoading
@@ -448,7 +713,7 @@ export function AdminEnterpriseMap() {
                     title={showBoundaries ? "Hide barangay boundaries" : "Show barangay boundaries"}
                     aria-pressed={showBoundaries}
                     onClick={() => setShowBoundaries((value) => !value)}
-                    className={`focus:ring-tanaw-sky rounded border px-2 py-1 text-[9px] font-black tracking-widest uppercase transition focus:ring-2 focus:outline-none ${showBoundaries ? "border-emerald-400/40 bg-emerald-500/20 text-white" : "border-white/15 bg-white/10 text-white/70 hover:bg-white/20"}`}
+                    className={`focus:ring-tanaw-sky rounded border px-2 py-1 text-[9px] font-black tracking-widest uppercase transition focus:ring-2 focus:outline-none ${showBoundaries ? "border-emerald-400/45 bg-emerald-500/25 text-white shadow-sm shadow-emerald-950/30" : "border-white/20 bg-white/10 text-white/75 hover:border-white/30 hover:bg-white/15 hover:text-white"}`}
                   >
                     Boundaries
                   </button>
@@ -458,22 +723,22 @@ export function AdminEnterpriseMap() {
                     aria-label="Collapse spatial directory"
                     title="Collapse spatial directory"
                     onClick={() => setIsDirectoryCollapsed(true)}
-                    className="focus:ring-tanaw-sky flex h-8 w-8 shrink-0 items-center justify-center rounded border border-white/15 bg-white/10 text-white transition hover:bg-white/20 focus:ring-2 focus:outline-none"
+                    className="focus:ring-tanaw-sky flex h-8 w-8 shrink-0 items-center justify-center rounded border border-white/20 bg-white/10 text-white/80 transition hover:border-white/30 hover:bg-white/15 hover:text-white focus:ring-2 focus:outline-none"
                   >
-                    <PanelRightClose size={15} />
+                    <PanelLeftClose size={15} />
                   </button>
                 </div>
               </div>
             </div>
 
             {/* Dropdown Selector section (Fixed size, shrink-0, overflow-visible for dropdown menu) */}
-            <div className="relative z-20 shrink-0 overflow-visible border-b border-white/10 bg-black/10 px-4 py-3">
-              <label className="mb-1 block text-[9px] font-black tracking-widest text-white/50 uppercase">Select Barangay</label>
+            <div className="relative z-20 shrink-0 overflow-visible border-b border-white/15 bg-black/20 px-4 py-3">
+              <label className="mb-1 block text-[9px] font-black tracking-widest text-white/65 uppercase">Select Barangay</label>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="focus:ring-tanaw-sky flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left transition hover:bg-white/10 focus:ring-2 focus:outline-none"
+                  className="focus:ring-tanaw-sky flex w-full items-center justify-between gap-2 rounded-lg border border-white/15 bg-slate-950/45 px-3 py-2 text-left shadow-inner shadow-black/20 transition hover:border-white/25 hover:bg-slate-950/55 focus:ring-2 focus:outline-none"
                 >
                   <span className="truncate text-[10px] font-bold tracking-widest text-white uppercase">{selectedBarangayName ? `Barangay ${selectedBarangayName}` : "All Barangays"}</span>
                   <div className="flex shrink-0 items-center gap-1.5">
@@ -484,7 +749,7 @@ export function AdminEnterpriseMap() {
                           e.stopPropagation();
                           clearSelectedBarangay();
                         }}
-                        className="rounded p-0.5 text-white/40 transition hover:bg-white/10 hover:text-white"
+                        className="rounded p-0.5 text-white/55 transition hover:bg-white/10 hover:text-white"
                         title="Clear selection"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
@@ -496,7 +761,7 @@ export function AdminEnterpriseMap() {
                         </svg>
                       </button>
                     )}
-                    <ChevronDown size={14} className={["text-white/50 transition-transform duration-200", isDropdownOpen ? "rotate-180" : ""].join(" ")} />
+                    <ChevronDown size={14} className={["text-white/65 transition-transform duration-200", isDropdownOpen ? "rotate-180" : ""].join(" ")} />
                   </div>
                 </button>
 
@@ -510,16 +775,16 @@ export function AdminEnterpriseMap() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 left-0 z-40 mt-1 flex max-h-64 flex-col overflow-hidden rounded-lg border border-white/10 bg-slate-950 shadow-2xl backdrop-blur-md"
+                        className="absolute right-0 left-0 z-40 mt-1 flex max-h-64 flex-col overflow-hidden rounded-lg border border-white/15 bg-slate-950/95 shadow-2xl backdrop-blur-md"
                       >
-                        <div className="shrink-0 border-b border-white/5 bg-black/20 p-2">
-                          <label className="flex items-center gap-2 rounded-md border border-white/10 bg-black/25 px-2 py-1 text-white">
-                            <Search size={11} className="text-white/40" />
+                        <div className="shrink-0 border-b border-white/10 bg-black/30 p-2">
+                          <label className="flex items-center gap-2 rounded-md border border-white/15 bg-black/35 px-2 py-1 text-white">
+                            <Search size={11} className="text-white/55" />
                             <input
                               value={barangaySearch}
                               onChange={(event) => setBarangaySearch(event.target.value)}
                               placeholder="Search barangay..."
-                              className="min-w-0 flex-1 bg-transparent text-[10px] font-bold tracking-widest text-white uppercase outline-none placeholder:text-white/30"
+                              className="min-w-0 flex-1 bg-transparent text-[10px] font-bold tracking-widest text-white uppercase outline-none placeholder:text-white/40"
                               onClick={(e) => e.stopPropagation()}
                             />
                           </label>
@@ -534,7 +799,7 @@ export function AdminEnterpriseMap() {
                             }}
                             className={[
                               "focus:ring-tanaw-sky flex w-full items-center justify-between rounded-md border border-transparent px-2 py-1.5 text-left text-[9px] font-black tracking-widest uppercase transition focus:ring-1 focus:outline-none",
-                              !selectedBarangayName ? "bg-tanaw-sky/20 border-tanaw-sky/30 text-white" : "text-white/60 hover:bg-white/5 hover:text-white",
+                              !selectedBarangayName ? "border-tanaw-sky/35 bg-tanaw-sky/25 text-white" : "text-white/70 hover:border-white/10 hover:bg-white/10 hover:text-white",
                             ].join(" ")}
                           >
                             <span>All Barangays</span>
@@ -550,7 +815,7 @@ export function AdminEnterpriseMap() {
                               }}
                               className={[
                                 "focus:ring-tanaw-sky flex w-full items-center justify-between rounded-md border border-transparent px-2 py-1.5 text-left text-[9px] font-black tracking-widest uppercase transition focus:ring-1 focus:outline-none",
-                                selectedBarangayName === item.label ? "bg-tanaw-sky/20 border-tanaw-sky/30 text-white" : "text-white/60 hover:bg-white/5 hover:text-white",
+                                selectedBarangayName === item.label ? "border-tanaw-sky/35 bg-tanaw-sky/25 text-white" : "text-white/70 hover:border-white/10 hover:bg-white/10 hover:text-white",
                               ].join(" ")}
                             >
                               <span className="truncate">Barangay {item.label}</span>
@@ -571,43 +836,62 @@ export function AdminEnterpriseMap() {
               <AnimatePresence mode="wait" initial={false}>
                 {selectedBarangayName ? (
                   <motion.div
-                    key="barangay-enterprises"
-                    initial={{ opacity: 0, y: 12 }}
+                    key={`barangay-enterprises-${normalizeBarangayName(selectedBarangayName)}`}
+                    initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 12 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.24, ease: "easeOut" }}
                     className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-3"
                   >
+                    <button
+                      type="button"
+                      onClick={clearSelectedBarangay}
+                      className="focus:ring-tanaw-sky flex shrink-0 items-center gap-2 rounded-lg border border-white/15 bg-slate-950/35 px-3 py-2 text-left text-[9px] font-black tracking-widest text-white/75 uppercase transition hover:border-white/25 hover:bg-slate-950/50 hover:text-white focus:ring-2 focus:outline-none"
+                    >
+                      <ArrowLeft size={12} className="text-tanaw-sky" />
+                      Back to Barangay Directory
+                    </button>
+
                     {/* Selected Barangay Info */}
-                    <div className="shrink-0 rounded-lg border border-white/10 bg-white/5 p-3">
+                    <div className="shrink-0 rounded-lg border border-white/15 bg-white/[0.08] p-3 shadow-sm shadow-black/20">
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <h3 className="text-sm font-black tracking-wide text-white uppercase">Barangay {selectedBarangayName}</h3>
-                          <p className="mt-1 text-[9px] font-bold tracking-widest text-white/55 uppercase">{selectedBarangayEnterprises.length} registered enterprises</p>
+                          <p className="mt-1 text-[9px] font-bold tracking-widest text-white/65 uppercase">Enterprises within this barangay</p>
                         </div>
-                        <span className={`shrink-0 rounded border px-2 py-1 text-[9px] font-black tracking-widest uppercase ${getDarkStatusBadgeClass(barangayHighestStatus)}`}>
-                          {barangayHighestStatus}
-                        </span>
+                        <span className="shrink-0 rounded border border-white/15 bg-black/35 px-2 py-1 font-mono text-[9px] font-black tracking-widest text-white uppercase">{selectedBarangayEnterprises.length}</span>
                       </div>
                     </div>
 
                     {/* Dedicated Enterprise List section at the bottom */}
-                    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/5 p-3">
+                    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/15 bg-white/[0.08] p-3 shadow-sm shadow-black/20">
                       <div className="mb-2 flex shrink-0 items-center justify-between gap-3">
-                        <h3 className="flex items-center gap-2 text-[9px] font-black tracking-widest text-white/70 uppercase">
+                        <h3 className="flex items-center gap-2 text-[9px] font-black tracking-widest text-white/80 uppercase">
                           <Building2 size={13} className="text-tanaw-sky" />
-                          Enterprise List
+                          Enterprises within this Barangay
                         </h3>
-                        <span className="text-[9px] font-bold tracking-widest text-white/55 uppercase">{selectedBarangayEnterprises.length}</span>
+                        <span className="text-[9px] font-bold tracking-widest text-white/65 uppercase">{selectedBarangayEnterprises.length}</span>
                       </div>
                       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-                        {selectedBarangayEnterprises.map((enterprise) => (
-                          <EnterpriseMapCard key={enterprise.id} enterprise={enterprise} selected={selectedEnterpriseId === enterprise.id} onClick={() => setSelectedEnterpriseId(enterprise.id)} />
+                        {selectedBarangayEnterprises.map((enterprise, index) => (
+                          <motion.div
+                            key={enterprise.id}
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.22, delay: Math.min(index * 0.025, 0.12), ease: "easeOut" }}
+                          >
+                            <EnterpriseMapCard enterprise={enterprise} selected={selectedEnterpriseId === enterprise.id} onClick={() => setSelectedEnterpriseId(enterprise.id)} />
+                          </motion.div>
                         ))}
                         {selectedBarangayEnterprises.length === 0 && (
-                          <div className="rounded-lg border border-white/10 bg-black/10 p-6 text-center text-[10px] font-bold tracking-widest text-white/55 uppercase">
+                          <motion.div
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.22, ease: "easeOut" }}
+                            className="rounded-lg border border-white/15 bg-black/20 p-6 text-center text-[10px] font-bold tracking-widest text-white/65 uppercase"
+                          >
                             No registered enterprises found for this barangay yet.
-                          </div>
+                          </motion.div>
                         )}
                       </div>
                     </div>
@@ -615,27 +899,27 @@ export function AdminEnterpriseMap() {
                 ) : (
                   <motion.div
                     key="all-enterprises-view"
-                    initial={{ opacity: 0, y: -12 }}
+                    initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -12 }}
-                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    exit={{ opacity: 0, y: 4 }}
+                    transition={{ duration: 0.22, ease: "easeOut" }}
                     className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-3"
                   >
                     {/* Prompt card */}
-                    <div className="shrink-0 rounded-lg border border-white/10 bg-white/5 p-3 text-center">
+                    <div className="shrink-0 rounded-lg border border-white/15 bg-white/[0.08] p-3 text-center shadow-sm shadow-black/20">
                       <MapPin size={18} className="text-tanaw-sky mx-auto mb-1.5 animate-bounce" style={{ animationDuration: "3s" }} />
                       <h4 className="text-[10px] font-black tracking-widest text-white uppercase">No Barangay Selected</h4>
-                      <p className="mt-1 text-[9px] leading-normal font-bold tracking-widest text-white/55 uppercase">Click a barangay boundary on the map or use the dropdown above to filter.</p>
+                      <p className="mt-1 text-[9px] leading-normal font-bold tracking-widest text-white/65 uppercase">Click a barangay boundary on the map or use the dropdown above to filter.</p>
                     </div>
 
                     {/* Dedicated Enterprise List section showing all enterprises */}
-                    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-white/5 p-3">
+                    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/15 bg-white/[0.08] p-3 shadow-sm shadow-black/20">
                       <div className="mb-2 flex shrink-0 items-center justify-between gap-3">
-                        <h3 className="flex items-center gap-2 text-[9px] font-black tracking-widest text-white/70 uppercase">
+                        <h3 className="flex items-center gap-2 text-[9px] font-black tracking-widest text-white/80 uppercase">
                           <Building2 size={13} className="text-tanaw-sky" />
                           All Enterprises
                         </h3>
-                        <span className="text-[9px] font-bold tracking-widest text-white/55 uppercase">{mapEnterprises.length}</span>
+                        <span className="text-[9px] font-bold tracking-widest text-white/65 uppercase">{mapEnterprises.length}</span>
                       </div>
                       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                         {mapEnterprises.map((enterprise) => (
@@ -665,33 +949,87 @@ export function AdminEnterpriseMap() {
           aria-controls="spatial-directory-panel"
           aria-label="Expand spatial directory"
           title="Expand spatial directory"
-          initial={{ opacity: 0, x: 12 }}
+          initial={{ opacity: 0, x: -12 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
           onClick={() => setIsDirectoryCollapsed(false)}
-          className="focus:ring-tanaw-sky absolute top-4 right-4 z-430 flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-slate-950/50 text-white shadow-2xl backdrop-blur-md transition hover:bg-slate-950/65 focus:ring-2 focus:outline-none"
+          className="focus:ring-tanaw-sky absolute top-4 left-4 z-430 flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-slate-950/50 text-white shadow-2xl backdrop-blur-md transition hover:bg-slate-950/65 focus:ring-2 focus:outline-none"
         >
-          <PanelRightOpen size={18} />
+          <PanelLeftOpen size={18} />
         </motion.button>
       )}
 
-      {selectedEnterprise && (
-        <div className="absolute bottom-4 left-4 z-420 hidden w-80 rounded-xl border border-white/80 bg-white/95 p-4 shadow-xl backdrop-blur md:block">
-          <div className="mb-3 flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Selected Enterprise</p>
-              <h3 className="text-tanaw-navy mt-1 text-sm font-black">{selectedEnterprise.name}</h3>
-            </div>
-            <span className={`rounded border px-2 py-1 text-[9px] font-black tracking-widest uppercase ${getLightStatusBadgeClass(selectedEnterprise.status)}`}>{selectedEnterprise.status}</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <InfoTile label="Barangay" value={selectedEnterprise.barangay} />
-            <InfoTile label="Type" value={selectedEnterprise.type} />
-            <InfoTile label="Visitors" value={selectedEnterprise.visitorCount.toLocaleString()} />
-            <InfoTile label="Tourists" value={selectedEnterprise.totalTourists.toLocaleString()} />
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {selectedEnterprise && (
+          <motion.div
+            className="absolute inset-0 z-[450] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-[3px]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            onClick={closeEnterpriseDetails}
+          >
+            <motion.section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="enterprise-details-title"
+              className="w-full max-w-3xl overflow-hidden rounded-xl border border-white/10 bg-slate-950/55 text-white shadow-2xl backdrop-blur-md"
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="border-b border-white/10 bg-black/25 px-5 py-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-2 text-[10px] font-black tracking-widest text-white/70 uppercase">
+                      <Building2 size={14} className="text-tanaw-sky" />
+                      Enterprise Details
+                    </p>
+                    <h3 id="enterprise-details-title" className="mt-1 text-xl leading-tight font-black text-white max-sm:text-lg">
+                      {selectedEnterprise.name}
+                    </h3>
+                    <p className="mt-1 text-[11px] font-bold tracking-widest text-white/75 uppercase">
+                      {selectedEnterprise.category} - Barangay {selectedEnterprise.barangay}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeEnterpriseDetails}
+                    aria-label="Close enterprise details"
+                    className="focus:ring-tanaw-sky flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-white/75 transition hover:bg-white/20 hover:text-white focus:ring-2 focus:outline-none"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="max-h-[76vh] overflow-y-auto bg-black/10 p-5 max-sm:p-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <EnterpriseMetricCard icon={<Activity size={16} />} label="Total Live Occupancy" value={selectedEnterprise.totalLiveOccupancy.toLocaleString()} />
+                  <EnterpriseMetricCard icon={<Users size={16} />} label="Est. Unique Count" value={selectedEnterprise.estimatedUniqueCount.toLocaleString()} />
+                  <EnterpriseMetricCard icon={<Building2 size={16} />} label="Category" value={selectedEnterprise.category} />
+                  <EnterpriseMetricCard
+                    icon={<Radio size={16} />}
+                    label="Status"
+                    value={<span className={`inline-flex rounded border px-2 py-1 text-[10px] font-black tracking-widest uppercase ${getDarkStatusBadgeClass(selectedEnterprise.status)}`}>{selectedEnterprise.status}</span>}
+                  />
+                  <EnterpriseMetricCard className="sm:col-span-2" icon={<MapPin size={16} />} label="Full Address" value={selectedEnterprise.fullAddress} />
+                </div>
+
+                <div className="mt-4 grid gap-3 rounded-lg border border-white/10 bg-white/5 p-4 text-sm text-white sm:grid-cols-2">
+                  <EnterpriseDetailRow icon={<Radio size={14} />} label="Gateway" value={selectedEnterprise.gatewayStatus ?? "Not Linked"} />
+                  <EnterpriseDetailRow icon={<Clock size={14} />} label="Last sync" value={selectedEnterprise.lastSync ?? "No sync recorded"} />
+                  <EnterpriseDetailRow icon={<Phone size={14} />} label="Contact" value={selectedEnterprise.contact ?? "No contact listed"} />
+                  <EnterpriseDetailRow icon={<TrendingUp size={14} />} label="Trend" value={selectedEnterprise.trend ?? "Stable"} />
+                  <EnterpriseDetailRow className="sm:col-span-2" icon={<Clock size={14} />} label="Operating hours" value={selectedEnterprise.operatingHours ?? "Not specified"} />
+                </div>
+              </div>
+            </motion.section>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -701,13 +1039,14 @@ function EnterpriseMapCard({ enterprise, selected, onClick }: { enterprise: MapE
     <button
       type="button"
       onClick={onClick}
-      className={`focus:ring-tanaw-sky w-full rounded-lg border p-3 text-left transition-all hover:bg-white/10 focus:ring-2 focus:outline-none ${selected ? "border-tanaw-sky/50 bg-white/15" : "border-white/10 bg-white/5"}`}
+      className={`focus:ring-tanaw-sky w-full rounded-lg border p-3 text-left shadow-sm shadow-black/15 transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/10 focus:ring-2 focus:outline-none ${selected ? "border-tanaw-sky/60 bg-tanaw-sky/15" : "border-white/15 bg-slate-950/35"}`}
     >
       <div className="mb-2 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h4 className="text-[12px] leading-tight font-bold text-white">{enterprise.name}</h4>
-          <div className="mt-1 flex items-center gap-1.5 text-[9px] font-bold tracking-widest text-white/60 uppercase">
-            <MapPin size={10} /> {enterprise.address}
+          <div className="mt-1 flex items-center gap-1.5 text-[9px] font-bold tracking-widest text-white/70 uppercase">
+            <MapPin size={10} className="shrink-0" />
+            <span className="truncate">{enterprise.fullAddress}</span>
           </div>
         </div>
         <span className={`flex shrink-0 items-center rounded border px-1.5 py-0.5 text-[9px] font-black tracking-widest uppercase ${getDarkStatusBadgeClass(enterprise.status)}`}>
@@ -715,24 +1054,39 @@ function EnterpriseMapCard({ enterprise, selected, onClick }: { enterprise: MapE
         </span>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-2 border-t border-white/10 pt-2 font-mono text-[10px]">
-        <span className="truncate text-white/60">{enterprise.type}</span>
+      <div className="mt-3 grid grid-cols-2 gap-2 border-t border-white/15 pt-2 font-mono text-[10px]">
+        <span className="truncate text-white/70">{enterprise.category}</span>
         <span className="flex items-center justify-end gap-1 font-bold text-white">
-          <Users size={12} className="text-tanaw-sky" />
-          {enterprise.visitorCount.toLocaleString()}
+          <Activity size={12} className="text-tanaw-sky" />
+          {enterprise.totalLiveOccupancy.toLocaleString()}
         </span>
-        <span className="text-white/60">Tourists</span>
-        <span className="text-right font-bold text-white">{enterprise.totalTourists.toLocaleString()}</span>
+        <span className="text-white/70">Est. Unique</span>
+        <span className="text-right font-bold text-white">{enterprise.estimatedUniqueCount.toLocaleString()}</span>
       </div>
     </button>
   );
 }
 
-function InfoTile({ label, value }: { label: string; value: string }) {
+function EnterpriseMetricCard({ icon, label, value, className = "" }: { icon: ReactNode; label: string; value: ReactNode; className?: string }) {
   return (
-    <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
-      <p className="text-[9px] font-black tracking-widest text-slate-400 uppercase">{label}</p>
-      <p className="mt-1 text-sm font-black text-slate-900">{value}</p>
+    <div className={`rounded-lg border border-white/10 bg-white/5 p-4 shadow-sm ${className}`}>
+      <div className="text-tanaw-sky flex items-center gap-2">
+        {icon}
+        <p className="text-[10px] font-black tracking-widest text-white/60 uppercase">{label}</p>
+      </div>
+      <div className="mt-2 text-lg leading-tight font-black text-white max-sm:text-base">{value}</div>
+    </div>
+  );
+}
+
+function EnterpriseDetailRow({ icon, label, value, className = "" }: { icon: ReactNode; label: string; value: string; className?: string }) {
+  return (
+    <div className={`flex min-w-0 items-start gap-2 ${className}`}>
+      <span className="text-tanaw-sky mt-0.5">{icon}</span>
+      <div className="min-w-0">
+        <p className="text-[9px] font-black tracking-widest text-white/50 uppercase">{label}</p>
+        <p className="mt-0.5 break-words font-bold text-white/90">{value}</p>
+      </div>
     </div>
   );
 }
@@ -820,12 +1174,6 @@ function getEnterprisesByBarangay(barangayName: string) {
   return mapEnterprises.filter((enterprise) => normalizeBarangayName(enterprise.barangay) === selectedKey);
 }
 
-function getHighestStatus(enterprises: MapEnterprise[]) {
-  if (enterprises.length === 0) return "No Data" as const;
-
-  return enterprises.reduce<EnterpriseStatus>((highest, enterprise) => (statusPriority[enterprise.status] > statusPriority[highest] ? enterprise.status : highest), enterprises[0].status);
-}
-
 function fitMapToSanPedroBounds(map: L.Map, layer: L.GeoJSON | null) {
   if (!layer) return;
 
@@ -833,7 +1181,7 @@ function fitMapToSanPedroBounds(map: L.Map, layer: L.GeoJSON | null) {
   if (!bounds.isValid()) return;
 
   const initialViewBounds = bounds.pad(0.36);
-  const interactionBounds = bounds.pad(0.58);
+  const interactionBounds = bounds.pad(1.05);
   const minZoomReferenceBounds = bounds.pad(0.62);
 
   map.setMaxBounds(interactionBounds);
@@ -856,12 +1204,6 @@ function getDarkStatusBadgeClass(status: EnterpriseStatus | "No Data") {
   if (status === "Warning") return "border-orange-500/30 bg-orange-900/40 text-[#ffb08a]";
   if (status === "Normal") return "border-green-500/30 bg-green-900/40 text-[#8affb0]";
   return "border-slate-400/25 bg-slate-900/45 text-slate-200";
-}
-
-function getLightStatusBadgeClass(status: EnterpriseStatus) {
-  if (status === "Critical") return "border-red-200 bg-red-50 text-red-700";
-  if (status === "Warning") return "border-orange-200 bg-orange-50 text-orange-700";
-  return "border-green-200 bg-green-50 text-green-700";
 }
 
 function escapeHtml(value: string) {
@@ -891,12 +1233,11 @@ function createBoundaryPopupHtml(featureItem: GeoJSON.Feature) {
 }
 
 function createTooltipHtml(enterprise: MapEnterprise, color: string) {
-  const visitorCap = Math.max(1, enterprise.visitorCount);
-  const touristShare = Math.min(100, Math.round((enterprise.totalTourists / visitorCap) * 100));
+  const occupancyShare = Math.min(100, Math.round((enterprise.totalLiveOccupancy / Math.max(1, enterprise.estimatedUniqueCount)) * 100));
 
-  return `<div style="font-family:Bai Jamjuree,sans-serif;min-width:140px;"><h4 style="margin:0;font-size:11px;font-weight:800;color:#2a3063;">${escapeHtml(enterprise.name)}</h4><p style="margin:2px 0 0;font-size:9px;color:#666;text-transform:uppercase;">${escapeHtml(enterprise.barangay)}</p><div style="margin-top:5px;height:4px;background:#e5e5e5;border-radius:2px;"><div style="height:100%;width:${touristShare}%;background:${color};border-radius:2px;"></div></div></div>`;
+  return `<div style="font-family:Bai Jamjuree,sans-serif;min-width:140px;"><h4 style="margin:0;font-size:11px;font-weight:800;color:#2a3063;">${escapeHtml(enterprise.name)}</h4><p style="margin:2px 0 0;font-size:9px;color:#666;text-transform:uppercase;">${escapeHtml(enterprise.category)} - ${escapeHtml(enterprise.barangay)}</p><div style="margin-top:5px;height:4px;background:#e5e5e5;border-radius:2px;"><div style="height:100%;width:${occupancyShare}%;background:${color};border-radius:2px;"></div></div></div>`;
 }
 
 function createPopupHtml(enterprise: MapEnterprise, color: string) {
-  return `<div style="font-family:Bai Jamjuree,sans-serif;min-width:220px;padding:4px;"><h3 style="margin:0 0 2px;color:#2a3063;font-weight:800;font-size:13px;">${escapeHtml(enterprise.name)}</h3><p style="font-size:9px;color:#666;text-transform:uppercase;letter-spacing:1px;">${escapeHtml(enterprise.type)} - ${escapeHtml(enterprise.barangay)}</p><p style="font-size:10px;color:#2a3063;font-weight:800;">${enterprise.visitorCount.toLocaleString()} visitors | ${enterprise.totalTourists.toLocaleString()} tourists</p><span style="font-size:9px;color:${color};font-weight:800;padding:2px 4px;border:1px solid ${color};border-radius:2px;text-transform:uppercase;">${enterprise.status}</span></div>`;
+  return `<div style="font-family:Bai Jamjuree,sans-serif;min-width:220px;padding:4px;"><h3 style="margin:0 0 2px;color:#2a3063;font-weight:800;font-size:13px;">${escapeHtml(enterprise.name)}</h3><p style="font-size:9px;color:#666;text-transform:uppercase;letter-spacing:1px;">${escapeHtml(enterprise.category)} - ${escapeHtml(enterprise.barangay)}</p><p style="font-size:10px;color:#2a3063;font-weight:800;">${enterprise.totalLiveOccupancy.toLocaleString()} live occupancy | ${enterprise.estimatedUniqueCount.toLocaleString()} est. unique</p><span style="font-size:9px;color:${color};font-weight:800;padding:2px 4px;border:1px solid ${color};border-radius:2px;text-transform:uppercase;">${enterprise.status}</span></div>`;
 }

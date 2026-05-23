@@ -62,7 +62,7 @@ export function ITLguAccountsPage() {
 
       <Panel className="mt-6 overflow-hidden">
         <div className="flex flex-wrap items-center gap-3 border-b border-gray-200 bg-gray-50 p-4">
-          <div className="relative min-w-70 flex-1">
+          <div className="relative min-w-0 flex-1 sm:min-w-70">
             <Search size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
             <input
               value={query}
@@ -81,12 +81,20 @@ export function ITLguAccountsPage() {
           </button>
         </div>
 
-        <div>
-          <table className="w-full text-left text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] table-fixed text-left text-sm">
+            <colgroup>
+              <col className="w-[20%]" />
+              <col className="w-[26%]" />
+              <col className="w-[15%]" />
+              <col className="w-[12%]" />
+              <col className="w-[16%]" />
+              <col className="w-[11%]" />
+            </colgroup>
             <thead className="bg-gray-50 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
               <tr>
                 {["Name", "Email", "Role", "Status", "Last Login", "Actions"].map((heading) => (
-                  <th key={heading} className="px-4 py-4">
+                  <th key={heading} className="px-3 py-4 whitespace-nowrap sm:px-4">
                     {heading}
                   </th>
                 ))}
@@ -95,14 +103,14 @@ export function ITLguAccountsPage() {
             <tbody className="divide-y divide-gray-100 text-gray-800">
               {filteredAccounts.map((account) => (
                 <tr key={account.id} className="hover:bg-tgreen-dark/5 transition">
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <button type="button" onClick={() => setSelectedAccount(account)} className="flex items-center gap-3 text-left">
+                  <td className="px-3 py-3 whitespace-nowrap sm:px-4">
+                    <button type="button" onClick={() => setSelectedAccount(account)} className="flex w-full min-w-0 items-center gap-3 text-left">
                       <span className="bg-tgreen-dark/10 text-tgreen-dark flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-black">
                         {account.firstName[0]}
                         {account.lastName[0]}
                       </span>
-                      <span>
-                        <span className="block font-bold text-gray-900">
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-bold text-gray-900">
                           {account.firstName}
                           {account.lastName ? ` ${account.lastName[0]}.` : ""}
                         </span>
@@ -110,15 +118,15 @@ export function ITLguAccountsPage() {
                       </span>
                     </button>
                   </td>
-                  <td className="px-4 py-3 text-xs whitespace-nowrap text-gray-600">{account.email}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="truncate px-3 py-3 text-xs whitespace-nowrap text-gray-600 sm:px-4">{account.email}</td>
+                  <td className="px-3 py-3 whitespace-nowrap sm:px-4">
                     <RoleBadge role={account.role} />
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="px-3 py-3 whitespace-nowrap sm:px-4">
                     <AccountStatusBadge status={account.status} />
                   </td>
-                  <td className="px-4 py-3 text-xs whitespace-nowrap text-gray-500">{account.lastLogin}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="truncate px-3 py-3 text-xs whitespace-nowrap text-gray-500 sm:px-4">{account.lastLogin}</td>
+                  <td className="px-3 py-3 whitespace-nowrap sm:px-4">
                     <div className="flex gap-2">
                       <IconAction label="View account details" onClick={() => setSelectedAccount(account)} icon={<Eye size={15} />} />
                       <IconAction label="Reset password" onClick={() => setActionState({ type: "reset", account })} icon={<KeyRound size={15} />} />

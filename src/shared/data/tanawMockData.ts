@@ -44,7 +44,7 @@ const monitoredEstablishments = [
     account: {
       id: "EA-002",
       enterpriseName: "Lolo Uweng Shrine",
-      category: "Faith Tourism",
+      category: "Tourism",
       managerName: "Irish Arabaca",
       email: "shrine@lolouweng.example",
       contactNumber: "+63 49 555 0102",
@@ -80,7 +80,7 @@ const monitoredEstablishments = [
     account: {
       id: "EA-003",
       enterpriseName: "Balaon ni Lolo Uweng",
-      category: "Faith Tourism",
+      category: "Tourism",
       managerName: "David Vallejera",
       email: "balaon@lolouweng.example",
       contactNumber: "+63 49 555 0103",
@@ -113,7 +113,7 @@ const monitoredEstablishments = [
     account: {
       id: "EA-004",
       enterpriseName: "San Pedro Apostol Parish Church",
-      category: "Faith Tourism",
+      category: "Tourism",
       managerName: "Regine Javier",
       email: "parish@sanpedroapostol.example",
       contactNumber: "+63 49 555 0104",

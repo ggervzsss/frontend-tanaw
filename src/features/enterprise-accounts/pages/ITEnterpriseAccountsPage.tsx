@@ -11,6 +11,7 @@ import { enterpriseAccounts } from "../../../shared/data";
 import type { CameraStatus, EnterpriseAccount, GatewayStatus } from "../../../shared/types";
 
 type StatusFilter = "All Statuses" | GatewayStatus;
+type CategoryFilter = "All Categories" | string;
 
 const statusFilters: StatusFilter[] = ["All Statuses", "Connected", "Offline", "Closed"];
 
@@ -18,6 +19,7 @@ export function ITEnterpriseAccountsPage() {
   const [accounts, setAccounts] = useState<EnterpriseAccount[]>(enterpriseAccounts);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("All Statuses");
+  const [category, setCategory] = useState<CategoryFilter>("All Categories");
   const [barangay, setBarangay] = useState("All Barangays");
   const [selectedEnterprise, setSelectedEnterprise] = useState<EnterpriseAccount | null>(null);
   const [cameraEnterprise, setCameraEnterprise] = useState<EnterpriseAccount | null>(null);
@@ -30,16 +32,21 @@ export function ITEnterpriseAccountsPage() {
   const [actionState, setActionState] = useState<ActionState>(null);
 
   const barangays = useMemo(() => ["All Barangays", ...new Set(accounts.map((enterprise) => enterprise.barangay))], [accounts]);
+  const categories = useMemo(() => {
+    const dataCategories = new Set(accounts.map((enterprise) => enterprise.category));
+    return ["All Categories", ...new Set(["Tourism", "Business", ...dataCategories])] satisfies CategoryFilter[];
+  }, [accounts]);
   const filteredEnterprises = useMemo(
     () =>
       accounts.filter((enterprise) => {
         const haystack = `${enterprise.enterpriseName} ${enterprise.managerName} ${enterprise.category} ${enterprise.barangay}`.toLowerCase();
         const matchesQuery = haystack.includes(query.trim().toLowerCase());
         const matchesStatus = status === "All Statuses" || enterprise.gatewayStatus === status;
+        const matchesCategory = category === "All Categories" || enterprise.category === category || enterprise.category.toLowerCase().includes(category.toLowerCase());
         const matchesBarangay = barangay === "All Barangays" || enterprise.barangay === barangay;
-        return matchesQuery && matchesStatus && matchesBarangay;
+        return matchesQuery && matchesStatus && matchesCategory && matchesBarangay;
       }),
-    [accounts, barangay, query, status],
+    [accounts, barangay, category, query, status],
   );
 
   const setEnterpriseStatus = (enterpriseId: string, gatewayStatus: GatewayStatus) => {
@@ -61,7 +68,7 @@ export function ITEnterpriseAccountsPage() {
       </motion.section>
 
       <Panel className="mt-6 overflow-hidden">
-        <div className="grid grid-cols-1 gap-3 border-b border-gray-200 bg-gray-50 p-4 xl:grid-cols-[minmax(260px,1fr)_auto_auto_auto]">
+        <div className="grid grid-cols-1 gap-3 border-b border-gray-200 bg-gray-50 p-4 xl:grid-cols-[minmax(260px,1fr)_auto_auto_auto_auto]">
           <div className="relative">
             <Search size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
             <input
@@ -72,6 +79,7 @@ export function ITEnterpriseAccountsPage() {
             />
           </div>
           <FilterSelect value={barangay} onChange={setBarangay} options={barangays} />
+          <FilterSelect value={category} onChange={setCategory} options={categories} />
           <FilterSelect value={status} onChange={(value) => setStatus(value as StatusFilter)} options={statusFilters} />
           <button
             onClick={() => setRegisterOpen(true)}
@@ -82,11 +90,19 @@ export function ITEnterpriseAccountsPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1120px] text-left text-sm">
+          <table className="w-full min-w-[820px] table-fixed text-left text-sm">
+            <colgroup>
+              <col className="w-[30%]" />
+              <col className="w-[13%]" />
+              <col className="w-[12%]" />
+              <col className="w-[10%]" />
+              <col className="w-[18%]" />
+              <col className="w-[17%]" />
+            </colgroup>
             <thead className="bg-gray-50 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
               <tr>
                 {["Enterprise", "Barangay", "Status", "Cameras", "Last Sync", "Actions"].map((heading) => (
-                  <th key={heading} className="px-6 py-4 whitespace-nowrap">
+                  <th key={heading} className="px-3 py-4 whitespace-nowrap sm:px-4 lg:px-5">
                     {heading}
                   </th>
                 ))}
@@ -97,26 +113,25 @@ export function ITEnterpriseAccountsPage() {
                 const online = enterprise.cameras.filter((camera) => camera.status === "Online").length;
                 return (
                   <tr key={enterprise.id} className="hover:bg-tgreen-dark/5 transition">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button type="button" onClick={() => setSelectedEnterprise(enterprise)} className="flex items-center gap-3 text-left">
+                    <td className="px-3 py-4 whitespace-nowrap sm:px-4 lg:px-5">
+                      <button type="button" onClick={() => setSelectedEnterprise(enterprise)} className="flex w-full min-w-0 items-center gap-3 text-left">
                         <span className="bg-tgreen-dark/10 text-tgreen-dark flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
                           <Building2 size={18} />
                         </span>
-                        <span className="min-w-0">
-                          <span className="font-bold text-gray-900">{enterprise.enterpriseName}</span>
-                          <span className="ml-2 text-[10px] font-semibold text-gray-500">{enterprise.category}</span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-bold text-gray-900">{enterprise.enterpriseName}</span>
                         </span>
                       </button>
                     </td>
-                    <td className="px-6 py-4 text-xs whitespace-nowrap text-gray-600">{enterprise.barangay}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="truncate px-3 py-4 text-xs whitespace-nowrap text-gray-600 sm:px-4 lg:px-5">{enterprise.barangay}</td>
+                    <td className="px-3 py-4 whitespace-nowrap sm:px-4 lg:px-5">
                       <GatewayBadge status={enterprise.gatewayStatus} />
                     </td>
-                    <td className="px-6 py-4 text-xs font-bold whitespace-nowrap text-gray-900">
+                    <td className="px-3 py-4 text-xs font-bold whitespace-nowrap text-gray-900 sm:px-4 lg:px-5">
                       {online}/{enterprise.cameras.length}
                     </td>
-                    <td className="px-6 py-4 text-xs whitespace-nowrap text-gray-500">{enterprise.lastSync}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="truncate px-3 py-4 text-xs whitespace-nowrap text-gray-500 sm:px-4 lg:px-5">{enterprise.lastSync}</td>
+                    <td className="px-3 py-4 whitespace-nowrap sm:px-4 lg:px-5">
                       <div className="flex gap-2">
                         <IconAction label="View enterprise" onClick={() => setSelectedEnterprise(enterprise)} icon={<Eye size={15} />} />
                         <IconAction label="Reset password" onClick={() => setActionState({ type: "reset", enterprise })} icon={<KeyRound size={15} />} />
@@ -196,6 +211,7 @@ function EnterpriseDetailsModal({ enterprise, onClose }: { enterprise: Enterpris
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Detail label="Enterprise Category" value={enterprise.category} />
           <Detail label="Contact Manager" value={enterprise.managerName} />
           <Detail label="Contact Email" value={enterprise.email} />
           <Detail label="Contact Number" value={enterprise.contactNumber} />

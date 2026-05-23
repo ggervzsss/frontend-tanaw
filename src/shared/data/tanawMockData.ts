@@ -1,4 +1,17 @@
-import type { AuditLog, Enterprise, EnterpriseAccount, FinalReport, IntakeReport, LguAccount, MapEnterprise, PipelineHealth, PriorityAlert, ReportEnterprise, SystemActivity, SystemAlert } from "../types";
+import type {
+  AuditLog,
+  Enterprise,
+  EnterpriseAccount,
+  FinalReport,
+  IntakeReport,
+  LguAccount,
+  MapEnterprise,
+  PipelineHealth,
+  PriorityAlert,
+  ReportEnterprise,
+  SystemActivity,
+  SystemAlert,
+} from "../types";
 
 const monitoredEstablishments = [
   {

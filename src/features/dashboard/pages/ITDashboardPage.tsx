@@ -16,6 +16,7 @@ export function ITDashboardPage() {
   const activeEnterprises = enterprises.filter((enterprise) => enterprise.gatewayStatus !== "Closed").length;
   const gatewaysOnline = enterprises.filter((enterprise) => enterprise.gatewayStatus === "Connected").length;
   const recentActivities = systemActivities.slice(0, 7);
+
   const actionableAlerts = priorityAlerts.filter((alert) => alert.status !== "Resolved").slice(0, 4);
 
   return (
@@ -88,21 +89,14 @@ export function ITDashboardPage() {
                   <h3 className="text-charcoal-800 m-0 text-base font-bold">Priority Alerts</h3>
                   <p className="mt-1 mb-0 text-xs text-gray-500">Actionable tasks requiring IT intervention or approval.</p>
                 </div>
-                <button
-                  onClick={() => setIsAllAlertsModalOpen(true)}
-                  className="shrink-0 text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition"
-                >
+                <button onClick={() => setIsAllAlertsModalOpen(true)} className="shrink-0 text-xs font-semibold text-emerald-600 transition hover:text-emerald-700">
                   View All Alerts
                 </button>
               </div>
             </div>
             <div className="divide-y divide-gray-100">
               {actionableAlerts.map((alert) => (
-                <article
-                  className="px-6 py-4 cursor-pointer hover:bg-emerald-50 transition"
-                  key={alert.id}
-                  onClick={() => setSelectedAlert(alert)}
-                >
+                <article className="cursor-pointer px-6 py-4 transition hover:bg-emerald-50" key={alert.id} onClick={() => setSelectedAlert(alert)}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <SeverityBadge severity={alert.severity} />
                     <ResolutionBadge mode={alert.resolutionMode} />
@@ -194,13 +188,13 @@ function AllAlertsModal({ alerts, onClose, onSelectAlert }: { alerts: PriorityAl
     <ModalPortal>
       <motion.div className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
         <motion.section
-          className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-2xl flex flex-col"
+          className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-2xl"
           initial={{ opacity: 0, y: 12, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 12, scale: 0.98 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
         >
-          <header className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4 shrink-0">
+          <header className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
             <div>
               <h2 className="text-lg font-bold text-gray-900">All Priority Alerts</h2>
               <p className="mt-1 mb-0 text-xs text-gray-500">List of all priority alerts and their current statuses.</p>
@@ -209,7 +203,7 @@ function AllAlertsModal({ alerts, onClose, onSelectAlert }: { alerts: PriorityAl
               Close
             </button>
           </header>
-          
+
           <div className="flex-1 overflow-y-auto">
             <div className="divide-y divide-gray-100">
               {alerts.length === 0 && (
@@ -218,11 +212,7 @@ function AllAlertsModal({ alerts, onClose, onSelectAlert }: { alerts: PriorityAl
                 </div>
               )}
               {alerts.map((alert) => (
-                <article
-                  className="px-6 py-4 cursor-pointer hover:bg-emerald-50 transition"
-                  key={alert.id}
-                  onClick={() => onSelectAlert(alert)}
-                >
+                <article className="cursor-pointer px-6 py-4 transition hover:bg-emerald-50" key={alert.id} onClick={() => onSelectAlert(alert)}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <SeverityBadge severity={alert.severity} />
                     <ResolutionBadge mode={alert.resolutionMode} />

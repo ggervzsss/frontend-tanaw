@@ -1,23 +1,82 @@
+import { Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
 import { ModalPortal, PageMotion } from "../../../shared/components/ui";
 import { systemActivities } from "../../../shared/data";
 import type { SystemActivity, SystemActivityType } from "../../../shared/types";
 
+const defaultTypeOptions = ["All Types", "LOGIN", "CONNECTION", "ACCOUNT CONFIG", "ENTERPRISE CONFIG", "IT ACTION", "SYSTEM"];
+const defaultAccountOptions = ["All Accounts", "LGU Account", "Enterprise Account", "IT Personnel", "System"];
+
 export function ITSystemLogsPage() {
+  const [query, setQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("All Types");
+  const [accountFilter, setAccountFilter] = useState("All Accounts");
   const [selectedActivity, setSelectedActivity] = useState<SystemActivity | null>(null);
+
+  const dynamicTypeOptions = useMemo(() => {
+    if (accountFilter === "All Accounts") return defaultTypeOptions;
+    const relevantActivities = systemActivities.filter((a) => a.actorType === accountFilter);
+    const types = new Set(relevantActivities.map((a) => a.type));
+    return ["All Types", ...Array.from(types).sort()];
+  }, [accountFilter]);
+
+  const dynamicAccountOptions = useMemo(() => {
+    if (typeFilter === "All Types") return defaultAccountOptions;
+    const relevantActivities = systemActivities.filter((a) => a.type === typeFilter);
+    const accounts = new Set(relevantActivities.map((a) => a.actorType));
+    return ["All Accounts", ...Array.from(accounts).sort()];
+  }, [typeFilter]);
+
+  useEffect(() => {
+    if (typeFilter !== "All Types" && !dynamicTypeOptions.includes(typeFilter)) {
+      setTypeFilter("All Types");
+    }
+  }, [dynamicTypeOptions, typeFilter]);
+
+  useEffect(() => {
+    if (accountFilter !== "All Accounts" && !dynamicAccountOptions.includes(accountFilter)) {
+      setAccountFilter("All Accounts");
+    }
+  }, [dynamicAccountOptions, accountFilter]);
+
+  const filteredActivities = useMemo(() => {
+    return systemActivities.filter((activity) => {
+      const displayName = activity.enterprise ?? activity.accountName ?? activity.initiatedBy;
+      const haystack = `${activity.summary} ${displayName}`.toLowerCase();
+      const matchesQuery = haystack.includes(query.trim().toLowerCase());
+      const matchesType = typeFilter === "All Types" || activity.type === typeFilter;
+      const matchesAccount = accountFilter === "All Accounts" || activity.actorType === accountFilter;
+      return matchesQuery && matchesType && matchesAccount;
+    });
+  }, [query, typeFilter, accountFilter]);
 
   return (
     <PageMotion>
       <PageHeader title="System Activity" description="IT-visible activity stream for account events, enterprise connectivity, configuration changes, and automated system actions." />
 
       <Panel className="mt-6 overflow-hidden">
-        <div className="border-b border-gray-100 px-5 py-4">
-          <h3 className="text-charcoal-800 m-0 text-base font-bold">Activity Logs</h3>
-          <p className="mt-1 mb-0 text-xs text-gray-500">Includes user activity, IT actions, enterprise connection states, and SYSTEM-generated notifications.</p>
+        <div className="flex flex-col gap-4 border-b border-gray-100 px-5 py-4">
+          <div>
+            <h3 className="text-charcoal-800 m-0 text-base font-bold">Activity Logs</h3>
+            <p className="mt-1 mb-0 text-xs text-gray-500">Includes user activity, IT actions, enterprise connection states, and SYSTEM-generated notifications.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative min-w-0 flex-1 sm:min-w-64">
+              <Search size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search summary or name"
+                className="w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-9 text-sm text-gray-900 transition outline-none focus:ring-1 focus:ring-emerald-600"
+              />
+            </div>
+            <FilterSelect value={typeFilter} onChange={setTypeFilter} options={dynamicTypeOptions} />
+            <FilterSelect value={accountFilter} onChange={setAccountFilter} options={dynamicAccountOptions} />
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -39,7 +98,7 @@ export function ITSystemLogsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-gray-800">
-              {systemActivities.map((activity) => (
+              {filteredActivities.map((activity) => (
                 <tr key={activity.id} onClick={() => setSelectedActivity(activity)} className="hover:bg-tgreen-dark/5 cursor-pointer transition">
                   <td className="px-3 py-4 font-mono text-xs whitespace-nowrap text-gray-500 lg:px-4">{activity.time}</td>
                   <td className="px-3 py-4 whitespace-nowrap lg:px-4">
@@ -60,6 +119,16 @@ export function ITSystemLogsPage() {
 
       <AnimatePresence>{selectedActivity && <ActivityDetailsModal activity={selectedActivity} onClose={() => setSelectedActivity(null)} />}</AnimatePresence>
     </PageMotion>
+  );
+}
+
+function FilterSelect({ value, onChange, options }: { value: string; onChange: (value: string) => void; options: readonly string[] }) {
+  return (
+    <select value={value} onChange={(event) => onChange(event.target.value)} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none">
+      {options.map((option) => (
+        <option key={option}>{option}</option>
+      ))}
+    </select>
   );
 }
 

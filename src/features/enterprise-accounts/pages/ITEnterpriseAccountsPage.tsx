@@ -1,4 +1,4 @@
-import { Building2, Camera, Edit3, PlugZap, Search, TestTube2, Wifi } from "lucide-react";
+import { Building2, Camera, Edit3, Eye, PlugZap, Search, TestTube2, Wifi } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
@@ -8,20 +8,18 @@ import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
 import { PageMotion, ModalPortal, stagger } from "../../../shared/components/ui";
 import { enterpriseAccounts } from "../../../shared/data";
-import type { CameraStatus, EnterpriseAccount, EnterpriseAccountStatus, GatewayStatus } from "../../../shared/types";
+import type { CameraStatus, EnterpriseAccount, GatewayStatus } from "../../../shared/types";
 
-type AccountFilter = "All Statuses" | EnterpriseAccountStatus;
-type GatewayFilter = "All Gateways" | GatewayStatus;
+type StatusFilter = "All Statuses" | GatewayStatus;
 
-const accountFilters: AccountFilter[] = ["All Statuses", "Active", "Archived", "Suspended"];
-const gatewayFilters: GatewayFilter[] = ["All Gateways", "Connected", "Sync Delayed", "Offline", "Not Linked"];
+const statusFilters: StatusFilter[] = ["All Statuses", "Connected", "Offline", "Closed"];
 
 export function ITEnterpriseAccountsPage() {
   const [query, setQuery] = useState("");
-  const [accountStatus, setAccountStatus] = useState<AccountFilter>("All Statuses");
-  const [gatewayStatus, setGatewayStatus] = useState<GatewayFilter>("All Gateways");
+  const [status, setStatus] = useState<StatusFilter>("All Statuses");
   const [barangay, setBarangay] = useState("All Barangays");
   const [selectedEnterprise, setSelectedEnterprise] = useState<EnterpriseAccount | null>(null);
+  const [cameraEnterprise, setCameraEnterprise] = useState<EnterpriseAccount | null>(null);
   const [registerOpen, setRegisterOpen] = useState(false);
 
   const barangays = useMemo(() => ["All Barangays", ...new Set(enterpriseAccounts.map((enterprise) => enterprise.barangay))], []);
@@ -30,12 +28,11 @@ export function ITEnterpriseAccountsPage() {
       enterpriseAccounts.filter((enterprise) => {
         const haystack = `${enterprise.enterpriseName} ${enterprise.managerName} ${enterprise.category} ${enterprise.barangay}`.toLowerCase();
         const matchesQuery = haystack.includes(query.trim().toLowerCase());
-        const matchesAccount = accountStatus === "All Statuses" || enterprise.accountStatus === accountStatus;
-        const matchesGateway = gatewayStatus === "All Gateways" || enterprise.gatewayStatus === gatewayStatus;
+        const matchesStatus = status === "All Statuses" || enterprise.gatewayStatus === status;
         const matchesBarangay = barangay === "All Barangays" || enterprise.barangay === barangay;
-        return matchesQuery && matchesAccount && matchesGateway && matchesBarangay;
+        return matchesQuery && matchesStatus && matchesBarangay;
       }),
-    [accountStatus, barangay, gatewayStatus, query],
+    [barangay, query, status],
   );
 
   const totalCameras = enterpriseAccounts.reduce((total, enterprise) => total + enterprise.cameras.length, 0);
@@ -48,17 +45,17 @@ export function ITEnterpriseAccountsPage() {
       <motion.section className="grid grid-cols-1 gap-4 md:grid-cols-4" variants={stagger}>
         <MetricCard label="Enterprise Accounts" value={enterpriseAccounts.length} foot="Registered entities" color="#2563eb" icon={Building2} />
         <MetricCard
-          label="Connected Gateways"
+          label="Connected Enterprises"
           value={enterpriseAccounts.filter((enterprise) => enterprise.gatewayStatus === "Connected").length}
-          foot="Ready for telemetry"
+          foot="Live data available"
           color="#065f46"
           icon={Wifi}
         />
         <MetricCard label="Assigned Cameras" value={`${onlineCameras}/${totalCameras}`} foot="Online camera nodes" color="#10b981" icon={Camera} />
         <MetricCard
           label="Needs Attention"
-          value={enterpriseAccounts.filter((enterprise) => ["Offline", "Sync Delayed"].includes(enterprise.gatewayStatus)).length}
-          foot="Gateway diagnosis"
+          value={enterpriseAccounts.filter((enterprise) => enterprise.gatewayStatus === "Offline").length}
+          foot="Desktop app offline"
           color="#dc2626"
           footClassName="text-red-600"
           icon={PlugZap}
@@ -66,7 +63,7 @@ export function ITEnterpriseAccountsPage() {
       </motion.section>
 
       <Panel className="mt-6 overflow-hidden">
-        <div className="grid grid-cols-1 gap-3 border-b border-gray-200 bg-gray-50 p-4 xl:grid-cols-[minmax(260px,1fr)_auto_auto_auto_auto]">
+        <div className="grid grid-cols-1 gap-3 border-b border-gray-200 bg-gray-50 p-4 xl:grid-cols-[minmax(260px,1fr)_auto_auto_auto]">
           <div className="relative">
             <Search size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
             <input
@@ -76,9 +73,8 @@ export function ITEnterpriseAccountsPage() {
               className="focus:ring-tgreen-dark w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-9 text-sm text-gray-900 transition outline-none focus:ring-1"
             />
           </div>
-          <FilterSelect value={accountStatus} onChange={(value) => setAccountStatus(value as AccountFilter)} options={accountFilters} />
           <FilterSelect value={barangay} onChange={setBarangay} options={barangays} />
-          <FilterSelect value={gatewayStatus} onChange={(value) => setGatewayStatus(value as GatewayFilter)} options={gatewayFilters} />
+          <FilterSelect value={status} onChange={(value) => setStatus(value as StatusFilter)} options={statusFilters} />
           <button
             onClick={() => setRegisterOpen(true)}
             className="bg-tgreen-dark hover:bg-tgreen-light inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition"
@@ -91,7 +87,7 @@ export function ITEnterpriseAccountsPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-50 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
               <tr>
-                {["Enterprise", "Contact Manager", "Barangay", "Gateway", "Cameras", "Last Sync", "Account", "Actions"].map((heading) => (
+                {["Enterprise", "Barangay", "Status", "Cameras", "Last Sync", "Actions"].map((heading) => (
                   <th key={heading} className="px-6 py-4">
                     {heading}
                   </th>
@@ -114,7 +110,6 @@ export function ITEnterpriseAccountsPage() {
                         </span>
                       </button>
                     </td>
-                    <td className="px-6 py-4 text-xs">{enterprise.managerName}</td>
                     <td className="px-6 py-4 text-xs text-gray-600">{enterprise.barangay}</td>
                     <td className="px-6 py-4">
                       <GatewayBadge status={enterprise.gatewayStatus} />
@@ -124,13 +119,9 @@ export function ITEnterpriseAccountsPage() {
                     </td>
                     <td className="px-6 py-4 text-xs text-gray-500">{enterprise.lastSync}</td>
                     <td className="px-6 py-4">
-                      <EnterpriseStatusBadge status={enterprise.accountStatus} />
-                    </td>
-                    <td className="px-6 py-4">
                       <div className="flex gap-2">
-                        <IconAction label="View enterprise" onClick={() => setSelectedEnterprise(enterprise)} icon={<Building2 size={15} />} />
-                        <IconAction label="Edit enterprise" onClick={() => toast.success("Enterprise update recorded in System Logs")} icon={<Edit3 size={15} />} />
-                        <IconAction label="Manage cameras" onClick={() => setSelectedEnterprise(enterprise)} icon={<Camera size={15} />} />
+                        <IconAction label="View enterprise" onClick={() => setSelectedEnterprise(enterprise)} icon={<Eye size={15} />} />
+                        <IconAction label="View assigned cameras" onClick={() => setCameraEnterprise(enterprise)} icon={<Camera size={15} />} />
                       </div>
                     </td>
                   </tr>
@@ -143,6 +134,7 @@ export function ITEnterpriseAccountsPage() {
 
       <AnimatePresence>
         {selectedEnterprise && <EnterpriseDetailsModal enterprise={selectedEnterprise} onClose={() => setSelectedEnterprise(null)} />}
+        {cameraEnterprise && <AssignedCamerasModal enterprise={cameraEnterprise} onClose={() => setCameraEnterprise(null)} />}
         {registerOpen && <RegisterEnterpriseModal onClose={() => setRegisterOpen(false)} />}
       </AnimatePresence>
     </PageMotion>
@@ -150,6 +142,10 @@ export function ITEnterpriseAccountsPage() {
 }
 
 function EnterpriseDetailsModal({ enterprise, onClose }: { enterprise: EnterpriseAccount; onClose: () => void }) {
+  const handleEdit = () => {
+    toast.success("Enterprise update recorded in System Logs");
+  };
+
   return (
     <ModalFrame title="Enterprise Details" onClose={onClose}>
       <div className="space-y-6">
@@ -161,7 +157,16 @@ function EnterpriseDetailsModal({ enterprise, onClose }: { enterprise: Enterpris
                 {enterprise.address} - {enterprise.category}
               </p>
             </div>
-            <GatewayBadge status={enterprise.gatewayStatus} />
+            <div className="flex items-center gap-2">
+              <GatewayBadge status={enterprise.gatewayStatus} />
+              <button
+                type="button"
+                onClick={handleEdit}
+                className="text-tgreen-dark hover:bg-tgreen-dark/5 inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold transition"
+              >
+                <Edit3 size={14} /> Edit
+              </button>
+            </div>
           </div>
         </div>
 
@@ -173,18 +178,20 @@ function EnterpriseDetailsModal({ enterprise, onClose }: { enterprise: Enterpris
           <Detail label="Gateway ID" value={enterprise.gatewayId ?? "Not linked"} />
           <Detail label="Last Sync" value={enterprise.lastSync} />
         </div>
+      </div>
+    </ModalFrame>
+  );
+}
 
+function AssignedCamerasModal({ enterprise, onClose }: { enterprise: EnterpriseAccount; onClose: () => void }) {
+  return (
+    <ModalFrame title="Assigned Cameras" onClose={onClose}>
+      <div className="space-y-4">
+        <div>
+          <h3 className="m-0 text-lg font-bold text-gray-900">{enterprise.enterpriseName}</h3>
+          <p className="mt-1 text-sm text-gray-500">{enterprise.address}</p>
+        </div>
         <section>
-          <div className="mb-3 flex items-center justify-between gap-4">
-            <h4 className="text-sm font-bold text-gray-900 uppercase">Assigned Cameras</h4>
-            <button
-              type="button"
-              onClick={() => toast.success("Camera setup action recorded.")}
-              className="bg-tgreen-dark hover:bg-tgreen-light inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-white transition"
-            >
-              <Camera size={14} /> Add Camera
-            </button>
-          </div>
           <div className="overflow-x-auto rounded-xl border border-gray-200">
             <table className="w-full text-left text-xs">
               <thead className="bg-gray-50 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
@@ -223,7 +230,7 @@ function EnterpriseDetailsModal({ enterprise, onClose }: { enterprise: Enterpris
                 {enterprise.cameras.length === 0 && (
                   <tr>
                     <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                      No cameras assigned. Link a gateway before adding camera nodes.
+                      No cameras assigned to this enterprise.
                     </td>
                   </tr>
                 )}
@@ -258,11 +265,11 @@ function RegisterEnterpriseModal({ onClose }: { onClose: () => void }) {
           <FormField key={label} label={label} />
         ))}
         <label className="block">
-          <span className="mb-1 block text-[10px] font-bold text-gray-500 uppercase">Account Status</span>
+          <span className="mb-1 block text-[10px] font-bold text-gray-500 uppercase">Status</span>
           <select className="focus:ring-tgreen-dark w-full rounded-lg border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-1">
-            <option>Active</option>
-            <option>Suspended</option>
-            <option>Archived</option>
+            <option>Connected</option>
+            <option>Offline</option>
+            <option>Closed</option>
           </select>
         </label>
         <button onClick={handleSave} className="bg-tgreen-dark hover:bg-tgreen-light rounded-lg p-3 text-sm font-bold text-white transition md:col-span-2">
@@ -342,18 +349,8 @@ function FormField({ label }: { label: string }) {
 function GatewayBadge({ status }: { status: GatewayStatus }) {
   const classes: Record<GatewayStatus, string> = {
     Connected: "bg-emerald-50 text-emerald-700",
-    "Sync Delayed": "bg-yellow-50 text-yellow-700",
     Offline: "bg-red-50 text-red-700",
-    "Not Linked": "bg-slate-100 text-slate-600",
-  };
-  return <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${classes[status]}`}>{status}</span>;
-}
-
-function EnterpriseStatusBadge({ status }: { status: EnterpriseAccountStatus }) {
-  const classes: Record<EnterpriseAccountStatus, string> = {
-    Active: "bg-emerald-50 text-emerald-700",
-    Archived: "bg-slate-100 text-slate-600",
-    Suspended: "bg-red-50 text-red-700",
+    Closed: "bg-slate-100 text-slate-600",
   };
   return <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${classes[status]}`}>{status}</span>;
 }

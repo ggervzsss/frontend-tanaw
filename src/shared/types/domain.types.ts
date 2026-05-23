@@ -1,6 +1,6 @@
 export type EnterpriseStatus = "Normal" | "Warning" | "Critical";
 export type CameraStatus = "Online" | "Offline" | "Unstable";
-export type GatewayStatus = "Connected" | "Sync Delayed" | "Offline" | "Not Linked";
+export type GatewayStatus = "Connected" | "Offline" | "Closed";
 export type AlertSeverity = "Info" | "Warning" | "Critical";
 export type AuditEvent = "Generate" | "Update" | "Error" | "Login" | "Export" | "Query" | "Submit";
 export type AuditRole = "System" | "IT Personnel" | "Enterprise" | "Staff" | "Admin";

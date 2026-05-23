@@ -22,40 +22,41 @@ export function ITSystemLogsPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[820px] table-fixed text-left text-sm">
+          <table className="w-full min-w-[760px] table-fixed text-left text-sm">
             <colgroup>
+              <col className="w-[21%]" />
+              <col className="w-[18%]" />
               <col className="w-[20%]" />
+              <col className="w-[25%]" />
               <col className="w-[16%]" />
-              <col className="w-[20%]" />
-              <col className="w-[34%]" />
-              <col className="w-[10%]" />
             </colgroup>
             <thead className="bg-gray-50 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
               <tr>
-                {["Timestamp", "Type", "Actor", "Target", "Action"].map((heading) => (
-                  <th key={heading} className="px-4 py-4 whitespace-nowrap">
+                {["Timestamp", "Type", "Actor", "Target"].map((heading) => (
+                  <th key={heading} className="px-3 py-4 whitespace-nowrap lg:px-4">
                     {heading}
                   </th>
                 ))}
+                <th className="px-3 py-4 text-right whitespace-nowrap lg:px-4">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-gray-800">
               {systemActivities.map((activity) => (
                 <tr key={activity.id} className="hover:bg-tgreen-dark/5 transition">
-                  <td className="px-4 py-4 font-mono text-xs whitespace-nowrap text-gray-500">{activity.time}</td>
-                  <td className="px-4 py-4 whitespace-nowrap">
+                  <td className="px-3 py-4 font-mono text-xs whitespace-nowrap text-gray-500 lg:px-4">{activity.time}</td>
+                  <td className="px-3 py-4 whitespace-nowrap lg:px-4">
                     <TypeBadge type={activity.type} />
                   </td>
-                  <td className="px-4 py-4 text-xs whitespace-nowrap">
+                  <td className="px-3 py-4 text-xs whitespace-nowrap lg:px-4">
                     <span className="block truncate font-bold text-gray-900">{activity.initiatedBy}</span>
                     <span className="text-[10px] font-semibold text-gray-500 uppercase">{activity.actorType}</span>
                   </td>
-                  <td className="truncate px-4 py-4 text-xs whitespace-nowrap text-gray-600">{activity.target ?? activity.enterprise ?? activity.accountName ?? "System"}</td>
-                  <td className="px-4 py-4 whitespace-nowrap">
+                  <td className="truncate px-3 py-4 text-xs whitespace-nowrap text-gray-600 lg:px-4">{activity.target ?? activity.enterprise ?? activity.accountName ?? "System"}</td>
+                  <td className="px-3 py-4 text-right whitespace-nowrap lg:px-4">
                     <button
                       type="button"
                       onClick={() => setSelectedActivity(activity)}
-                      className="text-tgreen-dark hover:bg-tgreen-dark/5 inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-[10px] font-bold transition"
+                      className="text-tgreen-dark hover:bg-tgreen-dark/5 inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-[10px] font-bold transition"
                     >
                       <FileText size={13} /> View
                     </button>

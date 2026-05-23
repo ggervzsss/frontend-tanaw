@@ -22,7 +22,7 @@ export function ITSystemLogsPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] table-fixed text-left text-sm">
+          <table className="w-full min-w-190 table-fixed text-left text-sm">
             <colgroup>
               <col className="w-[21%]" />
               <col className="w-[18%]" />
@@ -74,6 +74,8 @@ export function ITSystemLogsPage() {
 }
 
 function ActivityDetailsModal({ activity, onClose }: { activity: SystemActivity; onClose: () => void }) {
+  const relatedEntity = activity.enterprise ? <Detail label="Enterprise" value={activity.enterprise} /> : activity.accountName ? <Detail label="Account" value={activity.accountName} /> : null;
+
   return (
     <ModalPortal>
       <motion.div className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -98,14 +100,10 @@ function ActivityDetailsModal({ activity, onClose }: { activity: SystemActivity;
             <Detail label="Actor" value={`${activity.initiatedBy} (${activity.actorType})`} />
             <Detail label="Timestamp" value={activity.time} />
             <Detail label="Target" value={activity.target ?? "N/A"} />
-            <Detail label="Enterprise" value={activity.enterprise ?? "N/A"} />
-            <Detail label="Account" value={activity.accountName ?? "N/A"} />
-            <Detail label="Device" value={activity.device ?? "N/A"} />
+            {relatedEntity}
+            {activity.device && <Detail label="Device" value={activity.device} />}
             <div className="md:col-span-2">
               <Detail label="Summary" value={activity.summary} />
-            </div>
-            <div className="md:col-span-2">
-              <Detail label="Recommended Action" value={activity.recommendedAction} />
             </div>
           </div>
         </motion.section>

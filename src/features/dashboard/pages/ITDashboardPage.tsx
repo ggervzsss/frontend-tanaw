@@ -33,20 +33,20 @@ export function ITDashboardPage() {
             </div>
           </div>
           <div className="divide-y divide-gray-100">
-            {recentActivities.map((activity) => (
-              <article className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 px-6 py-4 max-md:grid-cols-1" key={activity.id}>
-                <ActivityTypeBadge type={activity.type} />
-                <div className="min-w-0">
-                  <p className="text-charcoal-800 m-0 text-sm font-semibold">{activity.summary}</p>
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
-                    <span>{activity.initiatedBy}</span>
-                    <span>{activity.actorType}</span>
-                    {activity.enterprise && <span>{activity.enterprise}</span>}
+            {recentActivities.map((activity) => {
+              const displayName = activity.enterprise ?? activity.accountName ?? activity.initiatedBy;
+
+              return (
+                <article className="grid grid-cols-[minmax(150px,auto)_minmax(0,1fr)_minmax(160px,auto)] items-center gap-4 px-6 py-4 max-lg:grid-cols-1 max-lg:items-start" key={activity.id}>
+                  <p className="m-0 font-mono text-xs whitespace-nowrap text-gray-500">{activity.time}</p>
+                  <p className="text-charcoal-800 m-0 min-w-0 truncate text-sm font-semibold">{activity.summary}</p>
+                  <div className="flex min-w-0 items-center justify-end gap-2 max-lg:justify-start">
+                    <span className="truncate text-xs font-semibold text-gray-600">{displayName}</span>
+                    <ActivityTypeBadge type={activity.type} />
                   </div>
-                </div>
-                <p className="m-0 font-mono text-xs whitespace-nowrap text-gray-500">{activity.time}</p>
-              </article>
-            ))}
+                </article>
+              );
+            })}
             {recentActivities.length === 0 && <DashboardEmptyState icon={Activity} title="No recent activity" description="System activity records will appear here once the logging source is connected." />}
           </div>
         </section>

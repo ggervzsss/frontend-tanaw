@@ -55,27 +55,9 @@ export function ITLguAccountsPage() {
           color={isInactive ? "#64748b" : "#065f46"}
           icon={isInactive ? Users : UserCheck}
         />
-        <MetricCard
-          label="Admin Accounts"
-          value={metricBase.filter((a) => a.role === "Admin").length}
-          foot="System administrators"
-          color="#2563eb"
-          icon={Shield}
-        />
-        <MetricCard
-          label="IT Accounts"
-          value={metricBase.filter((a) => a.role === "IT Personnel").length}
-          foot="Technical operators"
-          color="#10b981"
-          icon={KeyRound}
-        />
-        <MetricCard
-          label="Staff Accounts"
-          value={metricBase.filter((a) => a.role === "LGU Staff").length}
-          foot="LGU staff members"
-          color="#7c3aed"
-          icon={Users}
-        />
+        <MetricCard label="Admin Accounts" value={metricBase.filter((a) => a.role === "Admin").length} foot="System administrators" color="#2563eb" icon={Shield} />
+        <MetricCard label="IT Accounts" value={metricBase.filter((a) => a.role === "IT Personnel").length} foot="Technical operators" color="#10b981" icon={KeyRound} />
+        <MetricCard label="Staff Accounts" value={metricBase.filter((a) => a.role === "LGU Staff").length} foot="LGU staff members" color="#7c3aed" icon={Users} />
       </motion.section>
 
       <Panel className="mt-6 overflow-hidden">
@@ -113,7 +95,7 @@ export function ITLguAccountsPage() {
             <tbody className="divide-y divide-gray-100 text-gray-800">
               {filteredAccounts.map((account) => (
                 <tr key={account.id} className="hover:bg-tgreen-dark/5 transition">
-                  <td className="whitespace-nowrap px-4 py-3">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <button type="button" onClick={() => setSelectedAccount(account)} className="flex items-center gap-3 text-left">
                       <span className="bg-tgreen-dark/10 text-tgreen-dark flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-black">
                         {account.firstName[0]}
@@ -121,21 +103,22 @@ export function ITLguAccountsPage() {
                       </span>
                       <span>
                         <span className="block font-bold text-gray-900">
-                          {account.firstName}{account.lastName ? ` ${account.lastName[0]}.` : ""}
+                          {account.firstName}
+                          {account.lastName ? ` ${account.lastName[0]}.` : ""}
                         </span>
                         <span className="font-mono text-[10px] text-gray-500">{account.id}</span>
                       </span>
                     </button>
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-xs text-gray-600">{account.email}</td>
-                  <td className="whitespace-nowrap px-4 py-3">
+                  <td className="px-4 py-3 text-xs whitespace-nowrap text-gray-600">{account.email}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <RoleBadge role={account.role} />
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <AccountStatusBadge status={account.status} />
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-xs text-gray-500">{account.lastLogin}</td>
-                  <td className="whitespace-nowrap px-4 py-3">
+                  <td className="px-4 py-3 text-xs whitespace-nowrap text-gray-500">{account.lastLogin}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex gap-2">
                       <IconAction label="View account details" onClick={() => setSelectedAccount(account)} icon={<Eye size={15} />} />
                       <IconAction label="Reset password" onClick={() => setActionState({ type: "reset", account })} icon={<KeyRound size={15} />} />
@@ -156,34 +139,28 @@ export function ITLguAccountsPage() {
       <AnimatePresence>
         {selectedAccount && <AccountDetailsModal account={selectedAccount} onClose={() => setSelectedAccount(null)} />}
         {createOpen && <CreateAccountModal onClose={() => setCreateOpen(false)} />}
-        
-        {actionState?.type === "reset" && (
-          <ResetPasswordModal account={actionState.account} onClose={() => setActionState(null)} />
-        )}
-        
+
+        {actionState?.type === "reset" && <ResetPasswordModal account={actionState.account} onClose={() => setActionState(null)} />}
+
         {actionState?.type === "deactivate_step1" && (
-          <DeactivateAccountModalStep1 
-            account={actionState.account} 
-            onProceed={() => setActionState({ type: "deactivate_step2", account: actionState.account })} 
-            onClose={() => setActionState(null)} 
+          <DeactivateAccountModalStep1
+            account={actionState.account}
+            onProceed={() => setActionState({ type: "deactivate_step2", account: actionState.account })}
+            onClose={() => setActionState(null)}
           />
         )}
-        
-        {actionState?.type === "deactivate_step2" && (
-          <DeactivateAccountModalStep2 account={actionState.account} onClose={() => setActionState(null)} />
-        )}
-        
+
+        {actionState?.type === "deactivate_step2" && <DeactivateAccountModalStep2 account={actionState.account} onClose={() => setActionState(null)} />}
+
         {actionState?.type === "reactivate_step1" && (
-          <ReactivateAccountModalStep1 
-            account={actionState.account} 
-            onProceed={() => setActionState({ type: "reactivate_step2", account: actionState.account })} 
-            onClose={() => setActionState(null)} 
+          <ReactivateAccountModalStep1
+            account={actionState.account}
+            onProceed={() => setActionState({ type: "reactivate_step2", account: actionState.account })}
+            onClose={() => setActionState(null)}
           />
         )}
-        
-        {actionState?.type === "reactivate_step2" && (
-          <ReactivateAccountModalStep2 account={actionState.account} onClose={() => setActionState(null)} />
-        )}
+
+        {actionState?.type === "reactivate_step2" && <ReactivateAccountModalStep2 account={actionState.account} onClose={() => setActionState(null)} />}
       </AnimatePresence>
     </PageMotion>
   );
@@ -234,8 +211,8 @@ function CreateAccountModal({ onClose }: { onClose: () => void }) {
         <div className="flex items-start gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4 md:col-span-2">
           <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500 text-[10px] font-black text-white">i</span>
           <p className="text-xs leading-relaxed text-blue-700">
-            Once this account is saved, the system will automatically generate login credentials and send them to the registered email address or contact number provided above.
-            The user will be required to change their password upon their first login.
+            Once this account is saved, the system will automatically generate login credentials and send them to the registered email address or contact number provided above. The user will be
+            required to change their password upon their first login.
           </p>
         </div>
         <button onClick={handleSave} className="bg-tgreen-dark hover:bg-tgreen-light rounded-lg p-3 text-sm font-bold text-white transition md:col-span-2">
@@ -256,13 +233,17 @@ function ResetPasswordModal({ account, onClose }: { account: LguAccount; onClose
     <ModalFrame title="Reset LGU Account Password" onClose={onClose}>
       <div className="space-y-4">
         <p className="text-sm text-gray-600">
-          You are about to reset the password for <strong>{account.firstName} {account.lastName}</strong>.
+          You are about to reset the password for{" "}
+          <strong>
+            {account.firstName} {account.lastName}
+          </strong>
+          .
         </p>
         <div className="flex items-start gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4">
           <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500 text-[10px] font-black text-white">i</span>
           <p className="text-xs leading-relaxed text-blue-700">
-            The system will automatically generate new login credentials and send them to the registered email address ({account.email}) or contact number.
-            The user will be required to change their password upon their next login.
+            The system will automatically generate new login credentials and send them to the registered email address ({account.email}) or contact number. The user will be required to change their
+            password upon their next login.
           </p>
         </div>
         <div className="flex justify-end gap-3 pt-4">
@@ -283,13 +264,17 @@ function DeactivateAccountModalStep1({ account, onProceed, onClose }: { account:
     <ModalFrame title="Deactivate LGU Account" onClose={onClose}>
       <div className="space-y-4">
         <p className="text-sm text-gray-600">
-          You are about to deactivate the account for <strong>{account.firstName} {account.lastName}</strong> ({account.email}).
+          You are about to deactivate the account for{" "}
+          <strong>
+            {account.firstName} {account.lastName}
+          </strong>{" "}
+          ({account.email}).
         </p>
         <div className="flex items-start gap-3 rounded-lg border border-orange-100 bg-orange-50 p-4">
           <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-500 text-[10px] font-black text-white">!</span>
           <p className="text-xs leading-relaxed text-orange-800">
-            Deactivating this account will immediately revoke their access to the TANAW system. 
-            The user will be automatically logged out of any active sessions and will not be able to log in until the account is reactivated.
+            Deactivating this account will immediately revoke their access to the TANAW system. The user will be automatically logged out of any active sessions and will not be able to log in until
+            the account is reactivated.
           </p>
         </div>
         <div className="flex justify-end gap-3 pt-4">
@@ -322,19 +307,19 @@ function DeactivateAccountModalStep2({ account, onClose }: { account: LguAccount
         <p className="text-sm text-gray-600">
           To confirm the deactivation of <strong>{account.email}</strong>, please type <strong>{expectedText}</strong> below.
         </p>
-        <input 
-          type="text" 
+        <input
+          type="text"
           value={confirmText}
           onChange={(e) => setConfirmText(e.target.value)}
           placeholder={expectedText}
-          className="focus:ring-orange-500 w-full rounded-lg border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-1"
+          className="w-full rounded-lg border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-1 focus:ring-orange-500"
         />
         <div className="flex justify-end gap-3 pt-4">
           <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-500 transition hover:bg-gray-100">
             Cancel
           </button>
-          <button 
-            onClick={handleDeactivate} 
+          <button
+            onClick={handleDeactivate}
             disabled={confirmText !== expectedText}
             className="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -351,13 +336,16 @@ function ReactivateAccountModalStep1({ account, onProceed, onClose }: { account:
     <ModalFrame title="Reactivate LGU Account" onClose={onClose}>
       <div className="space-y-4">
         <p className="text-sm text-gray-600">
-          You are about to reactivate the account for <strong>{account.firstName} {account.lastName}</strong> ({account.email}).
+          You are about to reactivate the account for{" "}
+          <strong>
+            {account.firstName} {account.lastName}
+          </strong>{" "}
+          ({account.email}).
         </p>
         <div className="flex items-start gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4">
           <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500 text-[10px] font-black text-white">i</span>
           <p className="text-xs leading-relaxed text-blue-700">
-            Reactivating this account will restore their access to the TANAW system based on their role ({account.role}). 
-            They will be able to log in using their existing credentials.
+            Reactivating this account will restore their access to the TANAW system based on their role ({account.role}). They will be able to log in using their existing credentials.
           </p>
         </div>
         <div className="flex justify-end gap-3 pt-4">
@@ -390,8 +378,8 @@ function ReactivateAccountModalStep2({ account, onClose }: { account: LguAccount
         <p className="text-sm text-gray-600">
           To confirm the reactivation of <strong>{account.email}</strong>, please type <strong>{expectedText}</strong> below.
         </p>
-        <input 
-          type="text" 
+        <input
+          type="text"
           value={confirmText}
           onChange={(e) => setConfirmText(e.target.value)}
           placeholder={expectedText}
@@ -401,8 +389,8 @@ function ReactivateAccountModalStep2({ account, onClose }: { account: LguAccount
           <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-500 transition hover:bg-gray-100">
             Cancel
           </button>
-          <button 
-            onClick={handleReactivate} 
+          <button
+            onClick={handleReactivate}
             disabled={confirmText !== expectedText}
             className="bg-tgreen-dark hover:bg-tgreen-light rounded-lg px-4 py-2 text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -486,7 +474,7 @@ function RoleBadge({ role }: { role: LguAccountRoleLabel }) {
     "IT Personnel": "bg-emerald-50 text-emerald-700",
     "LGU Staff": "bg-slate-100 text-slate-700",
   };
-  return <span className={`whitespace-nowrap rounded-full px-3 py-1 text-[10px] font-bold uppercase ${classes[role]}`}>{role}</span>;
+  return <span className={`rounded-full px-3 py-1 text-[10px] font-bold whitespace-nowrap uppercase ${classes[role]}`}>{role}</span>;
 }
 
 function AccountStatusBadge({ status }: { status: LguAccountStatus }) {
@@ -494,5 +482,5 @@ function AccountStatusBadge({ status }: { status: LguAccountStatus }) {
     Active: "bg-emerald-50 text-emerald-700",
     Inactive: "bg-slate-100 text-slate-600",
   };
-  return <span className={`whitespace-nowrap rounded-full px-3 py-1 text-[10px] font-bold uppercase ${classes[status]}`}>{status}</span>;
+  return <span className={`rounded-full px-3 py-1 text-[10px] font-bold whitespace-nowrap uppercase ${classes[status]}`}>{status}</span>;
 }

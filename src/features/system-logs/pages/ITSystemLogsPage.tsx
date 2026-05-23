@@ -26,8 +26,7 @@ export function ITSystemLogsPage() {
   const filteredActivities = useMemo(
     () =>
       systemActivities.filter((activity) => {
-        const haystack =
-          `${activity.summary} ${activity.accountName ?? ""} ${activity.initiatedBy} ${activity.enterprise ?? ""} ${activity.device ?? ""} ${activity.type}`.toLowerCase();
+        const haystack = `${activity.summary} ${activity.accountName ?? ""} ${activity.initiatedBy} ${activity.enterprise ?? ""} ${activity.device ?? ""} ${activity.type}`.toLowerCase();
         const matchesSearch = haystack.includes(search.trim().toLowerCase());
         const matchesSeverity = severity === "All Severities" || activity.severity === severity;
         const matchesType = matchesActivityTypeFilter(activity.type, activityType);
@@ -37,11 +36,7 @@ export function ITSystemLogsPage() {
     [activityType, enterprise, search, severity],
   );
   const openAlerts = systemActivities.filter((activity) => isUnresolved(activity.status) && isTechnicalAlert(activity)).length;
-  const offlineDevices = new Set(
-    systemActivities
-      .filter((activity) => isUnresolved(activity.status) && activity.device && activity.deviceState === "Offline")
-      .map((activity) => activity.device),
-  ).size;
+  const offlineDevices = new Set(systemActivities.filter((activity) => isUnresolved(activity.status) && activity.device && activity.deviceState === "Offline").map((activity) => activity.device)).size;
   const accountChangesToday = systemActivities.filter((activity) => activity.type === "Account Activity" && activity.timePeriod === "Today").length;
   const pendingEnterpriseAttention = systemActivities.filter((activity) => isUnresolved(activity.status) && activity.requiresEnterpriseAttention).length;
 
@@ -221,12 +216,7 @@ function Detail({ label, value }: { label: string; value: string }) {
 }
 
 function matchesActivityTypeFilter(type: SystemActivityType, filter: ActivityFilter) {
-  return (
-    filter === "All Activities" ||
-    (filter === "Notifications" && type === "Notification") ||
-    (filter === "Sync Events" && type === "Sync Event") ||
-    type === filter
-  );
+  return filter === "All Activities" || (filter === "Notifications" && type === "Notification") || (filter === "Sync Events" && type === "Sync Event") || type === filter;
 }
 
 function isTechnicalAlert(activity: SystemActivity) {

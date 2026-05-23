@@ -7,10 +7,8 @@ import { enterpriseAccounts, enterprises, pipelineHealth, systemActivities } fro
 import type { AlertSeverity, SystemActivityStatus } from "../../../shared/types";
 
 export function ITDashboardPage() {
-  const offlineCameras = enterpriseAccounts.reduce(
-    (total, enterprise) => total + enterprise.cameras.filter((camera) => camera.status === "Offline").length,
-    0,
-  );
+  const offlineCameras = enterpriseAccounts.reduce((total, enterprise) => total + enterprise.cameras.filter((camera) => camera.status === "Offline").length, 0);
+  const activeEnterprises = enterprises.filter((enterprise) => enterprise.gatewayStatus !== "Closed").length;
   const gatewaysOnline = enterprises.filter((enterprise) => enterprise.gatewayStatus === "Connected").length;
   const alerts = pipelineHealth.flatMap((enterprise) =>
     enterprise.warnings.map((warning) => ({
@@ -27,7 +25,7 @@ export function ITDashboardPage() {
 
       <motion.section className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4" variants={stagger}>
         <MetricCard label="LGU Accounts" value={4} foot="Active account registry" color="#065f46" icon={Users} />
-        <MetricCard label="Active Enterprises" value={enterprises.filter((enterprise) => enterprise.status === "Active").length} foot="Currently monitored" color="#2563eb" icon={Building2} />
+        <MetricCard label="Active Enterprises" value={activeEnterprises} foot="Not marked closed" color="#2563eb" icon={Building2} />
         <MetricCard label="Gateways Online" value={gatewaysOnline} foot="Synced edge gateways" color="#10b981" icon={Wifi} />
         <MetricCard label="Offline Cameras" value={offlineCameras} foot="Needs diagnosis" color="#dc2626" footClassName="text-red-600" icon={AlertTriangle} />
       </motion.section>

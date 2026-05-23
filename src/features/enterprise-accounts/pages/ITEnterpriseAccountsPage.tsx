@@ -1,4 +1,4 @@
-import { Building2, Camera, Edit3, Eye, PlugZap, Search, TestTube2, Wifi } from "lucide-react";
+import { Building2, Camera, Edit3, Eye, KeyRound, PlugZap, Search, TestTube2, UserCheck, Wifi, XCircle } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
@@ -15,51 +15,49 @@ type StatusFilter = "All Statuses" | GatewayStatus;
 const statusFilters: StatusFilter[] = ["All Statuses", "Connected", "Offline", "Closed"];
 
 export function ITEnterpriseAccountsPage() {
+  const [accounts, setAccounts] = useState<EnterpriseAccount[]>(enterpriseAccounts);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("All Statuses");
   const [barangay, setBarangay] = useState("All Barangays");
   const [selectedEnterprise, setSelectedEnterprise] = useState<EnterpriseAccount | null>(null);
   const [cameraEnterprise, setCameraEnterprise] = useState<EnterpriseAccount | null>(null);
   const [registerOpen, setRegisterOpen] = useState(false);
+  type ActionState = {
+    type: "reset" | "close_step1" | "close_step2" | "activate_step1" | "activate_step2";
+    enterprise: EnterpriseAccount;
+  } | null;
 
-  const barangays = useMemo(() => ["All Barangays", ...new Set(enterpriseAccounts.map((enterprise) => enterprise.barangay))], []);
+  const [actionState, setActionState] = useState<ActionState>(null);
+
+  const barangays = useMemo(() => ["All Barangays", ...new Set(accounts.map((enterprise) => enterprise.barangay))], [accounts]);
   const filteredEnterprises = useMemo(
     () =>
-      enterpriseAccounts.filter((enterprise) => {
+      accounts.filter((enterprise) => {
         const haystack = `${enterprise.enterpriseName} ${enterprise.managerName} ${enterprise.category} ${enterprise.barangay}`.toLowerCase();
         const matchesQuery = haystack.includes(query.trim().toLowerCase());
         const matchesStatus = status === "All Statuses" || enterprise.gatewayStatus === status;
         const matchesBarangay = barangay === "All Barangays" || enterprise.barangay === barangay;
         return matchesQuery && matchesStatus && matchesBarangay;
       }),
-    [barangay, query, status],
+    [accounts, barangay, query, status],
   );
 
-  const totalCameras = enterpriseAccounts.reduce((total, enterprise) => total + enterprise.cameras.length, 0);
-  const onlineCameras = enterpriseAccounts.reduce((total, enterprise) => total + enterprise.cameras.filter((camera) => camera.status === "Online").length, 0);
+  const setEnterpriseStatus = (enterpriseId: string, gatewayStatus: GatewayStatus) => {
+    setAccounts((currentAccounts) => currentAccounts.map((account) => (account.id === enterpriseId ? { ...account, gatewayStatus } : account)));
+  };
+
+  const offlineEnterprises = accounts.filter((enterprise) => enterprise.gatewayStatus === "Offline").length;
+  const inactiveEnterprises = accounts.filter((enterprise) => enterprise.gatewayStatus === "Closed").length;
 
   return (
     <PageMotion>
       <PageHeader title="Enterprise Accounts" description="Manage establishment accounts, gateway links, and assigned camera nodes." />
 
       <motion.section className="grid grid-cols-1 gap-4 md:grid-cols-4" variants={stagger}>
-        <MetricCard label="Enterprise Accounts" value={enterpriseAccounts.length} foot="Registered entities" color="#2563eb" icon={Building2} />
-        <MetricCard
-          label="Connected Enterprises"
-          value={enterpriseAccounts.filter((enterprise) => enterprise.gatewayStatus === "Connected").length}
-          foot="Live data available"
-          color="#065f46"
-          icon={Wifi}
-        />
-        <MetricCard label="Assigned Cameras" value={`${onlineCameras}/${totalCameras}`} foot="Online camera nodes" color="#10b981" icon={Camera} />
-        <MetricCard
-          label="Needs Attention"
-          value={enterpriseAccounts.filter((enterprise) => enterprise.gatewayStatus === "Offline").length}
-          foot="Desktop app offline"
-          color="#dc2626"
-          footClassName="text-red-600"
-          icon={PlugZap}
-        />
+        <MetricCard label="Enterprise Accounts" value={accounts.length} foot="Registered entities" color="#2563eb" icon={Building2} />
+        <MetricCard label="Connected Enterprises" value={accounts.filter((enterprise) => enterprise.gatewayStatus === "Connected").length} foot="Live data available" color="#065f46" icon={Wifi} />
+        <MetricCard label="Offline Enterprises" value={offlineEnterprises} foot="Desktop app not running" color="#dc2626" footClassName="text-red-600" icon={PlugZap} />
+        <MetricCard label="Inactive Enterprises" value={inactiveEnterprises} foot="Marked closed" color="#64748b" footClassName="text-slate-600" icon={XCircle} />
       </motion.section>
 
       <Panel className="mt-6 overflow-hidden">
@@ -84,11 +82,11 @@ export function ITEnterpriseAccountsPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full min-w-[1120px] text-left text-sm">
             <thead className="bg-gray-50 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
               <tr>
                 {["Enterprise", "Barangay", "Status", "Cameras", "Last Sync", "Actions"].map((heading) => (
-                  <th key={heading} className="px-6 py-4">
+                  <th key={heading} className="px-6 py-4 whitespace-nowrap">
                     {heading}
                   </th>
                 ))}
@@ -99,28 +97,34 @@ export function ITEnterpriseAccountsPage() {
                 const online = enterprise.cameras.filter((camera) => camera.status === "Online").length;
                 return (
                   <tr key={enterprise.id} className="hover:bg-tgreen-dark/5 transition">
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <button type="button" onClick={() => setSelectedEnterprise(enterprise)} className="flex items-center gap-3 text-left">
-                        <span className="bg-tgreen-dark/10 text-tgreen-dark rounded-lg p-2">
+                        <span className="bg-tgreen-dark/10 text-tgreen-dark flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
                           <Building2 size={18} />
                         </span>
-                        <span>
-                          <span className="block font-bold text-gray-900">{enterprise.enterpriseName}</span>
-                          <span className="text-[10px] text-gray-500">{enterprise.category}</span>
+                        <span className="min-w-0">
+                          <span className="font-bold text-gray-900">{enterprise.enterpriseName}</span>
+                          <span className="ml-2 text-[10px] font-semibold text-gray-500">{enterprise.category}</span>
                         </span>
                       </button>
                     </td>
-                    <td className="px-6 py-4 text-xs text-gray-600">{enterprise.barangay}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-xs whitespace-nowrap text-gray-600">{enterprise.barangay}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <GatewayBadge status={enterprise.gatewayStatus} />
                     </td>
-                    <td className="px-6 py-4 text-xs font-bold text-gray-900">
+                    <td className="px-6 py-4 text-xs font-bold whitespace-nowrap text-gray-900">
                       {online}/{enterprise.cameras.length}
                     </td>
-                    <td className="px-6 py-4 text-xs text-gray-500">{enterprise.lastSync}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-xs whitespace-nowrap text-gray-500">{enterprise.lastSync}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex gap-2">
                         <IconAction label="View enterprise" onClick={() => setSelectedEnterprise(enterprise)} icon={<Eye size={15} />} />
+                        <IconAction label="Reset password" onClick={() => setActionState({ type: "reset", enterprise })} icon={<KeyRound size={15} />} />
+                        <IconAction
+                          label={enterprise.gatewayStatus === "Closed" ? "Activate enterprise" : "Deactivate enterprise"}
+                          onClick={() => setActionState({ type: enterprise.gatewayStatus === "Closed" ? "activate_step1" : "close_step1", enterprise })}
+                          icon={enterprise.gatewayStatus === "Closed" ? <UserCheck size={15} /> : <XCircle size={15} />}
+                        />
                         <IconAction label="View assigned cameras" onClick={() => setCameraEnterprise(enterprise)} icon={<Camera size={15} />} />
                       </div>
                     </td>
@@ -136,6 +140,27 @@ export function ITEnterpriseAccountsPage() {
         {selectedEnterprise && <EnterpriseDetailsModal enterprise={selectedEnterprise} onClose={() => setSelectedEnterprise(null)} />}
         {cameraEnterprise && <AssignedCamerasModal enterprise={cameraEnterprise} onClose={() => setCameraEnterprise(null)} />}
         {registerOpen && <RegisterEnterpriseModal onClose={() => setRegisterOpen(false)} />}
+        {actionState?.type === "reset" && <ResetEnterprisePasswordModal enterprise={actionState.enterprise} onClose={() => setActionState(null)} />}
+        {actionState?.type === "close_step1" && (
+          <CloseEnterpriseModalStep1
+            enterprise={actionState.enterprise}
+            onProceed={() => setActionState({ type: "close_step2", enterprise: actionState.enterprise })}
+            onClose={() => setActionState(null)}
+          />
+        )}
+        {actionState?.type === "close_step2" && (
+          <CloseEnterpriseModalStep2 enterprise={actionState.enterprise} onConfirm={() => setEnterpriseStatus(actionState.enterprise.id, "Closed")} onClose={() => setActionState(null)} />
+        )}
+        {actionState?.type === "activate_step1" && (
+          <ActivateEnterpriseModalStep1
+            enterprise={actionState.enterprise}
+            onProceed={() => setActionState({ type: "activate_step2", enterprise: actionState.enterprise })}
+            onClose={() => setActionState(null)}
+          />
+        )}
+        {actionState?.type === "activate_step2" && (
+          <ActivateEnterpriseModalStep2 enterprise={actionState.enterprise} onConfirm={() => setEnterpriseStatus(actionState.enterprise.id, "Offline")} onClose={() => setActionState(null)} />
+        )}
       </AnimatePresence>
     </PageMotion>
   );
@@ -238,6 +263,172 @@ function AssignedCamerasModal({ enterprise, onClose }: { enterprise: EnterpriseA
             </table>
           </div>
         </section>
+      </div>
+    </ModalFrame>
+  );
+}
+
+function ResetEnterprisePasswordModal({ enterprise, onClose }: { enterprise: EnterpriseAccount; onClose: () => void }) {
+  const handleReset = () => {
+    toast.success(`Password reset recorded for ${enterprise.email}`);
+    onClose();
+  };
+
+  return (
+    <ModalFrame title="Reset Enterprise Password" onClose={onClose}>
+      <div className="space-y-4">
+        <p className="text-sm text-gray-600">
+          You are about to reset the password for <strong>{enterprise.enterpriseName}</strong>.
+        </p>
+        <div className="flex items-start gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4">
+          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500 text-[10px] font-black text-white">i</span>
+          <p className="text-xs leading-relaxed text-blue-700">
+            The system will automatically generate new login credentials and send them to the registered email address ({enterprise.email}) or contact number. The enterprise user will be required to
+            change their password upon their next login.
+          </p>
+        </div>
+        <div className="flex justify-end gap-3 pt-4">
+          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-500 transition hover:bg-gray-100">
+            Cancel
+          </button>
+          <button onClick={handleReset} className="bg-tgreen-dark hover:bg-tgreen-light rounded-lg px-4 py-2 text-sm font-bold text-white transition">
+            Confirm Reset
+          </button>
+        </div>
+      </div>
+    </ModalFrame>
+  );
+}
+
+function CloseEnterpriseModalStep1({ enterprise, onProceed, onClose }: { enterprise: EnterpriseAccount; onProceed: () => void; onClose: () => void }) {
+  return (
+    <ModalFrame title="Deactivate Enterprise" onClose={onClose}>
+      <div className="space-y-4">
+        <p className="text-sm text-gray-600">
+          You are about to mark <strong>{enterprise.enterpriseName}</strong> as <strong>Closed</strong>.
+        </p>
+        <div className="flex items-start gap-3 rounded-lg border border-orange-100 bg-orange-50 p-4">
+          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-500 text-[10px] font-black text-white">!</span>
+          <p className="text-xs leading-relaxed text-orange-800">Closed enterprises are treated as inactive. Their account and records will remain available for historical data and record-keeping.</p>
+        </div>
+        <div className="flex justify-end gap-3 pt-4">
+          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-500 transition hover:bg-gray-100">
+            Cancel
+          </button>
+          <button onClick={onProceed} className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-orange-700">
+            Proceed
+          </button>
+        </div>
+      </div>
+    </ModalFrame>
+  );
+}
+
+function CloseEnterpriseModalStep2({ enterprise, onConfirm, onClose }: { enterprise: EnterpriseAccount; onConfirm: () => void; onClose: () => void }) {
+  const [confirmText, setConfirmText] = useState("");
+  const expectedText = "CLOSE";
+
+  const handleCloseEnterprise = () => {
+    if (confirmText === expectedText) {
+      onConfirm();
+      toast.success(`${enterprise.enterpriseName} marked as closed.`);
+      onClose();
+    }
+  };
+
+  return (
+    <ModalFrame title="Confirm Enterprise Deactivation" onClose={onClose}>
+      <div className="space-y-4">
+        <p className="text-sm text-gray-600">
+          To confirm that <strong>{enterprise.enterpriseName}</strong> should be marked as Closed, type <strong>{expectedText}</strong> below.
+        </p>
+        <input
+          type="text"
+          value={confirmText}
+          onChange={(event) => setConfirmText(event.target.value)}
+          placeholder={expectedText}
+          className="w-full rounded-lg border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-1 focus:ring-orange-500"
+        />
+        <div className="flex justify-end gap-3 pt-4">
+          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-500 transition hover:bg-gray-100">
+            Cancel
+          </button>
+          <button
+            onClick={handleCloseEnterprise}
+            disabled={confirmText !== expectedText}
+            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Confirm Deactivation
+          </button>
+        </div>
+      </div>
+    </ModalFrame>
+  );
+}
+
+function ActivateEnterpriseModalStep1({ enterprise, onProceed, onClose }: { enterprise: EnterpriseAccount; onProceed: () => void; onClose: () => void }) {
+  return (
+    <ModalFrame title="Activate Enterprise" onClose={onClose}>
+      <div className="space-y-4">
+        <p className="text-sm text-gray-600">
+          You are about to activate <strong>{enterprise.enterpriseName}</strong> and return the account to operational status.
+        </p>
+        <div className="flex items-start gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4">
+          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500 text-[10px] font-black text-white">i</span>
+          <p className="text-xs leading-relaxed text-blue-700">
+            Activating this enterprise restores it as an active operational account. It may still appear Offline until the desktop app starts processing data again.
+          </p>
+        </div>
+        <div className="flex justify-end gap-3 pt-4">
+          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-500 transition hover:bg-gray-100">
+            Cancel
+          </button>
+          <button onClick={onProceed} className="bg-tgreen-dark hover:bg-tgreen-light rounded-lg px-4 py-2 text-sm font-bold text-white transition">
+            Proceed
+          </button>
+        </div>
+      </div>
+    </ModalFrame>
+  );
+}
+
+function ActivateEnterpriseModalStep2({ enterprise, onConfirm, onClose }: { enterprise: EnterpriseAccount; onConfirm: () => void; onClose: () => void }) {
+  const [confirmText, setConfirmText] = useState("");
+  const expectedText = "ACTIVATE";
+
+  const handleActivateEnterprise = () => {
+    if (confirmText === expectedText) {
+      onConfirm();
+      toast.success(`${enterprise.enterpriseName} marked as active.`);
+      onClose();
+    }
+  };
+
+  return (
+    <ModalFrame title="Confirm Enterprise Activation" onClose={onClose}>
+      <div className="space-y-4">
+        <p className="text-sm text-gray-600">
+          To confirm activation for <strong>{enterprise.enterpriseName}</strong>, type <strong>{expectedText}</strong> below.
+        </p>
+        <input
+          type="text"
+          value={confirmText}
+          onChange={(event) => setConfirmText(event.target.value)}
+          placeholder={expectedText}
+          className="focus:ring-tgreen-dark w-full rounded-lg border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-1"
+        />
+        <div className="flex justify-end gap-3 pt-4">
+          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-500 transition hover:bg-gray-100">
+            Cancel
+          </button>
+          <button
+            onClick={handleActivateEnterprise}
+            disabled={confirmText !== expectedText}
+            className="bg-tgreen-dark hover:bg-tgreen-light rounded-lg px-4 py-2 text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Confirm Activation
+          </button>
+        </div>
       </div>
     </ModalFrame>
   );
@@ -352,7 +543,7 @@ function GatewayBadge({ status }: { status: GatewayStatus }) {
     Offline: "bg-red-50 text-red-700",
     Closed: "bg-slate-100 text-slate-600",
   };
-  return <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${classes[status]}`}>{status}</span>;
+  return <span className={`rounded-full px-3 py-1 text-[10px] font-bold whitespace-nowrap uppercase ${classes[status]}`}>{status}</span>;
 }
 
 function CameraBadge({ status }: { status: CameraStatus }) {
@@ -361,5 +552,5 @@ function CameraBadge({ status }: { status: CameraStatus }) {
     Unstable: "bg-yellow-50 text-yellow-700",
     Offline: "bg-red-50 text-red-700",
   };
-  return <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${classes[status]}`}>{status}</span>;
+  return <span className={`rounded-full px-3 py-1 text-[10px] font-bold whitespace-nowrap uppercase ${classes[status]}`}>{status}</span>;
 }

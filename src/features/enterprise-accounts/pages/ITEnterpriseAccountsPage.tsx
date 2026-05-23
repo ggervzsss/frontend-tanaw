@@ -60,7 +60,7 @@ export function ITEnterpriseAccountsPage() {
     <PageMotion>
       <PageHeader title="Enterprise Accounts" description="Manage establishment accounts, gateway links, and assigned camera nodes." />
 
-      <motion.section className="grid grid-cols-1 gap-4 md:grid-cols-4" variants={stagger}>
+      <motion.section className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4" variants={stagger}>
         <MetricCard label="Enterprise Accounts" value={accounts.length} foot="Registered entities" color="#2563eb" icon={Building2} />
         <MetricCard label="Connected Enterprises" value={accounts.filter((enterprise) => enterprise.gatewayStatus === "Connected").length} foot="Live data available" color="#065f46" icon={Wifi} />
         <MetricCard label="Offline Enterprises" value={offlineEnterprises} foot="Desktop app not running" color="#dc2626" footClassName="text-red-600" icon={PlugZap} />

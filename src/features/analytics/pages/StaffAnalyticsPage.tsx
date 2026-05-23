@@ -92,7 +92,7 @@ export function StaffAnalyticsPage() {
     <PageMotion>
       <PageHeader title="Comparative Analytics & Anomalies" description="Compare enterprise performance to identify discrepancies before consolidation." />
 
-      <motion.section className="grid grid-cols-1 gap-4 md:grid-cols-4" variants={stagger}>
+      <motion.section className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4" variants={stagger}>
         <MetricCard
           color="#065f46"
           label="Total Aggregated Entries"

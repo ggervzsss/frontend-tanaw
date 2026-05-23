@@ -173,7 +173,7 @@ export function StaffBatchReportsPage() {
     <PageMotion>
       <PageHeader title="Batch Reports" description="Enterprise-level compliance review before DOT report consolidation." />
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <section className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
         <MetricCard label="Registered Enterprises" value={reportEnterprises.length} foot="Required to submit" color="#065f46" icon={Building2} />
         <MetricCard label="Ready Reports" value={readyReports.length} foot="Available for consolidation" color="#10b981" icon={CheckCircle2} />
         <MetricCard label="Missing Submissions" value={missingReports.length} foot="Needs follow-up" color="#dc2626" footClassName="text-red-600" icon={FileText} />

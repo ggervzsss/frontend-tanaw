@@ -40,7 +40,7 @@ export function AdminAlertsMonitorPage() {
     <PageMotion>
       <PageHeader title="Alerts & Monitor" description="Live infrastructure, threshold incidents, and escalation state across monitored enterprises." />
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <section className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
         <MetricCard label="Actionable Incidents" value={activeAlerts.length} foot={`${notifiedAlerts.length} already notified`} color="#065f46" icon={BellRing} />
         <MetricCard label="Critical Priority" value={criticalAlerts.length} foot={`${warningAlerts.length} warning signals`} color="#dc2626" footClassName="text-red-600" icon={AlertTriangle} />
         <MetricCard label="Resolved Ledger" value={resolvedAlerts.length} foot="Historical confirmations" color="#2563eb" icon={CheckCircle2} />

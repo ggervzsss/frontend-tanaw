@@ -12,7 +12,7 @@ export function ITDashboardPage() {
   const [selectedActivity, setSelectedActivity] = useState<SystemActivity | null>(null);
   const [selectedAlert, setSelectedAlert] = useState<PriorityAlert | null>(null);
   const [isAllAlertsModalOpen, setIsAllAlertsModalOpen] = useState(false);
-  const offlineCameras = enterpriseAccounts.reduce((total, enterprise) => total + enterprise.cameras.filter((camera) => camera.status === "Offline").length, 0);
+  const activeAlertsCount = priorityAlerts.filter((alert) => alert.status !== "Resolved").length;
   const activeEnterprises = enterprises.filter((enterprise) => enterprise.gatewayStatus !== "Closed").length;
   const gatewaysOnline = enterprises.filter((enterprise) => enterprise.gatewayStatus === "Connected").length;
   const recentActivities = systemActivities.slice(0, 7);
@@ -27,7 +27,7 @@ export function ITDashboardPage() {
         <MetricCard label="LGU Accounts" value={4} foot="Active account registry" color="#065f46" icon={Users} />
         <MetricCard label="Active Enterprises" value={activeEnterprises} foot="Not marked closed" color="#2563eb" icon={Building2} />
         <MetricCard label="Gateways Online" value={gatewaysOnline} foot="Synced edge gateways" color="#10b981" icon={Wifi} />
-        <MetricCard label="Offline Cameras" value={offlineCameras} foot="Needs diagnosis" color="#dc2626" footClassName="text-red-600" icon={AlertTriangle} />
+        <MetricCard label="Priority Alerts" value={activeAlertsCount} foot="Requires IT action" color="#dc2626" footClassName="text-red-600" icon={Bell} />
       </motion.section>
 
       <div className="mt-6 grid grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-6 max-xl:grid-cols-1">

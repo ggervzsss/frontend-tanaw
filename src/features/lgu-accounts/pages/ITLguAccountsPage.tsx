@@ -47,7 +47,7 @@ export function ITLguAccountsPage() {
     <PageMotion>
       <PageHeader title="LGU Accounts" description="Manage internal personnel profiles, access roles, and account recovery operations." />
 
-      <motion.section className="grid grid-cols-1 gap-4 md:grid-cols-4" variants={stagger}>
+      <motion.section className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4" variants={stagger}>
         <MetricCard
           label={isInactive ? "Total Inactive Accounts" : "Active Accounts"}
           value={metricBase.length}

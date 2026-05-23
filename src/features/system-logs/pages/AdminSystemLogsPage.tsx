@@ -41,7 +41,7 @@ export function AdminSystemLogsPage() {
     <PageMotion>
       <PageHeader title="System Logs" description="Auditable activity ledger for authentication, configuration, reports, and system events." />
 
-      <motion.section className="grid grid-cols-1 gap-4 xl:grid-cols-4" variants={stagger}>
+      <motion.section className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4" variants={stagger}>
         <MetricCard label="Total Events (24h)" value="8,421" foot="System-wide activity" color="#2563eb" icon={Activity} />
         <MetricCard label="System Alerts" value={errorCount + 13} foot={`${errorCount} auth error, 13 warnings`} color="#dc2626" footClassName="text-red-600" icon={AlertTriangle} />
         <MetricCard label="Active Sessions" value={activeSessions} foot="Across all user roles" color="#065f46" icon={MonitorCheck} />

@@ -6,10 +6,12 @@ import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { ModalPortal, PageMotion, stagger } from "../../../shared/components/ui";
 import { enterpriseAccounts, enterprises, priorityAlerts, systemActivities } from "../../../shared/data";
-import type { AlertSeverity, PriorityAlertResolutionMode, SystemActivity, SystemActivityType } from "../../../shared/types";
+import type { AlertSeverity, PriorityAlert, PriorityAlertResolutionMode, SystemActivity } from "../../../shared/types";
 
 export function ITDashboardPage() {
   const [selectedActivity, setSelectedActivity] = useState<SystemActivity | null>(null);
+  const [selectedAlert, setSelectedAlert] = useState<PriorityAlert | null>(null);
+  const [isAllAlertsModalOpen, setIsAllAlertsModalOpen] = useState(false);
   const offlineCameras = enterpriseAccounts.reduce((total, enterprise) => total + enterprise.cameras.filter((camera) => camera.status === "Offline").length, 0);
   const activeEnterprises = enterprises.filter((enterprise) => enterprise.gatewayStatus !== "Closed").length;
   const gatewaysOnline = enterprises.filter((enterprise) => enterprise.gatewayStatus === "Connected").length;
@@ -39,14 +41,14 @@ export function ITDashboardPage() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-140 table-fixed text-left">
                 <colgroup>
-                  <col className="w-[22%]" />
-                  <col className="w-[40%]" />
-                  <col className="w-[25%]" />
-                  <col className="w-[13%]" />
+                  <col className="w-[18%]" />
+                  <col className="w-[52%]" />
+                  <col className="w-[30%]" />
                 </colgroup>
                 <thead className="bg-gray-50 text-[9px] font-bold tracking-wider text-gray-500 uppercase">
                   <tr>
-                    {["Timestamp", "Summary", "Name", "Type"].map((heading) => (
+                    <th className="py-2.5 pr-1.5 pl-2.5 whitespace-nowrap lg:pr-2 lg:pl-3">Timestamp</th>
+                    {["Summary", "Name"].map((heading) => (
                       <th key={heading} className="px-2.5 py-2.5 whitespace-nowrap lg:px-3">
                         {heading}
                       </th>
@@ -59,15 +61,12 @@ export function ITDashboardPage() {
 
                     return (
                       <tr key={activity.id} onClick={() => setSelectedActivity(activity)} className="hover:bg-tgreen-dark/5 cursor-pointer transition">
-                        <td className="px-2.5 py-3 font-mono text-[10px] leading-snug text-gray-500 lg:px-3">{formatCompactTimestamp(activity.time)}</td>
+                        <td className="py-3 pr-1.5 pl-2.5 font-mono text-[10px] leading-snug text-gray-500 lg:pr-2 lg:pl-3">{formatCompactTimestamp(activity.time)}</td>
                         <td className="text-charcoal-800 px-2.5 py-3 text-[11px] leading-snug font-semibold lg:px-3">
                           <span className="line-clamp-3">{activity.summary}</span>
                         </td>
                         <td className="px-2.5 py-3 text-[10px] leading-snug font-semibold wrap-break-word text-gray-600 lg:px-3">
                           <span className="line-clamp-3">{displayName}</span>
-                        </td>
-                        <td className="px-2.5 py-3 whitespace-nowrap lg:px-3">
-                          <ActivityTypeBadge type={activity.type} />
                         </td>
                       </tr>
                     );
@@ -89,11 +88,21 @@ export function ITDashboardPage() {
                   <h3 className="text-charcoal-800 m-0 text-base font-bold">Priority Alerts</h3>
                   <p className="mt-1 mb-0 text-xs text-gray-500">Actionable tasks requiring IT intervention or approval.</p>
                 </div>
+                <button
+                  onClick={() => setIsAllAlertsModalOpen(true)}
+                  className="shrink-0 text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition"
+                >
+                  View All Alerts
+                </button>
               </div>
             </div>
             <div className="divide-y divide-gray-100">
               {actionableAlerts.map((alert) => (
-                <article className="px-6 py-4" key={alert.id}>
+                <article
+                  className="px-6 py-4 cursor-pointer hover:bg-emerald-50 transition"
+                  key={alert.id}
+                  onClick={() => setSelectedAlert(alert)}
+                >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <SeverityBadge severity={alert.severity} />
                     <ResolutionBadge mode={alert.resolutionMode} />
@@ -115,13 +124,125 @@ export function ITDashboardPage() {
         </aside>
       </div>
 
-      <AnimatePresence>{selectedActivity && <ActivityDetailsModal activity={selectedActivity} onClose={() => setSelectedActivity(null)} />}</AnimatePresence>
+      <AnimatePresence>
+        {selectedActivity && <ActivityDetailsModal activity={selectedActivity} onClose={() => setSelectedActivity(null)} />}
+        {selectedAlert && <AlertDetailsModal alert={selectedAlert} onClose={() => setSelectedAlert(null)} />}
+        {isAllAlertsModalOpen && (
+          <AllAlertsModal
+            alerts={priorityAlerts}
+            onClose={() => setIsAllAlertsModalOpen(false)}
+            onSelectAlert={(alert) => {
+              setIsAllAlertsModalOpen(false);
+              setSelectedAlert(alert);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </PageMotion>
   );
 }
 
 function formatCompactTimestamp(timestamp: string) {
   return timestamp.replace("2026-", "");
+}
+
+function AlertDetailsModal({ alert, onClose }: { alert: PriorityAlert; onClose: () => void }) {
+  const relatedEntity = alert.enterprise ? <Detail label="Enterprise" value={alert.enterprise} /> : null;
+
+  return (
+    <ModalPortal>
+      <motion.div className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        <motion.section
+          className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-2xl"
+          initial={{ opacity: 0, y: 12, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 12, scale: 0.98 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+        >
+          <header className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <div>
+              <p className="font-mono text-[10px] font-bold text-gray-400">{alert.id}</p>
+              <h2 className="text-lg font-bold text-gray-900">Priority Alert Details</h2>
+            </div>
+            <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-white hover:text-gray-900">
+              Close
+            </button>
+          </header>
+          <div className="grid gap-4 p-6 md:grid-cols-2">
+            <Detail label="Type" value={alert.type} />
+            <Detail label="Severity" value={<SeverityBadge severity={alert.severity} />} />
+            <Detail label="Timestamp" value={alert.time} />
+            <Detail label="Status" value={alert.status} />
+            <Detail label="Requester" value={alert.requester} />
+            <Detail label="Resolution Mode" value={<ResolutionBadge mode={alert.resolutionMode} />} />
+            {relatedEntity}
+            <div className="md:col-span-2">
+              <Detail label="Summary" value={alert.summary} />
+            </div>
+            <div className="md:col-span-2">
+              <Detail label="Required Action" value={alert.requiredAction} />
+            </div>
+          </div>
+        </motion.section>
+      </motion.div>
+    </ModalPortal>
+  );
+}
+
+function AllAlertsModal({ alerts, onClose, onSelectAlert }: { alerts: PriorityAlert[]; onClose: () => void; onSelectAlert: (alert: PriorityAlert) => void }) {
+  return (
+    <ModalPortal>
+      <motion.div className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        <motion.section
+          className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-2xl flex flex-col"
+          initial={{ opacity: 0, y: 12, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 12, scale: 0.98 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+        >
+          <header className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4 shrink-0">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">All Priority Alerts</h2>
+              <p className="mt-1 mb-0 text-xs text-gray-500">List of all priority alerts and their current statuses.</p>
+            </div>
+            <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-white hover:text-gray-900">
+              Close
+            </button>
+          </header>
+          
+          <div className="flex-1 overflow-y-auto">
+            <div className="divide-y divide-gray-100">
+              {alerts.length === 0 && (
+                <div className="p-8">
+                  <DashboardEmptyState icon={Bell} title="No alerts" description="There are currently no priority alerts." />
+                </div>
+              )}
+              {alerts.map((alert) => (
+                <article
+                  className="px-6 py-4 cursor-pointer hover:bg-emerald-50 transition"
+                  key={alert.id}
+                  onClick={() => onSelectAlert(alert)}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <SeverityBadge severity={alert.severity} />
+                    <ResolutionBadge mode={alert.resolutionMode} />
+                  </div>
+                  <p className="text-charcoal-800 mt-3 mb-1 text-sm font-semibold">{alert.summary}</p>
+                  <p className="m-0 text-xs leading-relaxed text-gray-500">{alert.requiredAction}</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-bold tracking-wide text-gray-400 uppercase">
+                    <span>{alert.type}</span>
+                    <span>{alert.enterprise ?? alert.requester}</span>
+                    <span>{alert.time}</span>
+                    <span className="ml-auto text-gray-500">Status: {alert.status}</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </motion.section>
+      </motion.div>
+    </ModalPortal>
+  );
 }
 
 function ActivityDetailsModal({ activity, onClose }: { activity: SystemActivity; onClose: () => void }) {
@@ -160,22 +281,6 @@ function ActivityDetailsModal({ activity, onClose }: { activity: SystemActivity;
         </motion.section>
       </motion.div>
     </ModalPortal>
-  );
-}
-
-function ActivityTypeBadge({ type }: { type: SystemActivityType }) {
-  const classes: Record<SystemActivityType, string> = {
-    LOGIN: "bg-blue-50 text-blue-700",
-    CONNECTION: "bg-emerald-50 text-emerald-700",
-    "ACCOUNT CONFIG": "bg-indigo-50 text-indigo-700",
-    "ENTERPRISE CONFIG": "bg-cyan-50 text-cyan-700",
-    "IT ACTION": "bg-violet-50 text-violet-700",
-    SYSTEM: "bg-slate-100 text-slate-700",
-  };
-  return (
-    <span className={`inline-flex max-w-18 items-center justify-center rounded-full px-2 py-1 text-center text-[8px] leading-[1.05] font-bold whitespace-normal uppercase ${classes[type]}`}>
-      {type}
-    </span>
   );
 }
 

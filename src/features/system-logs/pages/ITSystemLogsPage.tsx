@@ -60,10 +60,6 @@ export function ITSystemLogsPage() {
 
       <Panel className="mt-6 overflow-hidden">
         <div className="flex flex-col gap-4 border-b border-gray-100 px-5 py-4">
-          <div>
-            <h3 className="text-charcoal-800 m-0 text-base font-bold">Activity Logs</h3>
-            <p className="mt-1 mb-0 text-xs text-gray-500">Includes user activity, IT actions, enterprise connection states, and SYSTEM-generated notifications.</p>
-          </div>
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative min-w-0 flex-1 sm:min-w-64">
               <Search size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />

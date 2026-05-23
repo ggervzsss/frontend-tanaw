@@ -33,8 +33,7 @@ export type Enterprise = {
   gatewayStatus: GatewayStatus;
 };
 
-export type SystemActivityType = "Account Activity" | "Enterprise Setup" | "Technical Incident" | "System Settings" | "Notification" | "Sync Event";
-export type SystemActivityStatus = "Open" | "Resolved" | "Completed" | "Pending" | "Acknowledged";
+export type SystemActivityType = "LOGIN" | "CONNECTION" | "ACCOUNT CONFIG" | "ENTERPRISE CONFIG" | "IT ACTION" | "SYSTEM";
 export type SystemActivityTimePeriod = "Today" | "Earlier";
 export type SystemActivityDeviceState = "Offline" | "Delayed" | "Healthy";
 
@@ -48,11 +47,28 @@ export type SystemActivity = {
   device?: string;
   accountName?: string;
   summary: string;
-  status: SystemActivityStatus;
   recommendedAction: string;
   timePeriod: SystemActivityTimePeriod;
+  actorType: "LGU Account" | "Enterprise Account" | "IT Personnel" | "System";
+  target?: string;
   deviceState?: SystemActivityDeviceState;
   requiresEnterpriseAttention?: boolean;
+};
+
+export type PriorityAlertType = "Maintenance Request" | "Password Reset Request";
+export type PriorityAlertResolutionMode = "On-site Visit Required" | "In-system Action";
+
+export type PriorityAlert = {
+  id: string;
+  type: PriorityAlertType;
+  severity: AlertSeverity;
+  enterprise?: string;
+  requester: string;
+  summary: string;
+  requiredAction: string;
+  resolutionMode: PriorityAlertResolutionMode;
+  status: "New" | "In Review" | "Resolved";
+  time: string;
 };
 
 export type PipelineAlert = {

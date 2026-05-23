@@ -58,7 +58,7 @@ export function ITSystemLogsPage() {
     <PageMotion>
       <PageHeader title="System Activity" description="IT-visible activity stream for account events, enterprise connectivity, configuration changes, and automated system actions." />
 
-      <Panel className="mt-6 overflow-hidden">
+      <Panel className="overflow-hidden">
         <div className="flex flex-col gap-4 border-b border-gray-100 px-5 py-4">
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative min-w-0 flex-1 sm:min-w-64">

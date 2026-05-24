@@ -1,7 +1,7 @@
 import { Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
 import { ModalPortal, PageMotion } from "../../../shared/components/ui";
@@ -20,31 +20,22 @@ export function ITSystemLogsPage() {
   const [timeRange, setTimeRange] = useState<ActivityTimeRange>("All Time");
   const [selectedActivity, setSelectedActivity] = useState<SystemActivity | null>(null);
 
-  const dynamicTypeOptions = useMemo(() => {
-    if (accountFilter === "All Accounts") return defaultTypeOptions;
-    const relevantActivities = systemActivities.filter((a) => a.actorType === accountFilter);
-    const types = new Set(relevantActivities.map((a) => a.type));
-    return ["All Types", ...Array.from(types).sort()];
-  }, [accountFilter]);
+  const dynamicTypeOptions = useMemo(() => getTypeOptions(accountFilter), [accountFilter]);
+  const dynamicAccountOptions = useMemo(() => getAccountOptions(typeFilter), [typeFilter]);
 
-  const dynamicAccountOptions = useMemo(() => {
-    if (typeFilter === "All Types") return defaultAccountOptions;
-    const relevantActivities = systemActivities.filter((a) => a.type === typeFilter);
-    const accounts = new Set(relevantActivities.map((a) => a.actorType));
-    return ["All Accounts", ...Array.from(accounts).sort()];
-  }, [typeFilter]);
-
-  useEffect(() => {
-    if (typeFilter !== "All Types" && !dynamicTypeOptions.includes(typeFilter)) {
-      setTypeFilter("All Types");
-    }
-  }, [dynamicTypeOptions, typeFilter]);
-
-  useEffect(() => {
-    if (accountFilter !== "All Accounts" && !dynamicAccountOptions.includes(accountFilter)) {
+  const handleTypeFilterChange = (value: string) => {
+    setTypeFilter(value);
+    if (!getAccountOptions(value).includes(accountFilter)) {
       setAccountFilter("All Accounts");
     }
-  }, [dynamicAccountOptions, accountFilter]);
+  };
+
+  const handleAccountFilterChange = (value: string) => {
+    setAccountFilter(value);
+    if (!getTypeOptions(value).includes(typeFilter)) {
+      setTypeFilter("All Types");
+    }
+  };
 
   const filteredActivities = useMemo(() => {
     return systemActivities.filter((activity) => {
@@ -74,8 +65,8 @@ export function ITSystemLogsPage() {
                 className="w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-9 text-sm text-gray-900 transition outline-none focus:ring-1 focus:ring-emerald-600"
               />
             </div>
-            <FilterSelect value={typeFilter} onChange={setTypeFilter} options={dynamicTypeOptions} />
-            <FilterSelect value={accountFilter} onChange={setAccountFilter} options={dynamicAccountOptions} />
+            <FilterSelect value={typeFilter} onChange={handleTypeFilterChange} options={dynamicTypeOptions} />
+            <FilterSelect value={accountFilter} onChange={handleAccountFilterChange} options={dynamicAccountOptions} />
             <FilterSelect value={timeRange} onChange={(value) => setTimeRange(value as ActivityTimeRange)} options={activityTimeRanges} />
           </div>
         </div>
@@ -125,6 +116,20 @@ export function ITSystemLogsPage() {
       <AnimatePresence>{selectedActivity && <ActivityDetailsModal activity={selectedActivity} onClose={() => setSelectedActivity(null)} />}</AnimatePresence>
     </PageMotion>
   );
+}
+
+function getTypeOptions(accountFilter: string) {
+  if (accountFilter === "All Accounts") return defaultTypeOptions;
+  const relevantActivities = systemActivities.filter((activity) => activity.actorType === accountFilter);
+  const types = new Set(relevantActivities.map((activity) => activity.type));
+  return ["All Types", ...Array.from(types).sort()];
+}
+
+function getAccountOptions(typeFilter: string) {
+  if (typeFilter === "All Types") return defaultAccountOptions;
+  const relevantActivities = systemActivities.filter((activity) => activity.type === typeFilter);
+  const accounts = new Set(relevantActivities.map((activity) => activity.actorType));
+  return ["All Accounts", ...Array.from(accounts).sort()];
 }
 
 function FilterSelect({ value, onChange, options }: { value: string; onChange: (value: string) => void; options: readonly string[] }) {

@@ -2,6 +2,7 @@ import L, { type GeoJSONOptions, type Layer } from "leaflet";
 import { Activity, ArrowLeft, Building2, ChevronDown, Clock, Map as MapIcon, MapPin, PanelLeftClose, PanelLeftOpen, Phone, Radio, Search, TrendingUp, Users, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ModalPortal } from "../../../shared/components/ui";
 import { mapEnterprises } from "../../../shared/data";
 import type { EnterpriseStatus, MapEnterprise } from "../../../shared/types";
 
@@ -220,6 +221,26 @@ export function AdminEnterpriseMap() {
     setSelectedEnterpriseId(null);
     mapRef.current?.closePopup();
   }, []);
+
+  useEffect(() => {
+    if (!selectedEnterprise) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeEnterpriseDetails();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [closeEnterpriseDetails, selectedEnterprise]);
 
   useEffect(() => {
     let isMounted = true;
@@ -727,76 +748,84 @@ export function AdminEnterpriseMap() {
 
       <AnimatePresence>
         {selectedEnterprise && (
-          <motion.div
-            className="absolute inset-0 z-[450] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-[3px]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            onClick={closeEnterpriseDetails}
-          >
-            <motion.section
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="enterprise-details-title"
-              className="w-full max-w-3xl overflow-hidden rounded-xl border border-white/10 bg-slate-950/55 text-white shadow-2xl backdrop-blur-md"
-              initial={{ opacity: 0, scale: 0.96, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 12 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="border-b border-white/10 bg-black/25 px-5 py-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="flex items-center gap-2 text-[10px] font-black tracking-widest text-white/70 uppercase">
-                      <Building2 size={14} className="text-tanaw-sky" />
-                      Enterprise Details
-                    </p>
-                    <h3 id="enterprise-details-title" className="mt-1 text-xl leading-tight font-black text-white max-sm:text-lg">
-                      {selectedEnterprise.name}
-                    </h3>
-                    <p className="mt-1 text-[11px] font-bold tracking-widest text-white/75 uppercase">
-                      {selectedEnterprise.category} - Barangay {selectedEnterprise.barangay}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={closeEnterpriseDetails}
-                    aria-label="Close enterprise details"
-                    className="focus:ring-tanaw-sky flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-white/75 transition hover:bg-white/20 hover:text-white focus:ring-2 focus:outline-none"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="max-h-[76vh] overflow-y-auto bg-black/10 p-5 max-sm:p-4">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <EnterpriseMetricCard icon={<Activity size={16} />} label="Total Live Occupancy" value={selectedEnterprise.totalLiveOccupancy.toLocaleString()} />
-                  <EnterpriseMetricCard icon={<Users size={16} />} label="Est. Unique Count" value={selectedEnterprise.estimatedUniqueCount.toLocaleString()} />
-                  <EnterpriseMetricCard icon={<Building2 size={16} />} label="Category" value={selectedEnterprise.category} />
-                  <EnterpriseMetricCard
-                    icon={<Radio size={16} />}
-                    label="Status"
-                    value={<span className={`inline-flex rounded border px-2 py-1 text-[10px] font-black tracking-widest uppercase ${getDarkStatusBadgeClass(selectedEnterprise.status)}`}>{selectedEnterprise.status}</span>}
-                  />
-                  <EnterpriseMetricCard className="sm:col-span-2" icon={<MapPin size={16} />} label="Full Address" value={selectedEnterprise.fullAddress} />
-                </div>
-
-                <div className="mt-4 grid gap-3 rounded-lg border border-white/10 bg-white/5 p-4 text-sm text-white sm:grid-cols-2">
-                  <EnterpriseDetailRow icon={<Radio size={14} />} label="Gateway" value={selectedEnterprise.gatewayStatus ?? "Not Linked"} />
-                  <EnterpriseDetailRow icon={<Clock size={14} />} label="Last sync" value={selectedEnterprise.lastSync ?? "No sync recorded"} />
-                  <EnterpriseDetailRow icon={<Phone size={14} />} label="Contact" value={selectedEnterprise.contact ?? "No contact listed"} />
-                  <EnterpriseDetailRow icon={<TrendingUp size={14} />} label="Trend" value={selectedEnterprise.trend ?? "Stable"} />
-                  <EnterpriseDetailRow className="sm:col-span-2" icon={<Clock size={14} />} label="Operating hours" value={selectedEnterprise.operatingHours ?? "Not specified"} />
-                </div>
-              </div>
-            </motion.section>
-          </motion.div>
+          <EnterpriseDetailsModal enterprise={selectedEnterprise} onClose={closeEnterpriseDetails} />
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function EnterpriseDetailsModal({ enterprise, onClose }: { enterprise: MapEnterprise; onClose: () => void }) {
+  return (
+    <ModalPortal>
+      <motion.div
+        className="fixed inset-0 z-[999] flex min-h-dvh items-center justify-center overflow-y-auto bg-slate-950/55 p-3 backdrop-blur-[3px] sm:p-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.18, ease: "easeOut" }}
+        onClick={onClose}
+      >
+        <motion.section
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="enterprise-details-title"
+          className="my-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-white/10 bg-slate-950/70 text-white shadow-2xl backdrop-blur-md sm:max-h-[calc(100dvh-3rem)]"
+          initial={{ opacity: 0, scale: 0.96, y: 12 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 12 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="shrink-0 border-b border-white/10 bg-black/25 px-4 py-4 sm:px-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="flex items-center gap-2 text-[10px] font-black tracking-widest text-white/70 uppercase">
+                  <Building2 size={14} className="text-tanaw-sky" />
+                  Enterprise Details
+                </p>
+                <h3 id="enterprise-details-title" className="mt-1 text-lg leading-tight font-black text-white sm:text-xl">
+                  {enterprise.name}
+                </h3>
+                <p className="mt-1 text-[10px] leading-relaxed font-bold tracking-widest text-white/75 uppercase sm:text-[11px]">
+                  {enterprise.category} - Barangay {enterprise.barangay}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close enterprise details"
+                className="focus:ring-tanaw-sky flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-white/75 transition hover:bg-white/20 hover:text-white focus:ring-2 focus:outline-none"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+
+          <div className="min-h-0 overflow-y-auto bg-black/10 p-4 sm:p-5">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <EnterpriseMetricCard icon={<Activity size={16} />} label="Total Live Occupancy" value={enterprise.totalLiveOccupancy.toLocaleString()} />
+              <EnterpriseMetricCard icon={<Users size={16} />} label="Est. Unique Count" value={enterprise.estimatedUniqueCount.toLocaleString()} />
+              <EnterpriseMetricCard icon={<Building2 size={16} />} label="Category" value={enterprise.category} />
+              <EnterpriseMetricCard
+                icon={<Radio size={16} />}
+                label="Status"
+                value={<span className={`inline-flex rounded border px-2 py-1 text-[10px] font-black tracking-widest uppercase ${getDarkStatusBadgeClass(enterprise.status)}`}>{enterprise.status}</span>}
+              />
+              <EnterpriseMetricCard className="sm:col-span-2" icon={<MapPin size={16} />} label="Full Address" value={enterprise.fullAddress} />
+            </div>
+
+            <div className="mt-4 grid gap-3 rounded-lg border border-white/10 bg-white/5 p-4 text-sm text-white sm:grid-cols-2">
+              <EnterpriseDetailRow icon={<Radio size={14} />} label="Gateway" value={enterprise.gatewayStatus ?? "Not Linked"} />
+              <EnterpriseDetailRow icon={<Clock size={14} />} label="Last sync" value={enterprise.lastSync ?? "No sync recorded"} />
+              <EnterpriseDetailRow icon={<Phone size={14} />} label="Contact" value={enterprise.contact ?? "No contact listed"} />
+              <EnterpriseDetailRow icon={<TrendingUp size={14} />} label="Trend" value={enterprise.trend ?? "Stable"} />
+              <EnterpriseDetailRow className="sm:col-span-2" icon={<Clock size={14} />} label="Operating hours" value={enterprise.operatingHours ?? "Not specified"} />
+            </div>
+          </div>
+        </motion.section>
+      </motion.div>
+    </ModalPortal>
   );
 }
 

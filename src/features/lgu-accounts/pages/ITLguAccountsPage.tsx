@@ -82,7 +82,7 @@ export function ITLguAccountsPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] table-fixed text-left text-sm">
+          <table className="w-full min-w-190 table-fixed text-left text-sm">
             <colgroup>
               <col className="w-[20%]" />
               <col className="w-[26%]" />

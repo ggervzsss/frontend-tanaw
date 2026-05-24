@@ -90,7 +90,7 @@ export function ITEnterpriseAccountsPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[820px] table-fixed text-left text-sm">
+          <table className="w-full min-w-205 table-fixed text-left text-sm">
             <colgroup>
               <col className="w-[30%]" />
               <col className="w-[13%]" />

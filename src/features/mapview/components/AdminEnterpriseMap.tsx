@@ -640,18 +640,20 @@ export function AdminEnterpriseMap() {
                     </button>
 
                     {/* Selected Barangay Info */}
-                    <div className="shrink-0 rounded-lg border border-white/15 bg-white/[0.08] p-3 shadow-sm shadow-black/20">
+                    <div className="shrink-0 rounded-lg border border-white/15 bg-white/8 p-3 shadow-sm shadow-black/20">
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <h3 className="text-sm font-black tracking-wide text-white uppercase">Barangay {selectedBarangayName}</h3>
                           <p className="mt-1 text-[9px] font-bold tracking-widest text-white/65 uppercase">Enterprises within this barangay</p>
                         </div>
-                        <span className="shrink-0 rounded border border-white/15 bg-black/35 px-2 py-1 font-mono text-[9px] font-black tracking-widest text-white uppercase">{selectedBarangayEnterprises.length}</span>
+                        <span className="shrink-0 rounded border border-white/15 bg-black/35 px-2 py-1 font-mono text-[9px] font-black tracking-widest text-white uppercase">
+                          {selectedBarangayEnterprises.length}
+                        </span>
                       </div>
                     </div>
 
                     {/* Dedicated Enterprise List section at the bottom */}
-                    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/15 bg-white/[0.08] p-3 shadow-sm shadow-black/20">
+                    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/15 bg-white/8 p-3 shadow-sm shadow-black/20">
                       <div className="mb-2 flex shrink-0 items-center justify-between gap-3">
                         <h3 className="flex items-center gap-2 text-[9px] font-black tracking-widest text-white/80 uppercase">
                           <Building2 size={13} className="text-tanaw-sky" />
@@ -693,14 +695,14 @@ export function AdminEnterpriseMap() {
                     className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-3"
                   >
                     {/* Prompt card */}
-                    <div className="shrink-0 rounded-lg border border-white/15 bg-white/[0.08] p-3 text-center shadow-sm shadow-black/20">
+                    <div className="shrink-0 rounded-lg border border-white/15 bg-white/8 p-3 text-center shadow-sm shadow-black/20">
                       <MapPin size={18} className="text-tanaw-sky mx-auto mb-1.5 animate-bounce" style={{ animationDuration: "3s" }} />
                       <h4 className="text-[10px] font-black tracking-widest text-white uppercase">No Barangay Selected</h4>
                       <p className="mt-1 text-[9px] leading-normal font-bold tracking-widest text-white/65 uppercase">Click a barangay boundary on the map or use the dropdown above to filter.</p>
                     </div>
 
                     {/* Dedicated Enterprise List section showing all enterprises */}
-                    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/15 bg-white/[0.08] p-3 shadow-sm shadow-black/20">
+                    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/15 bg-white/8 p-3 shadow-sm shadow-black/20">
                       <div className="mb-2 flex shrink-0 items-center justify-between gap-3">
                         <h3 className="flex items-center gap-2 text-[9px] font-black tracking-widest text-white/80 uppercase">
                           <Building2 size={13} className="text-tanaw-sky" />
@@ -746,11 +748,7 @@ export function AdminEnterpriseMap() {
         </motion.button>
       )}
 
-      <AnimatePresence>
-        {selectedEnterprise && (
-          <EnterpriseDetailsModal enterprise={selectedEnterprise} onClose={closeEnterpriseDetails} />
-        )}
-      </AnimatePresence>
+      <AnimatePresence>{selectedEnterprise && <EnterpriseDetailsModal enterprise={selectedEnterprise} onClose={closeEnterpriseDetails} />}</AnimatePresence>
     </div>
   );
 }
@@ -759,7 +757,7 @@ function EnterpriseDetailsModal({ enterprise, onClose }: { enterprise: MapEnterp
   return (
     <ModalPortal>
       <motion.div
-        className="fixed inset-0 z-[999] flex min-h-dvh items-center justify-center overflow-y-auto bg-slate-950/55 p-3 backdrop-blur-[3px] sm:p-6"
+        className="fixed inset-0 z-999 flex min-h-dvh items-center justify-center overflow-y-auto bg-slate-950/55 p-3 backdrop-blur-[3px] sm:p-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -810,7 +808,9 @@ function EnterpriseDetailsModal({ enterprise, onClose }: { enterprise: MapEnterp
               <EnterpriseMetricCard
                 icon={<Radio size={16} />}
                 label="Status"
-                value={<span className={`inline-flex rounded border px-2 py-1 text-[10px] font-black tracking-widest uppercase ${getDarkStatusBadgeClass(enterprise.status)}`}>{enterprise.status}</span>}
+                value={
+                  <span className={`inline-flex rounded border px-2 py-1 text-[10px] font-black tracking-widest uppercase ${getDarkStatusBadgeClass(enterprise.status)}`}>{enterprise.status}</span>
+                }
               />
               <EnterpriseMetricCard className="sm:col-span-2" icon={<MapPin size={16} />} label="Full Address" value={enterprise.fullAddress} />
             </div>
@@ -880,7 +880,7 @@ function EnterpriseDetailRow({ icon, label, value, className = "" }: { icon: Rea
       <span className="text-tanaw-sky mt-0.5">{icon}</span>
       <div className="min-w-0">
         <p className="text-[9px] font-black tracking-widest text-white/50 uppercase">{label}</p>
-        <p className="mt-0.5 break-words font-bold text-white/90">{value}</p>
+        <p className="mt-0.5 font-bold wrap-break-word text-white/90">{value}</p>
       </div>
     </div>
   );

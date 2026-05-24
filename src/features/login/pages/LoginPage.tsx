@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { routes } from "../../../app/routers/routes";
 import { useAuthStore } from "../../../app/store/authStore";
@@ -7,7 +8,18 @@ import { useLogin } from "../hooks";
 
 export function LoginPage() {
   const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
   const { handleLoginSubmit } = useLogin();
+
+  useEffect(() => {
+    if (user?.role === "enterprise") {
+      logout();
+    }
+  }, [logout, user?.role]);
+
+  if (user?.role === "enterprise") {
+    return null;
+  }
 
   if (user) {
     if (user.mustChangePassword) {

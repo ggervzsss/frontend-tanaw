@@ -15,6 +15,7 @@ export async function loginService(_credentials: LoginCredentials): Promise<Logi
   const response = await apiClient.post<LoginServiceResponse>("/auth/login", {
     username: _credentials.clientId,
     password: _credentials.encryptionKey,
+    loginScope: "web",
   });
 
   return response.data;

@@ -18,6 +18,10 @@ export function ChangePasswordPage() {
     return <Navigate to={routes.login} replace />;
   }
 
+  if (user.role === "enterprise") {
+    return <Navigate to={routes.login} replace />;
+  }
+
   if (!user.mustChangePassword) {
     return <Navigate to={getRoleDashboardPath(user.role)} replace />;
   }

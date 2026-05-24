@@ -19,7 +19,6 @@ export const routes = {
   staff: {
     root: "/staff",
     batchReports: "/staff/batch-reports",
-    submissionLog: "/staff/submission-log",
     finalReportsAudit: "/staff/final-reports-audit",
     analytics: "/staff/analytics",
   },

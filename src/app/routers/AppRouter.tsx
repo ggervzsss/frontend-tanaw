@@ -6,7 +6,7 @@ import { ITEnterpriseAccountsPage } from "../../features/enterprise-accounts";
 import { ITLguAccountsPage } from "../../features/lgu-accounts";
 import { LoginPage } from "../../features/login";
 import { AdminMapViewPage } from "../../features/mapview";
-import { StaffBatchReportsPage, StaffFinalReportsAuditPage, StaffSubmissionLogPage } from "../../features/reports";
+import { StaffBatchReportsPage, StaffFinalReportsAuditPage } from "../../features/reports";
 import { ITSystemSettingsPage } from "../../features/system-settings";
 import { AdminSystemLogsPage, ITSystemLogsPage } from "../../features/system-logs";
 import { AccountLayout } from "../../shared/components/layout";
@@ -67,7 +67,6 @@ export function AppRouter() {
       >
         <Route index element={<Navigate to={routes.staff.analytics} replace />} />
         <Route path="batch-reports" element={<StaffBatchReportsPage />} />
-        <Route path="submission-log" element={<StaffSubmissionLogPage />} />
         <Route path="final-reports-audit" element={<StaffFinalReportsAuditPage />} />
         <Route path="analytics" element={<StaffAnalyticsPage />} />
       </Route>

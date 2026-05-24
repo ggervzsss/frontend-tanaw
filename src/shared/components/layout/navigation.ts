@@ -1,4 +1,4 @@
-import { BarChart3, Bell, Building2, ClipboardList, FileCheck2, FileText, Layers, LayoutDashboard, MapPinned, Settings, Users } from "lucide-react";
+import { BarChart3, Bell, Building2, FileCheck2, FileText, Layers, LayoutDashboard, MapPinned, Settings, Users } from "lucide-react";
 import type { ComponentType } from "react";
 import { routes } from "../../../app/routers/routes";
 import type { UserRole } from "../../types/role.types";
@@ -43,12 +43,6 @@ export const roleNavigation: Record<UserRole, NavigationItem[]> = {
       label: "Batch Reports",
       path: routes.staff.batchReports,
       icon: Layers,
-    },
-    {
-      id: "submission-log",
-      label: "Submission Log",
-      path: routes.staff.submissionLog,
-      icon: ClipboardList,
     },
     {
       id: "final-reports-audit",

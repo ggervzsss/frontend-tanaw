@@ -1,5 +1,4 @@
 import type {
-  AuditLog,
   Enterprise,
   EnterpriseAccount,
   FinalReport,
@@ -10,7 +9,7 @@ import type {
   PriorityAlert,
   ReportEnterprise,
   SystemActivity,
-  SystemAlert,
+  SystemLog,
 } from "../types";
 
 const monitoredEstablishments = [
@@ -406,140 +405,40 @@ export const priorityAlerts: PriorityAlert[] = [
     status: "New",
     time: "1h ago",
   },
-];
-
-const baseAuditLogs = [
   {
-    id: 1,
-    time: "2026-05-13 11:10:05 AM",
-    user: "system",
-    role: "System",
-    module: "Analytics",
-    event: "Generate",
-    desc: "Automated hourly visitor aggregation completed.",
-  },
-  {
-    id: 2,
-    time: "2026-05-13 11:05:22 AM",
-    user: "jdelacruz (IT)",
-    role: "IT Personnel",
-    module: "Camera Config",
-    event: "Update",
-    desc: "Updated RTSP stream URL and frame rate for Archie's Events Place - Cam 01.",
-  },
-  {
-    id: 3,
-    time: "2026-05-13 10:50:11 AM",
-    user: "ent_balaon",
-    role: "Enterprise",
-    module: "Auth",
-    event: "Error",
-    desc: "Failed login attempt. Invalid credentials provided.",
-  },
-  {
-    id: 4,
-    time: "2026-05-13 10:48:00 AM",
-    user: "ent_balaon",
-    role: "Enterprise",
-    module: "Auth",
-    event: "Login",
-    desc: "Successful login from IP 112.204.15.88.",
-  },
-  {
-    id: 5,
-    time: "2026-05-13 10:30:45 AM",
-    user: "msantos (Staff)",
-    role: "Staff",
-    module: "Reports",
-    event: "Export",
-    desc: "Exported Weekly Tourism Report (May W2) as PDF.",
-  },
-  {
-    id: 6,
-    time: "2026-05-13 10:15:30 AM",
-    user: "admin_super",
-    role: "Admin",
-    module: "Ledger",
-    event: "Query",
-    desc: "Queried Enterprise Performance Ledger for Lolo Uweng Shrine.",
-  },
-  {
-    id: 7,
-    time: "2026-05-13 09:45:22 AM",
-    user: "jdelacruz (IT)",
-    role: "IT Personnel",
-    module: "Camera Config",
-    event: "Update",
-    desc: "IT Personnel updated RTSP stream URL for Enterprise A - Cam 02.",
-  },
-  {
-    id: 8,
-    time: "2026-05-13 09:30:00 AM",
-    user: "ent_shrine",
-    role: "Enterprise",
-    module: "Reports",
-    event: "Submit",
-    desc: "Enterprise Lolo Uweng Shrine submitted Weekly Compliance Report.",
-  },
-] satisfies Array<Omit<AuditLog, "hashId" | "ip" | "sessionId" | "userAgent" | "payload" | "prevState" | "newState">>;
-
-export const auditLogs: AuditLog[] = baseAuditLogs.map((log) => {
-  const hashId = `EVT-${log.time.replace(/[^0-9]/g, "").substring(0, 8)}-${log.id.toString().padStart(4, "0")}`;
-  const isUpdate = log.event === "Update";
-  const isAuth = log.event === "Login" || log.event === "Error";
-
-  return {
-    ...log,
-    hashId,
-    ip: log.user === "system" ? "127.0.0.1" : `112.204.${(31 + log.id * 17) % 255}.${(80 + log.id * 19) % 255}`,
-    sessionId: log.user === "system" ? "SYS-DAEMON-X" : `SESS-${hashId.slice(-6)}`,
-    userAgent: log.user === "system" ? "TANAW-Core-Service/2.0" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) TANAW-Portal/1.0",
-    payload: isUpdate
-      ? { action: "modify_configuration", target_module: log.module, execution_ms: 142 }
-      : isAuth
-        ? { auth_method: "jwt_token", provider: "internal_db", attempts: log.event === "Error" ? 5 : 1 }
-        : { report_type: "tourism_census", attached_files: 1, signature: "verified" },
-    prevState: isUpdate ? { status: "active", version: "1.0.0", flags: ["legacy_config"] } : null,
-    newState: isUpdate ? { status: "active", version: "1.0.1", flags: ["optimized_stream"] } : null,
-  };
-});
-
-export const systemAlerts: SystemAlert[] = [
-  {
-    id: "ALRT-901",
-    type: "Overcrowding Breach",
-    enterprise: "San Pedro Apostol Parish Church",
-    severity: "Critical",
-    timestamp: new Date(Date.now() - 5 * 60000).toISOString(),
-    status: "Active",
-    desc: "Occupancy exceeded 90% hard threshold. Security mobilization recommended.",
-  },
-  {
-    id: "ALRT-902",
-    type: "Camera Offline",
-    enterprise: "Archie's Events Place",
+    id: "PAL-004",
+    type: "Submission Delay",
     severity: "Warning",
-    timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
-    status: "Active",
-    desc: "RTSP stream dropped for Cam 01. Video analytics suspended.",
-  },
-  {
-    id: "ALRT-903",
-    type: "Visitor Surge",
-    enterprise: "Lolo Uweng Shrine",
-    severity: "Warning",
-    timestamp: new Date(Date.now() - 42 * 60000).toISOString(),
-    status: "IT Notified",
-    desc: "Sudden 40% increase in entry rate within 10 minutes. Monitoring required.",
-  },
-  {
-    id: "ALRT-904",
-    type: "Database Sync Delay",
     enterprise: "Balaon ni Lolo Uweng",
+    requester: "System",
+    summary: "Monthly compliance report is still missing for the active reporting cycle.",
+    requiredAction: "Ask Staff to follow up with the enterprise contact before consolidation closes.",
+    resolutionMode: "Staff Follow-up",
+    status: "New",
+    time: "2h ago",
+  },
+  {
+    id: "PAL-005",
+    type: "Threshold Breach",
+    severity: "Critical",
+    enterprise: "San Pedro Apostol Parish Church",
+    requester: "Occupancy Monitor",
+    summary: "Visitor count exceeded the configured critical threshold.",
+    requiredAction: "Review live map occupancy and coordinate with local operations if crowd control is required.",
+    resolutionMode: "Remote Review",
+    status: "In Review",
+    time: "3h ago",
+  },
+  {
+    id: "PAL-006",
+    type: "System Health",
     severity: "Info",
-    timestamp: new Date(Date.now() - 120 * 60000).toISOString(),
+    requester: "Sync Gateway",
+    summary: "Central reporting sync recovered after temporary edge latency.",
+    requiredAction: "No immediate action required. Keep the alert for audit visibility.",
+    resolutionMode: "Remote Review",
     status: "Resolved",
-    desc: "Edge node cache failed to sync to central cloud. Auto-resolved via redundant path.",
+    time: "Yesterday",
   },
 ];
 
@@ -651,5 +550,106 @@ export const finalReports: FinalReport[] = [
       entry: report.metrics.entry,
       exit: report.metrics.exit,
     })),
+  },
+];
+
+export const systemLogs: SystemLog[] = [
+  ...systemActivities.map<SystemLog>((activity) => ({
+    id: `LOG-${activity.id}`,
+    timestamp: activity.time,
+    category: "IT Activity",
+    severity: activity.severity === "Info" ? "Success" : activity.severity,
+    actor: activity.initiatedBy,
+    actorRole: activity.actorType === "LGU Account" ? "LGU Staff" : activity.actorType,
+    action: activity.type,
+    target: activity.target ?? activity.enterprise ?? activity.accountName ?? "System",
+    summary: activity.summary,
+    sourceId: activity.id,
+    metadata: {
+      recommendedAction: activity.recommendedAction,
+      device: activity.device ?? null,
+      deviceState: activity.deviceState ?? null,
+    },
+  })),
+  ...intakeReports
+    .filter((report) => report.submitted !== "Not submitted")
+    .map<SystemLog>((report) => ({
+      id: `LOG-SUB-${report.id}`,
+      timestamp: report.submitted,
+      category: "Staff Submission",
+      severity: report.status === "Returned" ? "Warning" : report.status === "Missing" ? "Critical" : "Success",
+      actor: report.enterprise,
+      actorRole: "Enterprise Account",
+      action: "Report Submission",
+      target: report.id,
+      summary: `${report.enterprise} submitted ${report.period} compliance report for Staff review.`,
+      sourceId: report.id,
+      metadata: {
+        status: report.status,
+        barangay: report.barangay,
+        category: report.category,
+      },
+    })),
+  ...finalReports.map<SystemLog>((report) => ({
+    id: `LOG-FIN-${report.id}`,
+    timestamp: report.generatedOn,
+    category: "Staff Operation",
+    severity: report.status === "Archived" || report.status === "Finalized" ? "Success" : "Info",
+    actor: report.preparedBy,
+    actorRole: "LGU Staff",
+    action: "Generate Final Report",
+    target: report.id,
+    summary: `${report.title} for ${report.period} was generated from ${report.enterpriseCount} enterprise submissions.`,
+    sourceId: report.id,
+    metadata: {
+      status: report.status,
+      totalEntry: report.totalEntry,
+      totalUnique: report.totalUnique,
+    },
+  })),
+  {
+    id: "LOG-ADM-001",
+    timestamp: "2026-05-23 09:10 AM",
+    category: "Admin Operation",
+    severity: "Success",
+    actor: "Jherico",
+    actorRole: "Admin",
+    action: "Map Review",
+    target: "Admin Map View",
+    summary: "Admin reviewed citywide enterprise distribution and visitor density layers.",
+    sourceId: "admin_001",
+    metadata: {
+      module: "Map View",
+    },
+  },
+  {
+    id: "LOG-ADM-002",
+    timestamp: "2026-05-23 09:04 AM",
+    category: "Admin Operation",
+    severity: "Info",
+    actor: "Jherico",
+    actorRole: "Admin",
+    action: "Alert Review",
+    target: "Priority Alerts",
+    summary: "Admin opened the centralized alerts feed for system-wide incident review.",
+    sourceId: "admin_001",
+    metadata: {
+      module: "Alerts",
+    },
+  },
+  {
+    id: "LOG-SYS-001",
+    timestamp: "2026-05-23 06:30 AM",
+    category: "System",
+    severity: "Success",
+    actor: "System",
+    actorRole: "System",
+    action: "Daily Retention Check",
+    target: "System Logs",
+    summary: "Scheduled retention scan completed for audit and operational activity records.",
+    sourceId: "system",
+    metadata: {
+      retentionDays: 180,
+    },
   },
 ];

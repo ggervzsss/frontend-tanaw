@@ -1,120 +1,129 @@
-import { Activity, AlertTriangle, Calendar, Filter, MonitorCheck, Search, Settings2 } from "lucide-react";
+import { Activity, AlertTriangle, Search, ShieldCheck, UserCog, Users } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
+import { useSystemLogStore } from "../../../app/store";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
-import { PageMotion, stagger } from "../../../shared/components/ui";
-import { auditLogs } from "../../../shared/data";
-import type { AuditEvent, AuditLog, AuditRole } from "../../../shared/types";
-import { EventBadge, LogDetailsModal, RoleBadge } from "../components";
+import { ModalPortal, PageMotion, stagger } from "../../../shared/components/ui";
+import type { LogSeverity, SystemLog, SystemLogActorRole, SystemLogCategory } from "../../../shared/types";
 
-type EventFilter = "All Events" | "Logins" | "Config Changes" | "Reports" | "Errors";
-type RoleFilter = "All Roles" | AuditRole;
+type CategoryFilter = "All Categories" | SystemLogCategory;
+type ActorFilter = "All Actors" | SystemLogActorRole;
+type SeverityFilter = "All Severities" | LogSeverity;
 
-const roleFilters: RoleFilter[] = ["All Roles", "Admin", "IT Personnel", "Staff", "Enterprise", "System"];
-const eventFilters: EventFilter[] = ["All Events", "Logins", "Config Changes", "Reports", "Errors"];
+const categoryFilters: CategoryFilter[] = ["All Categories", "IT Activity", "Staff Submission", "Staff Operation", "Admin Operation", "System"];
+const actorFilters: ActorFilter[] = ["All Actors", "Admin", "IT Personnel", "LGU Staff", "Enterprise Account", "System"];
+const severityFilters: SeverityFilter[] = ["All Severities", "Critical", "Warning", "Info", "Success"];
 
 export function AdminSystemLogsPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("All Roles");
-  const [eventFilter, setEventFilter] = useState<EventFilter>("All Events");
-  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+  const logs = useSystemLogStore((state) => state.logs);
+  const [query, setQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("All Categories");
+  const [actorFilter, setActorFilter] = useState<ActorFilter>("All Actors");
+  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("All Severities");
+  const [selectedLog, setSelectedLog] = useState<SystemLog | null>(null);
 
-  const filteredLogs = useMemo(
-    () =>
-      auditLogs.filter((log) => {
-        const search = searchTerm.toLowerCase();
-        const matchSearch = log.user.toLowerCase().includes(search) || log.desc.toLowerCase().includes(search) || log.module.toLowerCase().includes(search);
-        const matchRole = roleFilter === "All Roles" || log.role === roleFilter;
-        const matchEvent = matchesEventFilter(log.event, eventFilter);
+  const sortedLogs = useMemo(() => [...logs].sort((a, b) => getTimestampValue(b.timestamp) - getTimestampValue(a.timestamp)), [logs]);
 
-        return matchSearch && matchRole && matchEvent;
-      }),
-    [eventFilter, roleFilter, searchTerm],
-  );
+  const filteredLogs = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    return sortedLogs.filter((log) => {
+      const searchable = [log.id, log.category, log.severity, log.actor, log.actorRole, log.action, log.target, log.summary, log.sourceId ?? ""].join(" ").toLowerCase();
+      const matchesQuery = !normalizedQuery || searchable.includes(normalizedQuery);
+      const matchesCategory = categoryFilter === "All Categories" || log.category === categoryFilter;
+      const matchesActor = actorFilter === "All Actors" || log.actorRole === actorFilter;
+      const matchesSeverity = severityFilter === "All Severities" || log.severity === severityFilter;
+      return matchesQuery && matchesCategory && matchesActor && matchesSeverity;
+    });
+  }, [actorFilter, categoryFilter, query, severityFilter, sortedLogs]);
 
-  const errorCount = auditLogs.filter((log) => log.event === "Error").length;
-  const activeSessions = new Set(auditLogs.filter((log) => log.event === "Login").map((log) => log.sessionId)).size + 42;
+  const adminCount = logs.filter((log) => log.category === "Admin Operation").length;
+  const staffCount = logs.filter((log) => log.category === "Staff Operation" || log.category === "Staff Submission").length;
+  const riskCount = logs.filter((log) => log.severity === "Critical" || log.severity === "Warning").length;
 
   return (
     <PageMotion>
-      <PageHeader title="System Logs" description="Auditable activity ledger for authentication, configuration, reports, and system events." />
+      <PageHeader title="System Logs" description="Centralized operational feed for IT activity, staff submissions, admin actions, and system-wide events." />
 
       <motion.section className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4" variants={stagger}>
-        <MetricCard label="Total Events (24h)" value="8,421" foot="System-wide activity" color="#2563eb" icon={Activity} />
-        <MetricCard label="System Alerts" value={errorCount + 13} foot={`${errorCount} auth error, 13 warnings`} color="#dc2626" footClassName="text-red-600" icon={AlertTriangle} />
-        <MetricCard label="Active Sessions" value={activeSessions} foot="Across all user roles" color="#065f46" icon={MonitorCheck} />
-        <MetricCard label="Last Config Change" value="11:05 AM" foot="By jdelacruz (IT)" color="#ff6204" footClassName="text-orange-600" icon={Settings2} />
+        <MetricCard label="Total Logs" value={logs.length} foot="Centralized audit records" color="#2563eb" icon={Activity} />
+        <MetricCard label="Admin Operations" value={adminCount} foot="Recorded Admin actions" color="#065f46" icon={ShieldCheck} />
+        <MetricCard label="Staff Activity" value={staffCount} foot="Submissions and report actions" color="#10b981" icon={Users} />
+        <MetricCard label="Risk Signals" value={riskCount} foot="Warning and critical logs" color="#dc2626" footClassName="text-red-600" icon={AlertTriangle} />
       </motion.section>
 
-      <Panel className="relative mt-6 flex min-h-155 flex-col overflow-hidden">
-        <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-slate-200/80 bg-linear-to-r from-white via-slate-50 to-emerald-50/40 p-4">
-          <div className="relative min-w-62.5 flex-1">
-            <Search size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400" />
+      <Panel className="mt-6 overflow-hidden">
+        <div className="flex flex-wrap items-center gap-3 border-b border-gray-200 bg-gray-50 p-4">
+          <div className="relative min-w-65 flex-1">
+            <Search size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
             <input
-              placeholder="Search user, description, or module..."
-              className="focus:border-tanaw-green focus:ring-tanaw-green/10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 pl-9 text-[11px] font-semibold tracking-wide text-slate-600 uppercase shadow-sm transition-all outline-none focus:ring-2"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search actor, action, target, source, or summary"
+              className="focus:ring-tgreen-dark w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-9 text-sm text-gray-900 transition outline-none focus:ring-1"
             />
           </div>
-          <select className="admin-select" value={roleFilter} onChange={(event) => setRoleFilter(event.target.value as RoleFilter)}>
-            {roleFilters.map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-          <select className="admin-select" value={eventFilter} onChange={(event) => setEventFilter(event.target.value as EventFilter)}>
-            {eventFilters.map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-          <input type="date" className="admin-select" />
-          <button
-            type="button"
-            className="bg-tanaw-green hover:bg-tanaw-lime flex items-center gap-2 rounded-lg px-4 py-2 text-[10px] font-black tracking-widest text-white uppercase shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
-          >
-            <Filter size={12} /> Filter
-          </button>
+          <FilterSelect value={categoryFilter} onChange={(value) => setCategoryFilter(value as CategoryFilter)} options={categoryFilters} />
+          <FilterSelect value={actorFilter} onChange={(value) => setActorFilter(value as ActorFilter)} options={actorFilters} />
+          <FilterSelect value={severityFilter} onChange={(value) => setSeverityFilter(value as SeverityFilter)} options={severityFilters} />
         </div>
 
-        <div className="admin-scrollbar flex-1 overflow-auto bg-white">
-          <table className="w-full border-separate border-spacing-0 text-left whitespace-nowrap">
-            <thead className="sticky top-0 z-10 bg-white/95 shadow-sm backdrop-blur">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-230 table-fixed text-left text-sm">
+            <colgroup>
+              <col className="w-[15%]" />
+              <col className="w-[13%]" />
+              <col className="w-[10%]" />
+              <col className="w-[16%]" />
+              <col className="w-[18%]" />
+              <col className="w-[28%]" />
+            </colgroup>
+            <thead className="bg-gray-50 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
               <tr>
-                {["Timestamp", "User Identifier", "Role", "Module", "Event", "Technical Description"].map((header) => (
-                  <th key={header} className="border-b border-slate-200 bg-slate-50/95 p-3 text-[9px] font-black tracking-widest text-slate-500 uppercase">
-                    {header}
+                {["Timestamp", "Category", "Severity", "Actor", "Action / Target", "Summary"].map((heading) => (
+                  <th key={heading} className="px-4 py-4 whitespace-nowrap">
+                    {heading}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="text-[11px] font-medium text-slate-700">
+            <tbody className="divide-y divide-gray-100 text-gray-800">
               {filteredLogs.map((log) => (
-                <tr key={log.id} onClick={() => setSelectedLog(log)} className="group cursor-pointer transition-all duration-150 hover:bg-emerald-50/55">
-                  <td className="border-r border-b border-slate-100 p-3 font-mono text-[10px] text-slate-500 transition-colors group-hover:border-emerald-100">
-                    <div className="flex items-center gap-1.5">
-                      <Calendar size={10} /> {log.time}
-                    </div>
+                <tr key={log.id} onClick={() => setSelectedLog(log)} className="group hover:bg-tgreen-dark/5 cursor-pointer transition">
+                  <td className="px-4 py-4 font-mono text-xs text-gray-500">{log.timestamp}</td>
+                  <td className="px-4 py-4">
+                    <CategoryBadge category={log.category} />
                   </td>
-                  <td className="text-tanaw-navy group-hover:text-tanaw-green border-b border-slate-100 p-3 font-bold transition-colors group-hover:border-emerald-100">{log.user}</td>
-                  <td className="border-b border-slate-100 p-3 transition-colors group-hover:border-emerald-100">
-                    <RoleBadge role={log.role} />
+                  <td className="px-4 py-4">
+                    <SeverityBadge severity={log.severity} />
                   </td>
-                  <td className="border-b border-slate-100 p-3 text-[10px] font-black tracking-wide text-slate-500 uppercase transition-colors group-hover:border-emerald-100">{log.module}</td>
-                  <td className="border-b border-slate-100 p-3 transition-colors group-hover:border-emerald-100">
-                    <EventBadge event={log.event} />
+                  <td className="px-4 py-4">
+                    <div className="font-semibold text-gray-900">{log.actor}</div>
+                    <div className="mt-1 text-[10px] font-bold tracking-wide text-gray-500 uppercase">{log.actorRole}</div>
                   </td>
-                  <td className="min-w-75 border-b border-slate-100 p-3 leading-relaxed whitespace-normal text-slate-600 transition-colors group-hover:border-emerald-100">{log.desc}</td>
+                  <td className="px-4 py-4">
+                    <div className="font-semibold text-gray-900">{log.action}</div>
+                    <div className="mt-1 truncate text-xs text-gray-500">{log.target}</div>
+                  </td>
+                  <td className="px-4 py-4 text-xs leading-relaxed text-gray-600">{log.summary}</td>
                 </tr>
               ))}
+              {filteredLogs.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                    No system logs match the current filters.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
 
-        <div className="flex shrink-0 items-center justify-between border-t border-slate-200/80 bg-slate-50 px-4 py-3 text-[9px] font-black tracking-widest text-slate-400 uppercase">
-          <span>End of ledger</span>
-          <span>Showing {filteredLogs.length} Events</span>
+        <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-4 py-3 text-[10px] font-bold tracking-wide text-gray-500 uppercase">
+          <span>Showing {filteredLogs.length} records</span>
+          <span>{logs.length} total logs</span>
         </div>
       </Panel>
 
@@ -123,12 +132,93 @@ export function AdminSystemLogsPage() {
   );
 }
 
-function matchesEventFilter(event: AuditEvent, filter: EventFilter) {
+function FilterSelect({ value, onChange, options }: { value: string; onChange: (value: string) => void; options: readonly string[] }) {
   return (
-    filter === "All Events" ||
-    (filter === "Logins" && event === "Login") ||
-    (filter === "Config Changes" && event === "Update") ||
-    (filter === "Reports" && ["Submit", "Export"].includes(event)) ||
-    (filter === "Errors" && event === "Error")
+    <select value={value} onChange={(event) => onChange(event.target.value)} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none">
+      {options.map((option) => (
+        <option key={option}>{option}</option>
+      ))}
+    </select>
   );
+}
+
+function CategoryBadge({ category }: { category: SystemLogCategory }) {
+  const classes: Record<SystemLogCategory, string> = {
+    "IT Activity": "border-blue-200 bg-blue-50 text-blue-700",
+    "Staff Submission": "border-teal-200 bg-teal-50 text-teal-700",
+    "Staff Operation": "border-emerald-200 bg-emerald-50 text-emerald-700",
+    "Admin Operation": "border-indigo-200 bg-indigo-50 text-indigo-700",
+    System: "border-gray-200 bg-gray-100 text-gray-600",
+  };
+  return <span className={`rounded border px-2.5 py-1 text-[10px] font-bold tracking-wide whitespace-nowrap uppercase ${classes[category]}`}>{category}</span>;
+}
+
+function SeverityBadge({ severity }: { severity: LogSeverity }) {
+  const classes: Record<LogSeverity, string> = {
+    Success: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    Info: "border-blue-200 bg-blue-50 text-blue-700",
+    Warning: "border-yellow-200 bg-yellow-50 text-yellow-700",
+    Critical: "border-red-200 bg-red-50 text-red-700",
+  };
+  return <span className={`rounded border px-2.5 py-1 text-[10px] font-bold tracking-wide whitespace-nowrap uppercase ${classes[severity]}`}>{severity}</span>;
+}
+
+function LogDetailsModal({ log, onClose }: { log: SystemLog; onClose: () => void }) {
+  return (
+    <ModalPortal>
+      <motion.div className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        <motion.section
+          className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-2xl"
+          initial={{ opacity: 0, y: 12, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 12, scale: 0.98 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+        >
+          <header className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <div>
+              <p className="font-mono text-[10px] font-bold text-gray-400">{log.id}</p>
+              <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+                <UserCog size={18} /> Log Details
+              </h2>
+            </div>
+            <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-white hover:text-gray-900">
+              Close
+            </button>
+          </header>
+          <div className="grid gap-4 p-6 md:grid-cols-2">
+            <Detail label="Timestamp" value={log.timestamp} />
+            <Detail label="Source ID" value={log.sourceId ?? "N/A"} />
+            <Detail label="Category" value={<CategoryBadge category={log.category} />} />
+            <Detail label="Severity" value={<SeverityBadge severity={log.severity} />} />
+            <Detail label="Actor" value={`${log.actor} (${log.actorRole})`} />
+            <Detail label="Action" value={log.action} />
+            <Detail label="Target" value={log.target} />
+            <div className="md:col-span-2">
+              <Detail label="Summary" value={log.summary} />
+            </div>
+            {log.metadata && (
+              <div className="md:col-span-2">
+                <p className="mb-2 text-[10px] font-bold tracking-wide text-gray-500 uppercase">Metadata</p>
+                <pre className="bg-charcoal-950 max-h-56 overflow-auto rounded-xl p-4 text-xs text-slate-100">{JSON.stringify(log.metadata, null, 2)}</pre>
+              </div>
+            )}
+          </div>
+        </motion.section>
+      </motion.div>
+    </ModalPortal>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+      <p className="mb-1 text-[10px] font-bold tracking-wide text-gray-500 uppercase">{label}</p>
+      <p className="text-sm leading-relaxed font-semibold text-gray-900">{value}</p>
+    </div>
+  );
+}
+
+function getTimestampValue(timestamp: string) {
+  const value = Date.parse(timestamp);
+  return Number.isNaN(value) ? 0 : value;
 }

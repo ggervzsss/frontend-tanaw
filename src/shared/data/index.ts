@@ -1,5 +1,4 @@
 export {
-  auditLogs,
   enterpriseAccounts,
   enterprises,
   finalReports,
@@ -10,5 +9,5 @@ export {
   priorityAlerts,
   reportEnterprises,
   systemActivities,
-  systemAlerts,
+  systemLogs,
 } from "./tanawMockData";

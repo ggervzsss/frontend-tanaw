@@ -2,9 +2,7 @@ export type EnterpriseStatus = "Normal" | "Warning" | "Critical";
 export type CameraStatus = "Online" | "Offline" | "Unstable";
 export type GatewayStatus = "Connected" | "Offline" | "Closed";
 export type AlertSeverity = "Info" | "Warning" | "Critical";
-export type AuditEvent = "Generate" | "Update" | "Error" | "Login" | "Export" | "Query" | "Submit";
-export type AuditRole = "System" | "IT Personnel" | "Enterprise" | "Staff" | "Admin";
-export type AlertStatus = "Active" | "IT Notified" | "Resolved";
+export type LogSeverity = AlertSeverity | "Success";
 
 export type MapEnterprise = {
   id: number;
@@ -55,8 +53,9 @@ export type SystemActivity = {
   requiresEnterpriseAttention?: boolean;
 };
 
-export type PriorityAlertType = "Maintenance Request" | "Password Reset Request";
-export type PriorityAlertResolutionMode = "On-site Visit Required" | "In-system Action";
+export type PriorityAlertType = "Maintenance Request" | "Password Reset Request" | "Submission Delay" | "Threshold Breach" | "System Health";
+export type PriorityAlertResolutionMode = "On-site Visit Required" | "In-system Action" | "Staff Follow-up" | "Remote Review";
+export type PriorityAlertStatus = "New" | "In Review" | "Resolved";
 
 export type PriorityAlert = {
   id: string;
@@ -67,7 +66,7 @@ export type PriorityAlert = {
   summary: string;
   requiredAction: string;
   resolutionMode: PriorityAlertResolutionMode;
-  status: "New" | "In Review" | "Resolved";
+  status: PriorityAlertStatus;
   time: string;
 };
 
@@ -88,31 +87,21 @@ export type PipelineHealth = {
   warnings: PipelineAlert[];
 };
 
-export type AuditLog = {
-  id: number;
-  time: string;
-  user: string;
-  role: AuditRole;
-  module: string;
-  event: AuditEvent;
-  desc: string;
-  hashId: string;
-  ip: string;
-  sessionId: string;
-  userAgent: string;
-  payload: Record<string, unknown>;
-  prevState: Record<string, unknown> | null;
-  newState: Record<string, unknown> | null;
-};
+export type SystemLogCategory = "IT Activity" | "Staff Submission" | "Staff Operation" | "Admin Operation" | "System";
+export type SystemLogActorRole = "Admin" | "IT Personnel" | "LGU Staff" | "Enterprise Account" | "System";
 
-export type SystemAlert = {
+export type SystemLog = {
   id: string;
-  type: string;
-  enterprise: string;
-  severity: AlertSeverity;
   timestamp: string;
-  status: AlertStatus;
-  desc: string;
+  category: SystemLogCategory;
+  severity: LogSeverity;
+  actor: string;
+  actorRole: SystemLogActorRole;
+  action: string;
+  target: string;
+  summary: string;
+  sourceId?: string;
+  metadata?: Record<string, string | number | boolean | null>;
 };
 
 export type ReportStatus = "Pending Review" | "Ready to Consolidate" | "Returned" | "Consolidated" | "Missing";

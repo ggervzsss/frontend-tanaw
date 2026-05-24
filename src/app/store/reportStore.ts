@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { finalReports as initialFinalReports, intakeReports as initialReports, reportEnterprises } from "../../shared/data";
 import type { FinalReport, FinalReportStatus, IntakeReport, ReportStatus } from "../../shared/types";
+import { useSystemLogStore } from "./systemLogStore";
 
 type ReportState = {
   reports: IntakeReport[];
@@ -27,14 +28,54 @@ export const useReportStore = create<ReportState>()(
     (set, get) => ({
       reports: includeCurrentSubmissionPeriod(initialReports),
       finalReports: initialFinalReports,
-      updateReportStatus: (reportId, status, remarks) =>
+      updateReportStatus: (reportId, status, remarks) => {
+        const report = get().reports.find((item) => item.id === reportId);
         set((state) => ({
-          reports: state.reports.map((report) => (report.id === reportId ? { ...report, status, remarks: remarks ?? report.remarks } : report)),
-        })),
-      updateFinalReportStatus: (reportId, status) =>
+          reports: state.reports.map((item) => (item.id === reportId ? { ...item, status, remarks: remarks ?? item.remarks } : item)),
+        }));
+
+        if (report && report.status !== status) {
+          useSystemLogStore.getState().recordLog({
+            category: "Staff Operation",
+            severity: status === "Returned" || status === "Missing" ? "Warning" : "Success",
+            actor: "Staff User",
+            actorRole: "LGU Staff",
+            action: `Report ${status}`,
+            target: report.id,
+            summary: `Staff updated ${report.enterprise} report ${report.id} from ${report.status} to ${status}.`,
+            sourceId: report.id,
+            metadata: {
+              previousStatus: report.status,
+              newStatus: status,
+              remarks: remarks ?? report.remarks ?? null,
+            },
+          });
+        }
+      },
+      updateFinalReportStatus: (reportId, status) => {
+        const report = get().finalReports.find((item) => item.id === reportId);
         set((state) => ({
-          finalReports: state.finalReports.map((report) => (report.id === reportId ? { ...report, status } : report)),
-        })),
+          finalReports: state.finalReports.map((item) => (item.id === reportId ? { ...item, status } : item)),
+        }));
+
+        if (report && report.status !== status) {
+          useSystemLogStore.getState().recordLog({
+            category: "Staff Operation",
+            severity: status === "Archived" || status === "Finalized" ? "Success" : "Info",
+            actor: report.preparedBy,
+            actorRole: "LGU Staff",
+            action: `Final Report ${status}`,
+            target: report.id,
+            summary: `${report.preparedBy} changed final report ${report.id} from ${report.status} to ${status}.`,
+            sourceId: report.id,
+            metadata: {
+              previousStatus: report.status,
+              newStatus: status,
+              period: report.period,
+            },
+          });
+        }
+      },
       generateFinalReport: (reportIds, preparedBy) => {
         const selectedReports = get().reports.filter((report) => reportIds.includes(report.id));
         if (selectedReports.length === 0) return null;
@@ -68,6 +109,22 @@ export const useReportStore = create<ReportState>()(
           reports: state.reports.map((report) => (reportIds.includes(report.id) ? { ...report, status: "Consolidated" } : report)),
           finalReports: [finalReport, ...state.finalReports],
         }));
+
+        useSystemLogStore.getState().recordLog({
+          id: `LOG-FIN-${id}`,
+          category: "Staff Operation",
+          severity: "Success",
+          actor: preparedBy,
+          actorRole: "LGU Staff",
+          action: "Generate Final Report",
+          target: id,
+          summary: `${preparedBy} generated ${id} for ${periodMonth} ${year} from ${selectedReports.length} ready submissions.`,
+          sourceId: id,
+          metadata: {
+            reportCount: selectedReports.length,
+            enterpriseCount: finalReport.enterpriseCount,
+          },
+        });
 
         return finalReport;
       },

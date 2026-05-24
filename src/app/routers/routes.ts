@@ -9,17 +9,23 @@ export const routes = {
     alerts: "/it/alerts",
     systemLogs: "/it/system-logs",
     systemSettings: "/it/system-settings",
+    profile: "/it/profile",
+    security: "/it/security",
   },
   admin: {
     root: "/admin",
     mapview: "/admin/mapview",
     systemLogs: "/admin/system-logs",
     alertsMonitor: "/admin/alerts-monitor",
+    profile: "/admin/profile",
+    security: "/admin/security",
   },
   staff: {
     root: "/staff",
     batchReports: "/staff/batch-reports",
     finalReportsAudit: "/staff/final-reports-audit",
     analytics: "/staff/analytics",
+    profile: "/staff/profile",
+    security: "/staff/security",
   },
 } as const;

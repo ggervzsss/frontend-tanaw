@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { AccountProfilePage, AccountSecurityPage } from "../../features/account";
 import { AdminAlertsMonitorPage, ITAlertsPage } from "../../features/alerts-monitor";
 import { StaffAnalyticsPage } from "../../features/analytics";
 import { ITDashboardPage } from "../../features/dashboard";
@@ -41,6 +42,8 @@ export function AppRouter() {
         <Route path="alerts" element={<ITAlertsPage />} />
         <Route path="system-logs" element={<ITSystemLogsPage />} />
         <Route path="system-settings" element={<ITSystemSettingsPage />} />
+        <Route path="profile" element={<AccountProfilePage role="it" />} />
+        <Route path="security" element={<AccountSecurityPage />} />
       </Route>
 
       <Route
@@ -55,6 +58,8 @@ export function AppRouter() {
         <Route path="mapview" element={<AdminMapViewPage />} />
         <Route path="system-logs" element={<AdminSystemLogsPage />} />
         <Route path="alerts-monitor" element={<AdminAlertsMonitorPage />} />
+        <Route path="profile" element={<AccountProfilePage role="admin" />} />
+        <Route path="security" element={<AccountSecurityPage />} />
       </Route>
 
       <Route
@@ -69,6 +74,8 @@ export function AppRouter() {
         <Route path="batch-reports" element={<StaffBatchReportsPage />} />
         <Route path="final-reports-audit" element={<StaffFinalReportsAuditPage />} />
         <Route path="analytics" element={<StaffAnalyticsPage />} />
+        <Route path="profile" element={<AccountProfilePage role="staff" />} />
+        <Route path="security" element={<AccountSecurityPage />} />
       </Route>
 
       <Route path="*" element={<RootRedirect />} />

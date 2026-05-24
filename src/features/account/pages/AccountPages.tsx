@@ -1,0 +1,327 @@
+import { Check, Database, Download, Key, Monitor, MonitorSmartphone, Moon, RefreshCw, Save, Shield, Smartphone, Sun, Upload } from "lucide-react";
+import { type FormEvent, type ReactNode, useMemo, useState } from "react";
+import { useAuthStore } from "../../../app/store/authStore";
+import { PageHeader } from "../../../shared/components/layout";
+import { Panel, PanelHeader } from "../../../shared/components/panel";
+import { PageMotion } from "../../../shared/components/ui";
+import type { UserRole } from "../../../shared/types/role.types";
+import { roleAccessLabel, rolePortalLabel } from "../../../shared/components/layout/navigation";
+
+type AccountPageProps = {
+  role: UserRole;
+};
+
+type ProfileUser = {
+  name: string;
+  email: string;
+  department: string;
+  phone: string;
+};
+
+type ThemePreference = "light" | "dark" | "system";
+
+const roleIdentity: Record<UserRole, { node: string; affiliation: string; directoryId: string }> = {
+  admin: {
+    node: "LGU Command Center",
+    affiliation: "San Pedro City Tourism Office",
+    directoryId: "LGU-ADM-001",
+  },
+  it: {
+    node: "Technical Operations Desk",
+    affiliation: "TANAW Infrastructure",
+    directoryId: "LGU-IT-001",
+  },
+  staff: {
+    node: "Tourism Reporting Desk",
+    affiliation: "San Pedro City Tourism Office",
+    directoryId: "LGU-STF-001",
+  },
+};
+
+function useAccountProfile(): ProfileUser {
+  const authUser = useAuthStore((state) => state.user);
+
+  return {
+    name: authUser?.displayName ?? "TANAW User",
+    email: `${authUser?.id ?? "user"}@tanaw.gov.ph`,
+    department: authUser?.title ?? "City Tourism Operations",
+    phone: "+63 2 8847 0000",
+  };
+}
+
+export function AccountProfilePage({ role }: AccountPageProps) {
+  const user = useAccountProfile();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const identity = roleIdentity[role];
+  const initials = useMemo(
+    () =>
+      user.name
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join("")
+        .toUpperCase(),
+    [user.name],
+  );
+
+  const handleSave = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
+    window.setTimeout(() => {
+      setIsLoading(false);
+      setIsSuccess(true);
+      window.setTimeout(() => setIsSuccess(false), 2600);
+    }, 900);
+  };
+
+  return (
+    <PageMotion>
+      <PageHeader title="Profile Settings" description="Manage your account identity and primary contact details." />
+
+      <form onSubmit={handleSave} className="mx-auto max-w-5xl space-y-6 xl:mx-0">
+        <Panel className="overflow-hidden">
+          <PanelHeader title="Account Display" icon={Upload} />
+          <div className="p-6">
+            <div className="mb-8 flex flex-col gap-6 border-b border-slate-100 pb-8 sm:flex-row sm:items-center">
+              <button
+                type="button"
+                aria-label="Upload profile photo"
+                className="group hover:border-tanaw-green relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-slate-300 bg-slate-50 shadow-sm transition"
+              >
+                <span className="font-display text-tanaw-navy text-2xl font-bold transition-opacity group-hover:opacity-0">{initials || "TU"}</span>
+                <span className="bg-tanaw-green/85 absolute inset-0 flex items-center justify-center text-white opacity-0 transition-opacity group-hover:opacity-100">
+                  <Upload size={20} />
+                </span>
+              </button>
+              <div className="min-w-0">
+                <h2 className="text-lg font-bold text-slate-950">Profile Photo</h2>
+                <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-500">This profile is shown in the {rolePortalLabel[role]} header, reports, audit trails, and account activity logs.</p>
+                <span className="mt-3 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-black tracking-wide text-emerald-700 uppercase">{roleAccessLabel[role]}</span>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Full Name" defaultValue={user.name} />
+              <Field label="Professional Email" defaultValue={user.email} type="email" />
+              <Field label="Department" defaultValue={user.department} />
+              <Field label="Phone" defaultValue={user.phone} type="tel" />
+            </div>
+          </div>
+        </Panel>
+
+        <Panel className="overflow-hidden">
+          <PanelHeader title="Account Identity" icon={Shield} />
+          <div className="p-6">
+            <div className="grid gap-4 md:grid-cols-3">
+              <ReadOnlyField label="Current Node" value={identity.node} />
+              <ReadOnlyField label="Affiliation" value={identity.affiliation} />
+              <ReadOnlyField label="Directory ID" value={identity.directoryId} />
+            </div>
+            <p className="mt-4 text-xs font-medium text-slate-500">Structural role and affiliation changes are controlled through LGU account management.</p>
+          </div>
+        </Panel>
+
+        <div className="flex flex-wrap justify-end gap-3">
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="bg-tanaw-green disabled:bg-tanaw-green/70 inline-flex min-w-44 items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#044a1e]"
+          >
+            {isLoading ? <RefreshCw size={16} className="animate-spin" /> : isSuccess ? <Check size={16} /> : <Save size={16} />}
+            {isLoading ? "Saving..." : isSuccess ? "Saved" : "Save Changes"}
+          </button>
+        </div>
+      </form>
+    </PageMotion>
+  );
+}
+
+export function AccountSecurityPage() {
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+  const [isPasswordSuccess, setIsPasswordSuccess] = useState(false);
+  const [is2FAEnabled, setIs2FAEnabled] = useState(true);
+  const [theme, setTheme] = useState<ThemePreference>("system");
+  const [isArchiveLoading, setIsArchiveLoading] = useState(false);
+  const [isArchiveSuccess, setIsArchiveSuccess] = useState(false);
+
+  const handlePasswordUpdate = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsPasswordLoading(true);
+    window.setTimeout(() => {
+      setIsPasswordLoading(false);
+      setIsPasswordSuccess(true);
+      window.setTimeout(() => setIsPasswordSuccess(false), 2600);
+    }, 900);
+  };
+
+  const handleArchiveRequest = () => {
+    setIsArchiveLoading(true);
+    window.setTimeout(() => {
+      setIsArchiveLoading(false);
+      setIsArchiveSuccess(true);
+      window.setTimeout(() => setIsArchiveSuccess(false), 3000);
+    }, 1100);
+  };
+
+  return (
+    <PageMotion>
+      <PageHeader title="Security & Data Control" description="Manage credentials, active sessions, and local interface preferences." />
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="space-y-6">
+          <Panel className="overflow-hidden">
+            <PanelHeader title="Credential Control" icon={Key} />
+            <form onSubmit={handlePasswordUpdate} className="space-y-4 p-6">
+              <Field label="Current Password" defaultValue="" placeholder="********" type="password" />
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="New Password" defaultValue="" placeholder="********" type="password" />
+                <Field label="Confirm New Password" defaultValue="" placeholder="********" type="password" />
+              </div>
+              <div className="flex justify-end pt-2">
+                <button
+                  type="submit"
+                  disabled={isPasswordLoading}
+                  className="bg-tanaw-green disabled:bg-tanaw-green/70 inline-flex min-w-48 items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#044a1e]"
+                >
+                  {isPasswordLoading ? <RefreshCw size={16} className="animate-spin" /> : isPasswordSuccess ? <Check size={16} /> : <Key size={16} />}
+                  {isPasswordLoading ? "Updating..." : isPasswordSuccess ? "Password Updated" : "Update Password"}
+                </button>
+              </div>
+            </form>
+          </Panel>
+
+          <Panel className="overflow-hidden">
+            <PanelHeader
+              title="Active Sessions"
+              icon={MonitorSmartphone}
+              right={
+                <button type="button" className="text-tanaw-red text-xs font-bold transition hover:text-red-700 hover:underline">
+                  Sign Out of All Other Devices
+                </button>
+              }
+            />
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] text-left text-sm">
+                <thead className="bg-slate-50 text-[10px] font-black tracking-widest text-slate-500 uppercase">
+                  <tr>
+                    <th className="border-b border-slate-200 p-3">Device</th>
+                    <th className="border-b border-slate-200 p-3">Location</th>
+                    <th className="border-b border-slate-200 p-3">Last Active</th>
+                    <th className="border-b border-slate-200 p-3">IP Address</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  <tr>
+                    <td className="flex items-center gap-2 p-3 font-semibold text-slate-900">
+                      <Monitor size={15} className="text-tanaw-green" /> Workstation Browser (Current)
+                    </td>
+                    <td className="p-3 font-medium text-slate-600">San Pedro, PH</td>
+                    <td className="p-3 text-xs font-bold text-emerald-600">Active Now</td>
+                    <td className="p-3 font-mono text-xs text-slate-500">192.168.1.45</td>
+                  </tr>
+                  <tr>
+                    <td className="flex items-center gap-2 p-3 font-semibold text-slate-900">
+                      <Smartphone size={15} className="text-slate-400" /> Mobile Portal
+                    </td>
+                    <td className="p-3 font-medium text-slate-600">Makati, PH</td>
+                    <td className="p-3 text-xs font-medium text-slate-500">2 hours ago</td>
+                    <td className="p-3 font-mono text-xs text-slate-500">112.198.100.22</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </Panel>
+        </div>
+
+        <div className="space-y-6">
+          <Panel className="overflow-hidden">
+            <PanelHeader title="Enhanced Protection" icon={Shield} />
+            <div className="flex items-center justify-between gap-4 p-6">
+              <div>
+                <p className="text-sm font-bold text-slate-900">Two-Factor Auth</p>
+                <p className="mt-1 text-xs text-slate-500">Require an extra security code when logging in.</p>
+              </div>
+              <button
+                type="button"
+                aria-pressed={is2FAEnabled}
+                aria-label="Toggle two-factor authentication"
+                onClick={() => setIs2FAEnabled((current) => !current)}
+                className={["relative h-7 w-13 rounded-full transition", is2FAEnabled ? "bg-tanaw-green" : "bg-slate-300"].join(" ")}
+              >
+                <span className={["absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition", is2FAEnabled ? "left-7" : "left-1"].join(" ")} />
+              </button>
+            </div>
+          </Panel>
+
+          <Panel className="overflow-hidden">
+            <PanelHeader title="Interface Preference" icon={Moon} />
+            <div className="p-6">
+              <div className="grid grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1">
+                <ThemeButton active={theme === "light"} icon={<Sun size={14} />} label="Light" onClick={() => setTheme("light")} />
+                <ThemeButton active={theme === "dark"} icon={<Moon size={14} />} label="Dark" onClick={() => setTheme("dark")} />
+                <ThemeButton active={theme === "system"} icon={<Monitor size={14} />} label="System" onClick={() => setTheme("system")} />
+              </div>
+            </div>
+          </Panel>
+
+          <Panel className="overflow-hidden">
+            <PanelHeader title="Data Archive" icon={Database} />
+            <div className="p-6">
+              <p className="mb-5 text-xs leading-relaxed font-medium text-slate-500">Request a secure package of historical account activity, reports, and system logs for compliance review.</p>
+              <button
+                type="button"
+                onClick={handleArchiveRequest}
+                disabled={isArchiveLoading || isArchiveSuccess}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:bg-slate-100 disabled:text-slate-400"
+              >
+                {isArchiveLoading ? <RefreshCw size={16} className="animate-spin" /> : isArchiveSuccess ? <Check size={16} className="text-emerald-600" /> : <Download size={16} />}
+                {isArchiveLoading ? "Compiling Data..." : isArchiveSuccess ? "Archive Sent to Email" : "Request Data Archive"}
+              </button>
+            </div>
+          </Panel>
+        </div>
+      </div>
+    </PageMotion>
+  );
+}
+
+function Field({ label, defaultValue, type = "text", placeholder }: { label: string; defaultValue: string; type?: string; placeholder?: string }) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-xs font-bold tracking-wide text-slate-500 uppercase">{label}</span>
+      <input
+        type={type}
+        defaultValue={defaultValue}
+        placeholder={placeholder}
+        className="focus:ring-tanaw-green/20 w-full rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-900 transition outline-none focus:ring-2"
+      />
+    </label>
+  );
+}
+
+function ReadOnlyField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span className="mb-2 block text-[10px] font-bold tracking-wide text-slate-400 uppercase">{label}</span>
+      <div className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-900">{value}</div>
+    </div>
+  );
+}
+
+function ThemeButton({ active, icon, label, onClick }: { active: boolean; icon: ReactNode; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        "flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-bold transition",
+        active ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900",
+      ].join(" ")}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}

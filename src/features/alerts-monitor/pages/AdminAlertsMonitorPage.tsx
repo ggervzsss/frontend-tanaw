@@ -6,18 +6,16 @@ import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
 import { PageMotion } from "../../../shared/components/ui";
-import type { AlertSeverity, PriorityAlert, PriorityAlertOwner, PriorityAlertStatus, PriorityAlertType } from "../../../shared/types";
+import type { AlertSeverity, PriorityAlert, PriorityAlertStatus, PriorityAlertType } from "../../../shared/types";
 import { AlertDetailsModal, AlertStatusBadge, ResolutionBadge, SeverityBadge } from "../components";
 
 type SeverityFilter = "All Severities" | AlertSeverity;
 type StatusFilter = "All Statuses" | PriorityAlertStatus;
 type TypeFilter = "All Types" | PriorityAlertType;
-type OwnerFilter = "All Owners" | PriorityAlertOwner;
 
 const severityFilters: SeverityFilter[] = ["All Severities", "Critical", "Warning", "Info"];
 const statusFilters: StatusFilter[] = ["All Statuses", "New", "In Review", "Resolved"];
 const typeFilters: TypeFilter[] = ["All Types", "Maintenance Request", "Password Reset Request", "Submission Delay", "Threshold Breach", "Foot Traffic Alert", "Occupancy Spike"];
-const ownerFilters: OwnerFilter[] = ["All Owners", "Admin", "IT", "System"];
 
 export function AdminAlertsMonitorPage() {
   const alerts = useAlertStore((state) => state.alerts);
@@ -25,21 +23,21 @@ export function AdminAlertsMonitorPage() {
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("All Severities");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All Statuses");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("All Types");
-  const [ownerFilter, setOwnerFilter] = useState<OwnerFilter>("All Owners");
   const [selectedAlert, setSelectedAlert] = useState<PriorityAlert | null>(null);
 
   const filteredAlerts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return alerts.filter((alert) => {
-      const searchable = [alert.id, alert.type, alert.severity, alert.enterprise ?? "", alert.requester, alert.summary, alert.requiredAction, alert.status, alert.resolutionMode].join(" ").toLowerCase();
+      const searchable = [alert.id, alert.type, alert.severity, alert.enterprise ?? "", alert.requester, alert.summary, alert.requiredAction, alert.status, alert.resolutionMode]
+        .join(" ")
+        .toLowerCase();
       const matchesQuery = !normalizedQuery || searchable.includes(normalizedQuery);
       const matchesSeverity = severityFilter === "All Severities" || alert.severity === severityFilter;
       const matchesStatus = statusFilter === "All Statuses" || alert.status === statusFilter;
       const matchesType = typeFilter === "All Types" || alert.type === typeFilter;
-      const matchesOwner = ownerFilter === "All Owners" || alert.owner === ownerFilter;
-      return matchesQuery && matchesSeverity && matchesStatus && matchesType && matchesOwner;
+      return matchesQuery && matchesSeverity && matchesStatus && matchesType;
     });
-  }, [alerts, ownerFilter, query, severityFilter, statusFilter, typeFilter]);
+  }, [alerts, query, severityFilter, statusFilter, typeFilter]);
 
   const activeAlerts = alerts.filter((alert) => alert.status !== "Resolved");
   const criticalAlerts = activeAlerts.filter((alert) => alert.severity === "Critical");
@@ -71,23 +69,21 @@ export function AdminAlertsMonitorPage() {
           <FilterSelect value={severityFilter} onChange={(value) => setSeverityFilter(value as SeverityFilter)} options={severityFilters} />
           <FilterSelect value={statusFilter} onChange={(value) => setStatusFilter(value as StatusFilter)} options={statusFilters} />
           <FilterSelect value={typeFilter} onChange={(value) => setTypeFilter(value as TypeFilter)} options={typeFilters} />
-          <FilterSelect value={ownerFilter} onChange={(value) => setOwnerFilter(value as OwnerFilter)} options={ownerFilters} />
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-240 table-fixed text-left text-sm">
+          <table className="w-full min-w-220 table-fixed text-left text-sm">
             <colgroup>
               <col className="w-[12%]" />
               <col className="w-[16%]" />
               <col className="w-[12%]" />
-              <col className="w-[14%]" />
-              <col className="w-[25%]" />
-              <col className="w-[10%]" />
-              <col className="w-[11%]" />
+              <col className="w-[16%]" />
+              <col className="w-[32%]" />
+              <col className="w-[12%]" />
             </colgroup>
             <thead className="bg-gray-50 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
               <tr>
-                {["Alert ID", "Type", "Priority", "Source", "Required Action", "Status", "Owner"].map((heading) => (
+                {["Alert ID", "Type", "Priority", "Source", "Required Action", "Status"].map((heading) => (
                   <th key={heading} className="px-4 py-4 whitespace-nowrap">
                     {heading}
                   </th>
@@ -119,14 +115,11 @@ export function AdminAlertsMonitorPage() {
                     <AlertStatusBadge status={alert.status} />
                     <div className="mt-2 text-[10px] font-bold tracking-wide text-gray-400 uppercase">{alert.time}</div>
                   </td>
-                  <td className="px-4 py-4">
-                    <OwnerBadge owner={alert.owner} />
-                  </td>
                 </tr>
               ))}
               {filteredAlerts.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                     No alerts match the current filters.
                   </td>
                 </tr>
@@ -154,13 +147,4 @@ function FilterSelect({ value, onChange, options }: { value: string; onChange: (
       ))}
     </select>
   );
-}
-
-function OwnerBadge({ owner }: { owner: PriorityAlertOwner }) {
-  const classes: Record<PriorityAlertOwner, string> = {
-    Admin: "border-indigo-200 bg-indigo-50 text-indigo-700",
-    IT: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    System: "border-gray-200 bg-gray-100 text-gray-600",
-  };
-  return <span className={`rounded border px-2.5 py-1 text-[10px] font-bold tracking-wide whitespace-nowrap uppercase ${classes[owner]}`}>{owner}</span>;
 }

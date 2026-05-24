@@ -30,7 +30,9 @@ export function ITAlertsPage() {
   const filteredAlerts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return alerts.filter((alert) => {
-      const searchable = [alert.id, alert.type, alert.severity, alert.enterprise ?? "", alert.requester, alert.summary, alert.requiredAction, alert.status, alert.resolutionMode].join(" ").toLowerCase();
+      const searchable = [alert.id, alert.type, alert.severity, alert.enterprise ?? "", alert.requester, alert.summary, alert.requiredAction, alert.status, alert.resolutionMode]
+        .join(" ")
+        .toLowerCase();
       const matchesQuery = !normalizedQuery || searchable.includes(normalizedQuery);
       const matchesSeverity = severityFilter === "All Severities" || alert.severity === severityFilter;
       const matchesStatus = statusFilter === "All Statuses" || alert.status === statusFilter;

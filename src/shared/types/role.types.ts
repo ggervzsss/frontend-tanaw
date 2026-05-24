@@ -1,4 +1,4 @@
-export type UserRole = "it" | "admin" | "staff";
+export type UserRole = "it" | "admin" | "staff" | "enterprise";
 
 export type AuthUser = {
   id: string;
@@ -6,4 +6,7 @@ export type AuthUser = {
   displayName: string;
   role: UserRole;
   title: string;
+  mustChangePassword: boolean;
+  enterpriseId: string | null;
+  enterpriseName: string | null;
 };

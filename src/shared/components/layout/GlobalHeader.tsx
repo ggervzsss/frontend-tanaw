@@ -23,9 +23,8 @@ export function GlobalHeader({ role }: GlobalHeaderProps) {
 
   const profile = {
     name: authUser?.displayName ?? "TANAW User",
-    email: `${authUser?.id ?? "user"}@tanaw.gov.ph`,
+    email: authUser?.email ?? "",
     department: authUser?.title ?? "City Tourism Operations",
-    phone: "+63 2 8847 0000",
   };
 
   const initials = useMemo(

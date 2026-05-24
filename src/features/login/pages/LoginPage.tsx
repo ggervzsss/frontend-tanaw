@@ -1,4 +1,5 @@
 import { Navigate } from "react-router-dom";
+import { routes } from "../../../app/routers/routes";
 import { useAuthStore } from "../../../app/store/authStore";
 import { getRoleDashboardPath } from "../../../shared/utils/routeUtils";
 import { LoginBackground, LoginBrandHeader, LoginCard, LoginForm } from "../components";
@@ -9,6 +10,9 @@ export function LoginPage() {
   const { handleLoginSubmit } = useLogin();
 
   if (user) {
+    if (user.mustChangePassword) {
+      return <Navigate to={routes.changePassword} replace />;
+    }
     return <Navigate to={getRoleDashboardPath(user.role)} replace />;
   }
 

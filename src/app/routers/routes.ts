@@ -1,6 +1,8 @@
 export const routes = {
   home: "/",
   login: "/login",
+  changePassword: "/change-password",
+  enterpriseAccess: "/enterprise-access",
   it: {
     root: "/it",
     dashboard: "/it/dashboard",
@@ -8,6 +10,7 @@ export const routes = {
     enterpriseAccounts: "/it/enterprise-accounts",
     alerts: "/it/alerts",
     systemLogs: "/it/system-logs",
+    devLog: "/it/dev-log",
     systemSettings: "/it/system-settings",
     profile: "/it/profile",
     security: "/it/security",

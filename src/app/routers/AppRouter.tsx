@@ -3,9 +3,10 @@ import { AccountProfilePage, AccountSecurityPage } from "../../features/account"
 import { AdminAlertsMonitorPage, ITAlertsPage } from "../../features/alerts-monitor";
 import { StaffAnalyticsPage } from "../../features/analytics";
 import { ITDashboardPage } from "../../features/dashboard";
+import { ITDevLogPage } from "../../features/dev-log";
 import { ITEnterpriseAccountsPage } from "../../features/enterprise-accounts";
 import { ITLguAccountsPage } from "../../features/lgu-accounts";
-import { LoginPage } from "../../features/login";
+import { ChangePasswordPage, EnterpriseAccessPage, LoginPage } from "../../features/login";
 import { AdminMapViewPage } from "../../features/mapview";
 import { StaffBatchReportsPage, StaffFinalReportsAuditPage } from "../../features/reports";
 import { ITSystemSettingsPage } from "../../features/system-settings";
@@ -26,6 +27,8 @@ export function AppRouter() {
     <Routes>
       <Route path={routes.home} element={<RootRedirect />} />
       <Route path={routes.login} element={<LoginPage />} />
+      <Route path={routes.changePassword} element={<ChangePasswordPage />} />
+      <Route path={routes.enterpriseAccess} element={<EnterpriseAccessPage />} />
 
       <Route
         path={routes.it.root}
@@ -41,6 +44,7 @@ export function AppRouter() {
         <Route path="enterprise-accounts" element={<ITEnterpriseAccountsPage />} />
         <Route path="alerts" element={<ITAlertsPage />} />
         <Route path="system-logs" element={<ITSystemLogsPage />} />
+        <Route path="dev-log" element={<ITDevLogPage />} />
         <Route path="system-settings" element={<ITSystemSettingsPage />} />
         <Route path="profile" element={<AccountProfilePage role="it" />} />
         <Route path="security" element={<AccountSecurityPage />} />

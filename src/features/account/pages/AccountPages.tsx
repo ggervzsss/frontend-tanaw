@@ -1,4 +1,4 @@
-import { Check, Database, Download, Key, Monitor, MonitorSmartphone, Moon, RefreshCw, Save, Shield, Smartphone, Sun, Upload } from "lucide-react";
+import { Check, Database, Download, Key, Monitor, MonitorSmartphone, Moon, RefreshCw, Save, Shield, Sun, Upload } from "lucide-react";
 import { type FormEvent, type ReactNode, useMemo, useState } from "react";
 import { useAuthStore } from "../../../app/store/authStore";
 import { PageHeader } from "../../../shared/components/layout";
@@ -20,21 +20,22 @@ type ProfileUser = {
 
 type ThemePreference = "light" | "dark" | "system";
 
-const roleIdentity: Record<UserRole, { node: string; affiliation: string; directoryId: string }> = {
+const roleIdentity: Record<UserRole, { node: string; affiliation: string }> = {
   admin: {
     node: "LGU Command Center",
     affiliation: "San Pedro City Tourism Office",
-    directoryId: "LGU-ADM-001",
   },
   it: {
     node: "Technical Operations Desk",
     affiliation: "TANAW Infrastructure",
-    directoryId: "LGU-IT-001",
   },
   staff: {
     node: "Tourism Reporting Desk",
     affiliation: "San Pedro City Tourism Office",
-    directoryId: "LGU-STF-001",
+  },
+  enterprise: {
+    node: "Enterprise Portal",
+    affiliation: "Registered Enterprise",
   },
 };
 
@@ -43,13 +44,14 @@ function useAccountProfile(): ProfileUser {
 
   return {
     name: authUser?.displayName ?? "TANAW User",
-    email: `${authUser?.id ?? "user"}@tanaw.gov.ph`,
+    email: authUser?.email ?? "",
     department: authUser?.title ?? "City Tourism Operations",
-    phone: "+63 2 8847 0000",
+    phone: "",
   };
 }
 
 export function AccountProfilePage({ role }: AccountPageProps) {
+  const authUser = useAuthStore((state) => state.user);
   const user = useAccountProfile();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -117,7 +119,7 @@ export function AccountProfilePage({ role }: AccountPageProps) {
             <div className="grid gap-4 md:grid-cols-3">
               <ReadOnlyField label="Current Node" value={identity.node} />
               <ReadOnlyField label="Affiliation" value={identity.affiliation} />
-              <ReadOnlyField label="Directory ID" value={identity.directoryId} />
+              <ReadOnlyField label="Directory ID" value={authUser?.id ?? "Not assigned"} />
             </div>
             <p className="mt-4 text-xs font-medium text-slate-500">Structural role and affiliation changes are controlled through LGU account management.</p>
           </div>
@@ -217,17 +219,9 @@ export function AccountSecurityPage() {
                     <td className="flex items-center gap-2 p-3 font-semibold text-slate-900">
                       <Monitor size={15} className="text-tanaw-green" /> Workstation Browser (Current)
                     </td>
-                    <td className="p-3 font-medium text-slate-600">San Pedro, PH</td>
+                    <td className="p-3 font-medium text-slate-600">Current device</td>
                     <td className="p-3 text-xs font-bold text-emerald-600">Active Now</td>
-                    <td className="p-3 font-mono text-xs text-slate-500">192.168.1.45</td>
-                  </tr>
-                  <tr>
-                    <td className="flex items-center gap-2 p-3 font-semibold text-slate-900">
-                      <Smartphone size={15} className="text-slate-400" /> Mobile Portal
-                    </td>
-                    <td className="p-3 font-medium text-slate-600">Makati, PH</td>
-                    <td className="p-3 text-xs font-medium text-slate-500">2 hours ago</td>
-                    <td className="p-3 font-mono text-xs text-slate-500">112.198.100.22</td>
+                    <td className="p-3 font-mono text-xs text-slate-500">Unavailable</td>
                   </tr>
                 </tbody>
               </table>

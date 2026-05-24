@@ -38,7 +38,7 @@ export const useReportStore = create<ReportState>()(
           useSystemLogStore.getState().recordLog({
             category: "Staff Operation",
             severity: status === "Returned" || status === "Missing" ? "Warning" : "Success",
-            actor: "Staff User",
+            actor: "LGU Staff",
             actorRole: "LGU Staff",
             action: `Report ${status}`,
             target: report.id,
@@ -136,26 +136,25 @@ export const useReportStore = create<ReportState>()(
     }),
     {
       name: "tanaw-report-workflow",
-      version: 2,
-      migrate: () => ({
-        reports: includeCurrentSubmissionPeriod(initialReports),
-        finalReports: initialFinalReports,
+      version: 3,
+      migrate: () => getInitialReportState(),
+      merge: (_persistedState, currentState) => ({
+        ...currentState,
+        ...getInitialReportState(),
       }),
       partialize: (state) => ({
-        reports: mergeReportsWithBaseline(state.reports),
+        reports: state.reports,
         finalReports: state.finalReports,
       }),
     },
   ),
 );
 
-function mergeReportsWithBaseline(reports: IntakeReport[]) {
-  const reportMap = new Map(reports.map((report) => [report.id, report]));
-  const baselineIds = new Set(initialReports.map((report) => report.id));
-  const baselineReports = initialReports.map((report) => reportMap.get(report.id) ?? report);
-  const openedPeriodReports = reports.filter((report) => !baselineIds.has(report.id));
-
-  return [...baselineReports, ...openedPeriodReports];
+function getInitialReportState() {
+  return {
+    reports: includeCurrentSubmissionPeriod(initialReports),
+    finalReports: initialFinalReports,
+  };
 }
 
 function includeCurrentSubmissionPeriod(reports: IntakeReport[]) {

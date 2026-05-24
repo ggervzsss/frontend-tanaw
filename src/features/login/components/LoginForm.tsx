@@ -15,8 +15,8 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
         <input
           id="client-id"
           name="clientId"
-          type="email"
-          placeholder="username"
+          type="text"
+          placeholder="username or enterprise ID"
           className="text-charcoal-800 w-full rounded-2xl border border-[#f3f4f6] bg-[#f9fafb] px-5 py-4 text-sm font-semibold transition-shadow outline-none focus:shadow-[0_0_0_2px_#055b25]"
         />
       </div>

@@ -18,6 +18,11 @@ export function useLogin() {
     try {
       const session = await loginService({ clientId, encryptionKey });
       setSession(session);
+      if (session.user.mustChangePassword) {
+        toast.success("Temporary credentials verified");
+        navigate("/change-password", { replace: true });
+        return;
+      }
       toast.success("Portal Initialized Successfully");
       navigate(getRoleDashboardPath(session.user.role), { replace: true });
     } catch {

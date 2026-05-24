@@ -1,4 +1,4 @@
-import { BarChart3, Bell, Building2, FileCheck2, FileText, Layers, LayoutDashboard, MapPinned, Settings, Users } from "lucide-react";
+import { BarChart3, Bell, Building2, FileCheck2, FileText, Inbox, Layers, LayoutDashboard, MapPinned, Settings, Users } from "lucide-react";
 import type { ComponentType } from "react";
 import { routes } from "../../../app/routers/routes";
 import type { UserRole } from "../../types/role.types";
@@ -83,22 +83,31 @@ export const roleNavigation: Record<UserRole, NavigationItem[]> = {
       icon: FileText,
     },
     {
+      id: "dev-log",
+      label: "Dev Log",
+      path: routes.it.devLog,
+      icon: Inbox,
+    },
+    {
       id: "system-settings",
       label: "System Settings",
       path: routes.it.systemSettings,
       icon: Settings,
     },
   ],
+  enterprise: [],
 };
 
 export const rolePortalLabel: Record<UserRole, string> = {
   admin: "Admin Portal",
   staff: "Staff Portal",
   it: "IT Portal",
+  enterprise: "Enterprise Portal",
 };
 
 export const roleAccessLabel: Record<UserRole, string> = {
   admin: "Supervisory Access",
   staff: "Processing Access",
   it: "Technical Access",
+  enterprise: "Enterprise Access",
 };

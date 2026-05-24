@@ -148,7 +148,7 @@ export function StaffBatchReportsPage() {
     if (!allReady) return;
     const finalReport = generateFinalReport(
       readyReports.map((r) => r.id),
-      authUser?.displayName ?? "Staff User",
+      authUser?.displayName ?? "LGU Staff",
     );
     if (!finalReport) {
       toast.error("No ready reports available for consolidation.");

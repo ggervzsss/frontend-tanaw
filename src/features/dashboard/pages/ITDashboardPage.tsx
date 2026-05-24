@@ -8,8 +8,8 @@ import { useAlertStore } from "../../../app/store";
 import { AlertDetailsModal, PriorityAlertListItem } from "../../alerts-monitor/components";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
-import { ModalPortal, PageMotion, stagger } from "../../../shared/components/ui";
-import { enterprises, systemActivities } from "../../../shared/data";
+import { EmptyState, ModalPortal, PageMotion, stagger } from "../../../shared/components/ui";
+import { enterprises, lguAccounts, systemActivities } from "../../../shared/data";
 import type { PriorityAlert, SystemActivity } from "../../../shared/types";
 
 export function ITDashboardPage() {
@@ -17,6 +17,7 @@ export function ITDashboardPage() {
   const [selectedAlert, setSelectedAlert] = useState<PriorityAlert | null>(null);
   const priorityAlerts = useAlertStore((state) => state.alerts).filter((alert) => alert.owner === "IT");
   const activeAlertsCount = priorityAlerts.filter((alert) => alert.status !== "Resolved").length;
+  const activeLguAccounts = lguAccounts.filter((account) => account.status === "Active").length;
   const activeEnterprises = enterprises.filter((enterprise) => enterprise.gatewayStatus !== "Closed").length;
   const gatewaysOnline = enterprises.filter((enterprise) => enterprise.gatewayStatus === "Connected").length;
   const recentActivities = systemActivities.slice(0, 7);
@@ -28,7 +29,7 @@ export function ITDashboardPage() {
       <PageHeader title="Dashboard" description="Operational overview for accounts, enterprise connectivity, camera health, and recent system activity." />
 
       <motion.section className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4" variants={stagger}>
-        <MetricCard label="LGU Accounts" value={4} foot="Active account registry" color="#065f46" icon={Users} />
+        <MetricCard label="LGU Accounts" value={activeLguAccounts} foot="Active account registry" color="#065f46" icon={Users} />
         <MetricCard label="Active Enterprises" value={activeEnterprises} foot="Not marked closed" color="#2563eb" icon={Building2} />
         <MetricCard label="Gateways Online" value={gatewaysOnline} foot="Synced edge gateways" color="#10b981" icon={Wifi} />
         <MetricCard label="Priority Alerts" value={activeAlertsCount} foot="Requires IT action" color="#dc2626" footClassName="text-red-600" icon={Bell} />
@@ -80,7 +81,7 @@ export function ITDashboardPage() {
               </table>
             </div>
             {recentActivities.length === 0 && (
-              <DashboardEmptyState icon={Activity} title="No recent activity" description="System activity records will appear here once the logging source is connected." />
+              <EmptyState icon={Activity} title="No recent activity" description="System activity records will appear here once the logging source is connected." />
             )}
           </div>
         </section>
@@ -103,7 +104,7 @@ export function ITDashboardPage() {
                 <PriorityAlertListItem key={alert.id} alert={alert} onOpen={setSelectedAlert} />
               ))}
               {actionableAlerts.length === 0 && (
-                <DashboardEmptyState icon={Bell} title="No priority alerts" description="Alerts requiring IT attention will appear here once alert ingestion is implemented." />
+                <EmptyState icon={Bell} title="No priority alerts" description="Alerts requiring IT attention will appear here once alert ingestion is implemented." />
               )}
             </div>
           </section>
@@ -166,18 +167,6 @@ function Detail({ label, value }: { label: string; value: ReactNode }) {
     <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
       <p className="mb-1 text-[10px] font-bold tracking-wide text-gray-500 uppercase">{label}</p>
       <p className="text-sm leading-relaxed font-semibold text-gray-900">{value}</p>
-    </div>
-  );
-}
-
-function DashboardEmptyState({ icon: Icon, title, description }: { icon: typeof Activity; title: string; description: string }) {
-  return (
-    <div className="flex min-h-55 flex-col items-center justify-center px-6 py-10 text-center">
-      <span className="bg-tgreen-dark/10 text-tgreen-dark flex h-10 w-10 items-center justify-center rounded-lg">
-        <Icon size={20} />
-      </span>
-      <p className="mt-3 text-sm font-bold text-gray-900">{title}</p>
-      <p className="mt-1 max-w-sm text-xs leading-relaxed text-gray-500">{description}</p>
     </div>
   );
 }

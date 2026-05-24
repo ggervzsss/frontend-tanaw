@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
-import { PageMotion, ModalPortal, stagger } from "../../../shared/components/ui";
+import { EmptyState, PageMotion, ModalPortal, stagger } from "../../../shared/components/ui";
 import { lguAccounts } from "../../../shared/data";
 import type { LguAccount, LguAccountRoleLabel, LguAccountStatus } from "../../../shared/types";
 
@@ -139,6 +139,13 @@ export function ITLguAccountsPage() {
                   </td>
                 </tr>
               ))}
+              {filteredAccounts.length === 0 && (
+                <tr>
+                  <td colSpan={6}>
+                    <EmptyState icon={Users} title="No LGU accounts" description="LGU personnel accounts will appear here once IT creates or imports real users." />
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

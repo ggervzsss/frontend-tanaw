@@ -1,9 +1,9 @@
-import { Search } from "lucide-react";
+import { FileText, Search } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useMemo, useState } from "react";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
-import { PageMotion } from "../../../shared/components/ui";
+import { EmptyState, PageMotion } from "../../../shared/components/ui";
 import { useReportStore } from "../../../app/store/reportStore";
 import type { FinalReport } from "../../../shared/types";
 import { FinalReportViewer, ReportStatusBadge } from "../components";
@@ -109,8 +109,8 @@ export function StaffFinalReportsAuditPage() {
               ))}
               {filteredReports.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                    No final reports match the current filters.
+                  <td colSpan={6}>
+                    <EmptyState icon={FileText} title="No final reports" description="Consolidated reports will appear here after staff generates official submissions." />
                   </td>
                 </tr>
               )}

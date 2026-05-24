@@ -5,7 +5,7 @@ import { useAlertStore } from "../../../app/store";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
-import { PageMotion } from "../../../shared/components/ui";
+import { EmptyState, PageMotion } from "../../../shared/components/ui";
 import type { AlertSeverity, PriorityAlert, PriorityAlertStatus, PriorityAlertType } from "../../../shared/types";
 import { AlertDetailsModal, AlertStatusBadge, ResolutionBadge, SeverityBadge } from "../components";
 
@@ -119,8 +119,8 @@ export function AdminAlertsMonitorPage() {
               ))}
               {filteredAlerts.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                    No alerts match the current filters.
+                  <td colSpan={6}>
+                    <EmptyState icon={Bell} title="No alerts" description="System-wide alerts will appear here once monitoring and alert ingestion are connected." />
                   </td>
                 </tr>
               )}

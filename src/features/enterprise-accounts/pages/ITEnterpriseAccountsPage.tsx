@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
-import { PageMotion, ModalPortal, stagger } from "../../../shared/components/ui";
+import { EmptyState, PageMotion, ModalPortal, stagger } from "../../../shared/components/ui";
 import { enterpriseAccounts } from "../../../shared/data";
 import type { CameraStatus, EnterpriseAccount, GatewayStatus } from "../../../shared/types";
 
@@ -146,6 +146,17 @@ export function ITEnterpriseAccountsPage() {
                   </tr>
                 );
               })}
+              {filteredEnterprises.length === 0 && (
+                <tr>
+                  <td colSpan={6}>
+                    <EmptyState
+                      icon={Building2}
+                      title="No enterprise accounts"
+                      description="Enterprise accounts will appear here once establishments are registered or backend data is connected."
+                    />
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -271,8 +282,8 @@ function AssignedCamerasModal({ enterprise, onClose }: { enterprise: EnterpriseA
                 ))}
                 {enterprise.cameras.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                      No cameras assigned to this enterprise.
+                    <td colSpan={7}>
+                      <EmptyState icon={Camera} title="No assigned cameras" description="Camera nodes assigned to this enterprise will appear here once devices are configured." minHeightClassName="min-h-45" />
                     </td>
                   </tr>
                 )}

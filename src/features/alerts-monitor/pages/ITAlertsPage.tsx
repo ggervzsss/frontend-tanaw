@@ -5,7 +5,7 @@ import { useAlertStore, useAuthStore } from "../../../app/store";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
-import { PageMotion } from "../../../shared/components/ui";
+import { EmptyState, PageMotion } from "../../../shared/components/ui";
 import type { AlertSeverity, PriorityAlert, PriorityAlertStatus, PriorityAlertType } from "../../../shared/types";
 import { AlertDetailsModal, AlertStatusBadge, ResolutionBadge, SeverityBadge } from "../components";
 
@@ -136,8 +136,8 @@ export function ITAlertsPage() {
               ))}
               {filteredAlerts.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
-                    No IT alerts match the current filters.
+                  <td colSpan={7}>
+                    <EmptyState icon={Bell} title="No IT alerts" description="Technical alerts requiring IT attention will appear here once alert ingestion is connected." />
                   </td>
                 </tr>
               )}

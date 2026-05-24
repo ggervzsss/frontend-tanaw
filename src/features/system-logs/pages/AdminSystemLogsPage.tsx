@@ -6,7 +6,7 @@ import { useSystemLogStore } from "../../../app/store";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
-import { ModalPortal, PageMotion, stagger } from "../../../shared/components/ui";
+import { EmptyState, ModalPortal, PageMotion, stagger } from "../../../shared/components/ui";
 import type { LogSeverity, SystemLog, SystemLogActorRole, SystemLogCategory } from "../../../shared/types";
 import { activityTimeRanges, isWithinActivityTimeRange } from "../../../shared/utils";
 import type { ActivityTimeRange } from "../../../shared/utils";
@@ -117,8 +117,8 @@ export function AdminSystemLogsPage() {
               ))}
               {filteredLogs.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                    No system logs match the current filters.
+                  <td colSpan={6}>
+                    <EmptyState icon={Activity} title="No system logs" description="Centralized audit records will appear here once backend logging is connected." />
                   </td>
                 </tr>
               )}

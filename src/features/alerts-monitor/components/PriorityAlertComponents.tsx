@@ -1,7 +1,7 @@
 import { Bell } from "lucide-react";
 import { motion } from "motion/react";
 import type { ReactNode } from "react";
-import { ModalPortal } from "../../../shared/components/ui";
+import { EmptyState, ModalPortal } from "../../../shared/components/ui";
 import type { AlertSeverity, PriorityAlert, PriorityAlertResolutionMode } from "../../../shared/types";
 
 type PriorityAlertListItemProps = {
@@ -149,13 +149,5 @@ function Detail({ label, value }: { label: string; value: ReactNode }) {
 }
 
 function AlertEmptyState() {
-  return (
-    <div className="flex min-h-55 flex-col items-center justify-center px-6 py-10 text-center">
-      <span className="bg-tgreen-dark/10 text-tgreen-dark flex h-10 w-10 items-center justify-center rounded-lg">
-        <Bell size={20} />
-      </span>
-      <p className="mt-3 text-sm font-bold text-gray-900">No alerts</p>
-      <p className="mt-1 max-w-sm text-xs leading-relaxed text-gray-500">There are currently no priority alerts.</p>
-    </div>
-  );
+  return <EmptyState icon={Bell} title="No alerts" description="There are currently no priority alerts." />;
 }

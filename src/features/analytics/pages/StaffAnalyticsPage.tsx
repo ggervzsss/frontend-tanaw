@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { useReportStore } from "../../../app/store/reportStore";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
-import { PageMotion, stagger } from "../../../shared/components/ui";
+import { EmptyState, PageMotion, stagger } from "../../../shared/components/ui";
 import type { IntakeReport } from "../../../shared/types";
 
 const MONTH_ORDER = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -135,26 +135,30 @@ export function StaffAnalyticsPage() {
         <section className="col-span-2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <h3 className="mb-6 text-sm font-semibold text-gray-900">Enterprise Traffic Comparison</h3>
           <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.15} />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} dy={10} />
-                <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} dx={-10} />
-                <Tooltip
-                  cursor={{ fill: "rgba(0,0,0,0.04)" }}
-                  contentStyle={{
-                    backgroundColor: "#1f2937",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                  }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
-                <Bar dataKey="entries" name="Total Entries" fill="#065f46" radius={[2, 2, 0, 0]} maxBarSize={40} />
-                <Bar dataKey="unique" name="Unique Pax" fill="#3b82f6" radius={[2, 2, 0, 0]} maxBarSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
+            {chartData.length === 0 ? (
+              <EmptyState icon={Activity} title="No traffic data" description="Enterprise traffic comparisons will appear here once reporting submissions are available." minHeightClassName="min-h-72" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.15} />
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} dy={10} />
+                  <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} dx={-10} />
+                  <Tooltip
+                    cursor={{ fill: "rgba(0,0,0,0.04)" }}
+                    contentStyle={{
+                      backgroundColor: "#1f2937",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                    }}
+                  />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
+                  <Bar dataKey="entries" name="Total Entries" fill="#065f46" radius={[2, 2, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey="unique" name="Unique Pax" fill="#3b82f6" radius={[2, 2, 0, 0]} maxBarSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </section>
 
@@ -171,9 +175,12 @@ export function StaffAnalyticsPage() {
               <SubmissionLogItem key={report.id} enterprise={report.enterprise} timestamp={report.submitted} />
             ))}
             {submissionLog.length === 0 && (
-              <div className="rounded-lg border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-gray-500">
-                No submissions recorded for {activePeriod?.label ?? "this reporting period"}.
-              </div>
+              <EmptyState
+                icon={ClipboardCheck}
+                title="No submissions"
+                description={`Submissions for ${activePeriod?.label ?? "this reporting period"} will appear here once reports are received.`}
+                minHeightClassName="min-h-45"
+              />
             )}
           </div>
         </section>

@@ -1,10 +1,10 @@
-import { Search } from "lucide-react";
+import { Activity, Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
-import { ModalPortal, PageMotion } from "../../../shared/components/ui";
+import { EmptyState, ModalPortal, PageMotion } from "../../../shared/components/ui";
 import { systemActivities } from "../../../shared/data";
 import type { SystemActivity, SystemActivityType } from "../../../shared/types";
 import { activityTimeRanges, isWithinActivityTimeRange } from "../../../shared/utils";
@@ -104,6 +104,13 @@ export function ITSystemLogsPage() {
                   <td className="px-3 py-4 text-xs leading-relaxed text-gray-600 lg:px-4">{activity.summary}</td>
                 </tr>
               ))}
+              {filteredActivities.length === 0 && (
+                <tr>
+                  <td colSpan={5}>
+                    <EmptyState icon={Activity} title="No system activity" description="System activity records will appear here once users, devices, and automated events are connected." />
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

@@ -7,7 +7,7 @@ import { useReportStore } from "../../../app/store/reportStore";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
-import { PageMotion, ModalPortal } from "../../../shared/components/ui";
+import { EmptyState, PageMotion, ModalPortal } from "../../../shared/components/ui";
 import { reportEnterprises } from "../../../shared/data";
 import type { IntakeReport, ReportEnterprise } from "../../../shared/types";
 import { ReportReviewModal, ReportStatusBadge } from "../components";
@@ -262,6 +262,13 @@ export function StaffBatchReportsPage() {
                   </tr>
                 );
               })}
+              {enterpriseRows.length === 0 && (
+                <tr>
+                  <td colSpan={5}>
+                    <EmptyState icon={Building2} title="No report enterprises" description="Enterprise report rows will appear here once registered establishments are connected to reporting." />
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -372,7 +379,7 @@ function ReportSection({ title, reports, empty, onOpenReport }: { title: string;
             </div>
           </button>
         ))}
-        {reports.length === 0 && <div className="rounded-xl border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">{empty}</div>}
+        {reports.length === 0 && <EmptyState icon={FileText} title={empty} description="Relevant submissions will appear here once reports are received from enterprises." minHeightClassName="min-h-40" />}
       </div>
     </section>
   );

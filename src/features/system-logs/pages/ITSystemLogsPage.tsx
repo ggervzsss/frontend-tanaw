@@ -7,6 +7,8 @@ import { Panel } from "../../../shared/components/panel";
 import { ModalPortal, PageMotion } from "../../../shared/components/ui";
 import { systemActivities } from "../../../shared/data";
 import type { SystemActivity, SystemActivityType } from "../../../shared/types";
+import { activityTimeRanges, isWithinActivityTimeRange } from "../../../shared/utils";
+import type { ActivityTimeRange } from "../../../shared/utils";
 
 const defaultTypeOptions = ["All Types", "LOGIN", "CONNECTION", "ACCOUNT CONFIG", "ENTERPRISE CONFIG", "IT ACTION", "SYSTEM"];
 const defaultAccountOptions = ["All Accounts", "LGU Account", "Enterprise Account", "IT Personnel", "System"];
@@ -15,6 +17,7 @@ export function ITSystemLogsPage() {
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("All Types");
   const [accountFilter, setAccountFilter] = useState("All Accounts");
+  const [timeRange, setTimeRange] = useState<ActivityTimeRange>("All Time");
   const [selectedActivity, setSelectedActivity] = useState<SystemActivity | null>(null);
 
   const dynamicTypeOptions = useMemo(() => {
@@ -50,9 +53,10 @@ export function ITSystemLogsPage() {
       const matchesQuery = haystack.includes(query.trim().toLowerCase());
       const matchesType = typeFilter === "All Types" || activity.type === typeFilter;
       const matchesAccount = accountFilter === "All Accounts" || activity.actorType === accountFilter;
-      return matchesQuery && matchesType && matchesAccount;
+      const matchesTimeRange = isWithinActivityTimeRange(activity.time, timeRange);
+      return matchesQuery && matchesType && matchesAccount && matchesTimeRange;
     });
-  }, [query, typeFilter, accountFilter]);
+  }, [query, typeFilter, accountFilter, timeRange]);
 
   return (
     <PageMotion>
@@ -72,6 +76,7 @@ export function ITSystemLogsPage() {
             </div>
             <FilterSelect value={typeFilter} onChange={setTypeFilter} options={dynamicTypeOptions} />
             <FilterSelect value={accountFilter} onChange={setAccountFilter} options={dynamicAccountOptions} />
+            <FilterSelect value={timeRange} onChange={(value) => setTimeRange(value as ActivityTimeRange)} options={activityTimeRanges} />
           </div>
         </div>
 
@@ -110,6 +115,10 @@ export function ITSystemLogsPage() {
               ))}
             </tbody>
           </table>
+        </div>
+        <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-4 py-3 text-[10px] font-bold tracking-wide text-gray-500 uppercase">
+          <span>Showing {filteredActivities.length} activities</span>
+          <span>{timeRange}</span>
         </div>
       </Panel>
 

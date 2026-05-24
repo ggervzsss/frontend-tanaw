@@ -8,6 +8,8 @@ import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
 import { ModalPortal, PageMotion, stagger } from "../../../shared/components/ui";
 import type { LogSeverity, SystemLog, SystemLogActorRole, SystemLogCategory } from "../../../shared/types";
+import { activityTimeRanges, isWithinActivityTimeRange } from "../../../shared/utils";
+import type { ActivityTimeRange } from "../../../shared/utils";
 
 type CategoryFilter = "All Categories" | SystemLogCategory;
 type ActorFilter = "All Actors" | SystemLogActorRole;
@@ -23,6 +25,7 @@ export function AdminSystemLogsPage() {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("All Categories");
   const [actorFilter, setActorFilter] = useState<ActorFilter>("All Actors");
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("All Severities");
+  const [timeRange, setTimeRange] = useState<ActivityTimeRange>("All Time");
   const [selectedLog, setSelectedLog] = useState<SystemLog | null>(null);
 
   const sortedLogs = useMemo(() => [...logs].sort((a, b) => getTimestampValue(b.timestamp) - getTimestampValue(a.timestamp)), [logs]);
@@ -35,9 +38,10 @@ export function AdminSystemLogsPage() {
       const matchesCategory = categoryFilter === "All Categories" || log.category === categoryFilter;
       const matchesActor = actorFilter === "All Actors" || log.actorRole === actorFilter;
       const matchesSeverity = severityFilter === "All Severities" || log.severity === severityFilter;
-      return matchesQuery && matchesCategory && matchesActor && matchesSeverity;
+      const matchesTimeRange = isWithinActivityTimeRange(log.timestamp, timeRange);
+      return matchesQuery && matchesCategory && matchesActor && matchesSeverity && matchesTimeRange;
     });
-  }, [actorFilter, categoryFilter, query, severityFilter, sortedLogs]);
+  }, [actorFilter, categoryFilter, query, severityFilter, sortedLogs, timeRange]);
 
   const adminCount = logs.filter((log) => log.category === "Admin Operation").length;
   const staffCount = logs.filter((log) => log.category === "Staff Operation" || log.category === "Staff Submission").length;
@@ -68,6 +72,7 @@ export function AdminSystemLogsPage() {
           <FilterSelect value={categoryFilter} onChange={(value) => setCategoryFilter(value as CategoryFilter)} options={categoryFilters} />
           <FilterSelect value={actorFilter} onChange={(value) => setActorFilter(value as ActorFilter)} options={actorFilters} />
           <FilterSelect value={severityFilter} onChange={(value) => setSeverityFilter(value as SeverityFilter)} options={severityFilters} />
+          <FilterSelect value={timeRange} onChange={(value) => setTimeRange(value as ActivityTimeRange)} options={activityTimeRanges} />
         </div>
 
         <div className="overflow-x-auto">
@@ -123,7 +128,7 @@ export function AdminSystemLogsPage() {
 
         <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-4 py-3 text-[10px] font-bold tracking-wide text-gray-500 uppercase">
           <span>Showing {filteredLogs.length} records</span>
-          <span>{logs.length} total logs</span>
+          <span>{timeRange}</span>
         </div>
       </Panel>
 

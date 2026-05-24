@@ -2,8 +2,10 @@ import { Activity, Bell, Building2, Users, Wifi } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { routes } from "../../../app/routers/routes";
 import { useAlertStore } from "../../../app/store";
-import { AlertDetailsModal, AllAlertsModal, PriorityAlertListItem } from "../../alerts-monitor/components";
+import { AlertDetailsModal, PriorityAlertListItem } from "../../alerts-monitor/components";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { ModalPortal, PageMotion, stagger } from "../../../shared/components/ui";
@@ -13,8 +15,7 @@ import type { PriorityAlert, SystemActivity } from "../../../shared/types";
 export function ITDashboardPage() {
   const [selectedActivity, setSelectedActivity] = useState<SystemActivity | null>(null);
   const [selectedAlert, setSelectedAlert] = useState<PriorityAlert | null>(null);
-  const [isAllAlertsModalOpen, setIsAllAlertsModalOpen] = useState(false);
-  const priorityAlerts = useAlertStore((state) => state.alerts);
+  const priorityAlerts = useAlertStore((state) => state.alerts).filter((alert) => alert.owner === "IT");
   const activeAlertsCount = priorityAlerts.filter((alert) => alert.status !== "Resolved").length;
   const activeEnterprises = enterprises.filter((enterprise) => enterprise.gatewayStatus !== "Closed").length;
   const gatewaysOnline = enterprises.filter((enterprise) => enterprise.gatewayStatus === "Connected").length;
@@ -92,9 +93,9 @@ export function ITDashboardPage() {
                   <h3 className="text-charcoal-800 m-0 text-base font-bold">Priority Alerts</h3>
                   <p className="mt-1 mb-0 text-xs text-gray-500">Actionable tasks requiring IT intervention or approval.</p>
                 </div>
-                <button onClick={() => setIsAllAlertsModalOpen(true)} className="shrink-0 text-xs font-semibold text-emerald-600 transition hover:text-emerald-700">
+                <Link to={routes.it.alerts} className="shrink-0 text-xs font-semibold text-emerald-600 transition hover:text-emerald-700">
                   View All Alerts
-                </button>
+                </Link>
               </div>
             </div>
             <div className="divide-y divide-gray-100">
@@ -112,16 +113,6 @@ export function ITDashboardPage() {
       <AnimatePresence>
         {selectedActivity && <ActivityDetailsModal activity={selectedActivity} onClose={() => setSelectedActivity(null)} />}
         {selectedAlert && <AlertDetailsModal alert={selectedAlert} onClose={() => setSelectedAlert(null)} />}
-        {isAllAlertsModalOpen && (
-          <AllAlertsModal
-            alerts={priorityAlerts}
-            onClose={() => setIsAllAlertsModalOpen(false)}
-            onSelectAlert={(alert) => {
-              setIsAllAlertsModalOpen(false);
-              setSelectedAlert(alert);
-            }}
-          />
-        )}
       </AnimatePresence>
     </PageMotion>
   );

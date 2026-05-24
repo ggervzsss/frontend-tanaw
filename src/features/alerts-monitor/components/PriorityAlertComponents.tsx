@@ -125,6 +125,7 @@ export function ResolutionBadge({ mode }: { mode: PriorityAlertResolutionMode })
     "In-system Action": "bg-emerald-50 text-emerald-700",
     "Staff Follow-up": "bg-amber-50 text-amber-700",
     "Remote Review": "bg-blue-50 text-blue-700",
+    "Admin Monitoring": "bg-indigo-50 text-indigo-700",
   };
   return <span className={`rounded-full px-3 py-1 text-[10px] font-bold whitespace-nowrap uppercase ${classes[mode]}`}>{mode}</span>;
 }

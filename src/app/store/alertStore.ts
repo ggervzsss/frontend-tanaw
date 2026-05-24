@@ -1,19 +1,19 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { priorityAlerts as initialPriorityAlerts } from "../../shared/data";
-import type { PriorityAlert, PriorityAlertStatus } from "../../shared/types";
+import type { PriorityAlert, PriorityAlertStatus, SystemLogActorRole } from "../../shared/types";
 import { useSystemLogStore } from "./systemLogStore";
 
 type AlertState = {
   alerts: PriorityAlert[];
-  updateAlertStatus: (alertId: string, status: PriorityAlertStatus, actor?: string) => void;
+  updateAlertStatus: (alertId: string, status: PriorityAlertStatus, actor?: string, actorRole?: SystemLogActorRole) => void;
 };
 
 export const useAlertStore = create<AlertState>()(
   persist(
     (set, get) => ({
       alerts: initialPriorityAlerts,
-      updateAlertStatus: (alertId, status, actor = "Admin") => {
+      updateAlertStatus: (alertId, status, actor = "Admin", actorRole = "Admin") => {
         const alert = get().alerts.find((item) => item.id === alertId);
         if (!alert || alert.status === status) return;
 
@@ -25,7 +25,7 @@ export const useAlertStore = create<AlertState>()(
           category: "Admin Operation",
           severity: status === "Resolved" ? "Success" : alert.severity,
           actor,
-          actorRole: "Admin",
+          actorRole,
           action: `Alert ${status}`,
           target: alert.enterprise ?? alert.requester,
           summary: `${actor} marked ${alert.id} (${alert.type}) as ${status}.`,
@@ -40,7 +40,24 @@ export const useAlertStore = create<AlertState>()(
     }),
     {
       name: "tanaw-alerts",
-      version: 1,
+      version: 2,
+      migrate: (persistedState) => {
+        const state = persistedState as { alerts?: PriorityAlert[] } | undefined;
+        return {
+          alerts: removeSystemHealthAlerts(state?.alerts ?? initialPriorityAlerts),
+        };
+      },
+      merge: (persistedState, currentState) => {
+        const state = persistedState as { alerts?: PriorityAlert[] } | undefined;
+        return {
+          ...currentState,
+          alerts: removeSystemHealthAlerts(state?.alerts ?? currentState.alerts),
+        };
+      },
     },
   ),
 );
+
+function removeSystemHealthAlerts(alerts: PriorityAlert[]) {
+  return alerts.filter((alert) => alert.type.toString() !== "System Health");
+}

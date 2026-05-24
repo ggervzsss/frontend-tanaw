@@ -20,6 +20,7 @@ export type {
   PipelineAlert,
   PipelineHealth,
   PriorityAlert,
+  PriorityAlertOwner,
   PriorityAlertResolutionMode,
   PriorityAlertStatus,
   PriorityAlertType,

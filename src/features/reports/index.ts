@@ -1,1 +1,1 @@
-export { StaffBatchReportsPage, StaffFinalReportsAuditPage } from "./pages";
+export { StaffBatchReportsPage, StaffFinalReportsAuditPage, StaffSubmissionLogPage } from "./pages";

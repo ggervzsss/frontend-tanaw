@@ -1,31 +1,30 @@
 import { AlertTriangle, Bell, CheckCircle2, Clock3, Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
-import { useAlertStore } from "../../../app/store";
+import { useAlertStore, useAuthStore } from "../../../app/store";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
 import { PageMotion } from "../../../shared/components/ui";
-import type { AlertSeverity, PriorityAlert, PriorityAlertOwner, PriorityAlertStatus, PriorityAlertType } from "../../../shared/types";
+import type { AlertSeverity, PriorityAlert, PriorityAlertStatus, PriorityAlertType } from "../../../shared/types";
 import { AlertDetailsModal, AlertStatusBadge, ResolutionBadge, SeverityBadge } from "../components";
 
 type SeverityFilter = "All Severities" | AlertSeverity;
 type StatusFilter = "All Statuses" | PriorityAlertStatus;
 type TypeFilter = "All Types" | PriorityAlertType;
-type OwnerFilter = "All Owners" | PriorityAlertOwner;
 
 const severityFilters: SeverityFilter[] = ["All Severities", "Critical", "Warning", "Info"];
 const statusFilters: StatusFilter[] = ["All Statuses", "New", "In Review", "Resolved"];
-const typeFilters: TypeFilter[] = ["All Types", "Maintenance Request", "Password Reset Request", "Submission Delay", "Threshold Breach", "Foot Traffic Alert", "Occupancy Spike"];
-const ownerFilters: OwnerFilter[] = ["All Owners", "Admin", "IT", "System"];
+const typeFilters: TypeFilter[] = ["All Types", "Maintenance Request", "Password Reset Request"];
 
-export function AdminAlertsMonitorPage() {
-  const alerts = useAlertStore((state) => state.alerts);
+export function ITAlertsPage() {
+  const authUser = useAuthStore((state) => state.user);
+  const alerts = useAlertStore((state) => state.alerts).filter((alert) => alert.owner === "IT");
+  const updateAlertStatus = useAlertStore((state) => state.updateAlertStatus);
   const [query, setQuery] = useState("");
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("All Severities");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All Statuses");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("All Types");
-  const [ownerFilter, setOwnerFilter] = useState<OwnerFilter>("All Owners");
   const [selectedAlert, setSelectedAlert] = useState<PriorityAlert | null>(null);
 
   const filteredAlerts = useMemo(() => {
@@ -36,25 +35,28 @@ export function AdminAlertsMonitorPage() {
       const matchesSeverity = severityFilter === "All Severities" || alert.severity === severityFilter;
       const matchesStatus = statusFilter === "All Statuses" || alert.status === statusFilter;
       const matchesType = typeFilter === "All Types" || alert.type === typeFilter;
-      const matchesOwner = ownerFilter === "All Owners" || alert.owner === ownerFilter;
-      return matchesQuery && matchesSeverity && matchesStatus && matchesType && matchesOwner;
+      return matchesQuery && matchesSeverity && matchesStatus && matchesType;
     });
-  }, [alerts, ownerFilter, query, severityFilter, statusFilter, typeFilter]);
+  }, [alerts, query, severityFilter, statusFilter, typeFilter]);
 
   const activeAlerts = alerts.filter((alert) => alert.status !== "Resolved");
   const criticalAlerts = activeAlerts.filter((alert) => alert.severity === "Critical");
   const inReviewAlerts = alerts.filter((alert) => alert.status === "In Review");
   const resolvedAlerts = alerts.filter((alert) => alert.status === "Resolved");
 
+  const handleStatusChange = (alert: PriorityAlert, status: PriorityAlertStatus) => {
+    updateAlertStatus(alert.id, status, authUser?.displayName ?? "IT Personnel", "IT Personnel");
+  };
+
   return (
     <PageMotion>
-      <PageHeader title="Alerts" description="Read-only system-wide alert visibility for IT requests, enterprise issues, reporting delays, occupancy spikes, and monitoring events." />
+      <PageHeader title="Alerts" description="Technical alert queue for maintenance requests, CCTV or connection issues, password resets, and account-related concerns." />
 
       <motion.section className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
-        <MetricCard label="Active Alerts" value={activeAlerts.length} foot="Unresolved system-wide items" color="#dc2626" footClassName="text-red-600" icon={Bell} />
-        <MetricCard label="Critical Alerts" value={criticalAlerts.length} foot="Highest priority queue" color="#b91c1c" footClassName="text-red-600" icon={AlertTriangle} />
-        <MetricCard label="In Review" value={inReviewAlerts.length} foot="Currently being handled" color="#ca8a04" footClassName="text-yellow-700" icon={Clock3} />
-        <MetricCard label="Resolved" value={resolvedAlerts.length} foot="Closed alert records" color="#065f46" icon={CheckCircle2} />
+        <MetricCard label="Active Alerts" value={activeAlerts.length} foot="Technical queue" color="#dc2626" footClassName="text-red-600" icon={Bell} />
+        <MetricCard label="Critical" value={criticalAlerts.length} foot="Requires urgent IT action" color="#b91c1c" footClassName="text-red-600" icon={AlertTriangle} />
+        <MetricCard label="In Review" value={inReviewAlerts.length} foot="Currently assigned or triaged" color="#ca8a04" footClassName="text-yellow-700" icon={Clock3} />
+        <MetricCard label="Resolved" value={resolvedAlerts.length} foot="Closed by IT" color="#065f46" icon={CheckCircle2} />
       </motion.section>
 
       <Panel className="mt-6 overflow-hidden">
@@ -71,7 +73,6 @@ export function AdminAlertsMonitorPage() {
           <FilterSelect value={severityFilter} onChange={(value) => setSeverityFilter(value as SeverityFilter)} options={severityFilters} />
           <FilterSelect value={statusFilter} onChange={(value) => setStatusFilter(value as StatusFilter)} options={statusFilters} />
           <FilterSelect value={typeFilter} onChange={(value) => setTypeFilter(value as TypeFilter)} options={typeFilters} />
-          <FilterSelect value={ownerFilter} onChange={(value) => setOwnerFilter(value as OwnerFilter)} options={ownerFilters} />
         </div>
 
         <div className="overflow-x-auto">
@@ -87,7 +88,7 @@ export function AdminAlertsMonitorPage() {
             </colgroup>
             <thead className="bg-gray-50 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
               <tr>
-                {["Alert ID", "Type", "Priority", "Source", "Required Action", "Status", "Owner"].map((heading) => (
+                {["Alert ID", "Type", "Priority", "Source", "Required Action", "Status", "IT Actions"].map((heading) => (
                   <th key={heading} className="px-4 py-4 whitespace-nowrap">
                     {heading}
                   </th>
@@ -120,14 +121,21 @@ export function AdminAlertsMonitorPage() {
                     <div className="mt-2 text-[10px] font-bold tracking-wide text-gray-400 uppercase">{alert.time}</div>
                   </td>
                   <td className="px-4 py-4">
-                    <OwnerBadge owner={alert.owner} />
+                    <div className="flex flex-col gap-2">
+                      <StatusButton disabled={alert.status === "In Review" || alert.status === "Resolved"} onClick={() => handleStatusChange(alert, "In Review")}>
+                        Review
+                      </StatusButton>
+                      <StatusButton disabled={alert.status === "Resolved"} onClick={() => handleStatusChange(alert, "Resolved")}>
+                        Resolve
+                      </StatusButton>
+                    </div>
                   </td>
                 </tr>
               ))}
               {filteredAlerts.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
-                    No alerts match the current filters.
+                    No IT alerts match the current filters.
                   </td>
                 </tr>
               )}
@@ -137,7 +145,7 @@ export function AdminAlertsMonitorPage() {
 
         <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-4 py-3 text-[10px] font-bold tracking-wide text-gray-500 uppercase">
           <span>Showing {filteredAlerts.length} alerts</span>
-          <span>{alerts.length} total alerts</span>
+          <span>{alerts.length} IT-owned alerts</span>
         </div>
       </Panel>
 
@@ -156,11 +164,18 @@ function FilterSelect({ value, onChange, options }: { value: string; onChange: (
   );
 }
 
-function OwnerBadge({ owner }: { owner: PriorityAlertOwner }) {
-  const classes: Record<PriorityAlertOwner, string> = {
-    Admin: "border-indigo-200 bg-indigo-50 text-indigo-700",
-    IT: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    System: "border-gray-200 bg-gray-100 text-gray-600",
-  };
-  return <span className={`rounded border px-2.5 py-1 text-[10px] font-bold tracking-wide whitespace-nowrap uppercase ${classes[owner]}`}>{owner}</span>;
+function StatusButton({ children, disabled, onClick }: { children: string; disabled: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick();
+      }}
+      className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-[10px] font-bold tracking-wide text-gray-600 uppercase transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+    >
+      {children}
+    </button>
+  );
 }

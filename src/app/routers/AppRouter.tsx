@@ -1,12 +1,12 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { AdminAlertsMonitorPage } from "../../features/alerts-monitor";
+import { AdminAlertsMonitorPage, ITAlertsPage } from "../../features/alerts-monitor";
 import { StaffAnalyticsPage } from "../../features/analytics";
 import { ITDashboardPage } from "../../features/dashboard";
 import { ITEnterpriseAccountsPage } from "../../features/enterprise-accounts";
 import { ITLguAccountsPage } from "../../features/lgu-accounts";
 import { LoginPage } from "../../features/login";
 import { AdminMapViewPage } from "../../features/mapview";
-import { StaffBatchReportsPage, StaffFinalReportsAuditPage } from "../../features/reports";
+import { StaffBatchReportsPage, StaffFinalReportsAuditPage, StaffSubmissionLogPage } from "../../features/reports";
 import { ITSystemSettingsPage } from "../../features/system-settings";
 import { AdminSystemLogsPage, ITSystemLogsPage } from "../../features/system-logs";
 import { AccountLayout } from "../../shared/components/layout";
@@ -38,6 +38,7 @@ export function AppRouter() {
         <Route path="dashboard" element={<ITDashboardPage />} />
         <Route path="lgu-accounts" element={<ITLguAccountsPage />} />
         <Route path="enterprise-accounts" element={<ITEnterpriseAccountsPage />} />
+        <Route path="alerts" element={<ITAlertsPage />} />
         <Route path="system-logs" element={<ITSystemLogsPage />} />
         <Route path="system-settings" element={<ITSystemSettingsPage />} />
       </Route>
@@ -66,6 +67,7 @@ export function AppRouter() {
       >
         <Route index element={<Navigate to={routes.staff.analytics} replace />} />
         <Route path="batch-reports" element={<StaffBatchReportsPage />} />
+        <Route path="submission-log" element={<StaffSubmissionLogPage />} />
         <Route path="final-reports-audit" element={<StaffFinalReportsAuditPage />} />
         <Route path="analytics" element={<StaffAnalyticsPage />} />
       </Route>

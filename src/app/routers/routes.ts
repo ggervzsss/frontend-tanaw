@@ -6,6 +6,7 @@ export const routes = {
     dashboard: "/it/dashboard",
     lguAccounts: "/it/lgu-accounts",
     enterpriseAccounts: "/it/enterprise-accounts",
+    alerts: "/it/alerts",
     systemLogs: "/it/system-logs",
     systemSettings: "/it/system-settings",
   },
@@ -18,6 +19,7 @@ export const routes = {
   staff: {
     root: "/staff",
     batchReports: "/staff/batch-reports",
+    submissionLog: "/staff/submission-log",
     finalReportsAudit: "/staff/final-reports-audit",
     analytics: "/staff/analytics",
   },

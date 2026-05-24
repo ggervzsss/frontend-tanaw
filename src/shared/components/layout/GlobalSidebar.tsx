@@ -1,8 +1,4 @@
-import { LogOut } from "lucide-react";
-import { NavLink, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
-import { useAuthStore } from "../../../app/store/authStore";
-import { routes } from "../../../app/routers/routes";
+import { NavLink } from "react-router-dom";
 import { CITY_SEAL } from "../../constants/branding";
 import type { UserRole } from "../../types/role.types";
 import { roleNavigation, rolePortalLabel } from "./navigation";
@@ -12,15 +8,6 @@ type GlobalSidebarProps = {
 };
 
 export function GlobalSidebar({ role }: GlobalSidebarProps) {
-  const logout = useAuthStore((state) => state.logout);
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    toast.success("Secure logout complete.");
-    navigate(routes.login, { replace: true });
-  };
-
   return (
     <aside className="bg-tanaw-green z-20 flex h-full w-64 flex-col rounded-r-4xl border-r border-white/10 text-white shadow-2xl max-[920px]:h-auto max-[920px]:w-full max-[920px]:rounded-none">
       <div className="mt-4 flex flex-col items-center border-b border-white/10 p-6 max-[920px]:mt-0">
@@ -49,17 +36,6 @@ export function GlobalSidebar({ role }: GlobalSidebarProps) {
           );
         })}
       </nav>
-
-      <div className="mb-4 border-t border-white/10 p-6 max-[920px]:mb-0">
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="text-tanaw-peach hover:bg-tanaw-red flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 hover:text-white active:scale-[0.99]"
-        >
-          <LogOut size={18} />
-          Sign Out Session
-        </button>
-      </div>
     </aside>
   );
 }

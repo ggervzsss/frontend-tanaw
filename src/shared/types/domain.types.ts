@@ -1,6 +1,6 @@
 export type EnterpriseStatus = "Normal" | "Warning" | "Critical";
 export type CameraStatus = "Online" | "Offline" | "Unstable";
-export type GatewayStatus = "Connected" | "Offline" | "Closed";
+export type GatewayStatus = "Connected" | "Sync Delayed" | "Offline" | "Not Linked" | "Closed";
 export type AlertSeverity = "Info" | "Warning" | "Critical";
 export type LogSeverity = AlertSeverity | "Success";
 
@@ -8,18 +8,18 @@ export type MapEnterprise = {
   id: number;
   name: string;
   barangay: string;
-  type: string;
-  address: string;
+  category: string;
+  fullAddress: string;
   lat: number;
   lng: number;
-  visitorCount: number;
+  totalLiveOccupancy: number;
+  estimatedUniqueCount: number;
   status: EnterpriseStatus;
-  topSegment: string;
-  localVisitors: number;
-  nonLocalVisitors: number;
-  maleVisitors: number;
-  femaleVisitors: number;
-  totalTourists: number;
+  operatingHours?: string;
+  contact?: string;
+  trend?: "Up" | "Stable" | "Down";
+  lastSync?: string;
+  gatewayStatus?: GatewayStatus;
 };
 
 export type Enterprise = {

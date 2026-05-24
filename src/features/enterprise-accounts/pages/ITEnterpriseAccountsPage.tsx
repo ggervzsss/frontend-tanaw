@@ -13,7 +13,7 @@ import type { CameraStatus, EnterpriseAccount, GatewayStatus } from "../../../sh
 type StatusFilter = "All Statuses" | GatewayStatus;
 type CategoryFilter = "All Categories" | string;
 
-const statusFilters: StatusFilter[] = ["All Statuses", "Connected", "Offline", "Closed"];
+const statusFilters: StatusFilter[] = ["All Statuses", "Connected", "Sync Delayed", "Offline", "Not Linked", "Closed"];
 
 export function ITEnterpriseAccountsPage() {
   const [accounts, setAccounts] = useState<EnterpriseAccount[]>(enterpriseAccounts);
@@ -211,6 +211,7 @@ function EnterpriseDetailsModal({ enterprise, onClose }: { enterprise: Enterpris
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Detail label="Registered Address" value={enterprise.address} />
           <Detail label="Enterprise Category" value={enterprise.category} />
           <Detail label="Contact Manager" value={enterprise.managerName} />
           <Detail label="Contact Email" value={enterprise.email} />
@@ -475,7 +476,9 @@ function RegisterEnterpriseModal({ onClose }: { onClose: () => void }) {
           <span className="mb-1 block text-[10px] font-bold text-gray-500 uppercase">Status</span>
           <select className="focus:ring-tgreen-dark w-full rounded-lg border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-1">
             <option>Connected</option>
+            <option>Sync Delayed</option>
             <option>Offline</option>
+            <option>Not Linked</option>
             <option>Closed</option>
           </select>
         </label>
@@ -556,7 +559,9 @@ function FormField({ label }: { label: string }) {
 function GatewayBadge({ status }: { status: GatewayStatus }) {
   const classes: Record<GatewayStatus, string> = {
     Connected: "bg-emerald-50 text-emerald-700",
+    "Sync Delayed": "bg-yellow-50 text-yellow-700",
     Offline: "bg-red-50 text-red-700",
+    "Not Linked": "bg-gray-100 text-gray-600",
     Closed: "bg-slate-100 text-slate-600",
   };
   return <span className={`rounded-full px-3 py-1 text-[10px] font-bold whitespace-nowrap uppercase ${classes[status]}`}>{status}</span>;

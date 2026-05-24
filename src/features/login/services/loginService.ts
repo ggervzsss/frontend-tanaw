@@ -1,4 +1,5 @@
 import type { AuthUser } from "../../../shared/types/role.types";
+import { apiClient } from "../../../shared/lib/apiClient";
 
 export type LoginCredentials = {
   clientId: string;
@@ -11,10 +12,14 @@ export type LoginServiceResponse = {
 };
 
 export async function loginService(_credentials: LoginCredentials): Promise<LoginServiceResponse> {
-  void _credentials;
-  throw new Error("loginService - real backend not yet integrated.");
+  const response = await apiClient.post<LoginServiceResponse>("/auth/login", {
+    username: _credentials.clientId,
+    password: _credentials.encryptionKey,
+  });
+
+  return response.data;
 }
 
 export async function logoutService(): Promise<void> {
-  throw new Error("logoutService - real backend not yet integrated.");
+  return Promise.resolve();
 }

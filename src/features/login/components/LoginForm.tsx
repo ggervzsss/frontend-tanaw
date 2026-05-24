@@ -15,11 +15,10 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
         <input
           id="client-id"
           name="clientId"
-          type="text"
+          type="email"
           placeholder="username"
           className="text-charcoal-800 w-full rounded-2xl border border-[#f3f4f6] bg-[#f9fafb] px-5 py-4 text-sm font-semibold transition-shadow outline-none focus:shadow-[0_0_0_2px_#055b25]"
         />
-        <p className="mt-2 text-[10px] font-semibold text-[#9ca3af]">Try admin_001, staff_001, or it_001</p>
       </div>
 
       <div className="mb-6">

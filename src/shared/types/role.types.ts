@@ -2,6 +2,7 @@ export type UserRole = "it" | "admin" | "staff";
 
 export type AuthUser = {
   id: string;
+  email: string;
   displayName: string;
   role: UserRole;
   title: string;

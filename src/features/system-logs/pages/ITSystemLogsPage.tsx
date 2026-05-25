@@ -5,49 +5,49 @@ import { useMemo, useState } from "react";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
 import { EmptyState, ModalPortal, PageMotion } from "../../../shared/components/ui";
-import { systemActivities } from "../../../shared/data";
-import type { SystemActivity, SystemActivityType } from "../../../shared/types";
+import { useActivityLogs } from "../../../shared/hooks/useActivityLogs";
+import type { SystemLog, SystemLogCategory } from "../../../shared/types";
 import { activityTimeRanges, isWithinActivityTimeRange } from "../../../shared/utils";
 import type { ActivityTimeRange } from "../../../shared/utils";
 
-const defaultTypeOptions = ["All Types", "LOGIN", "CONNECTION", "ACCOUNT CONFIG", "ENTERPRISE CONFIG", "IT ACTION", "SYSTEM"];
-const defaultAccountOptions = ["All Accounts", "LGU Account", "Enterprise Account", "IT Personnel", "System"];
+const defaultTypeOptions = ["All Types", "IT Activity", "System"];
+const defaultAccountOptions = ["All Accounts", "IT Personnel", "System"];
 
 export function ITSystemLogsPage() {
+  const { logs, isLoading } = useActivityLogs();
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("All Types");
   const [accountFilter, setAccountFilter] = useState("All Accounts");
   const [timeRange, setTimeRange] = useState<ActivityTimeRange>("All Time");
-  const [selectedActivity, setSelectedActivity] = useState<SystemActivity | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<SystemLog | null>(null);
 
-  const dynamicTypeOptions = useMemo(() => getTypeOptions(accountFilter), [accountFilter]);
-  const dynamicAccountOptions = useMemo(() => getAccountOptions(typeFilter), [typeFilter]);
+  const dynamicTypeOptions = useMemo(() => getTypeOptions(logs, accountFilter), [accountFilter, logs]);
+  const dynamicAccountOptions = useMemo(() => getAccountOptions(logs, typeFilter), [logs, typeFilter]);
 
   const handleTypeFilterChange = (value: string) => {
     setTypeFilter(value);
-    if (!getAccountOptions(value).includes(accountFilter)) {
+      if (!getAccountOptions(logs, value).includes(accountFilter)) {
       setAccountFilter("All Accounts");
     }
   };
 
   const handleAccountFilterChange = (value: string) => {
     setAccountFilter(value);
-    if (!getTypeOptions(value).includes(typeFilter)) {
+      if (!getTypeOptions(logs, value).includes(typeFilter)) {
       setTypeFilter("All Types");
     }
   };
 
   const filteredActivities = useMemo(() => {
-    return systemActivities.filter((activity) => {
-      const displayName = activity.enterprise ?? activity.accountName ?? activity.initiatedBy;
-      const haystack = `${activity.summary} ${displayName}`.toLowerCase();
+    return logs.filter((activity) => {
+      const haystack = `${activity.summary} ${activity.actor} ${activity.target} ${activity.action}`.toLowerCase();
       const matchesQuery = haystack.includes(query.trim().toLowerCase());
-      const matchesType = typeFilter === "All Types" || activity.type === typeFilter;
-      const matchesAccount = accountFilter === "All Accounts" || activity.actorType === accountFilter;
-      const matchesTimeRange = isWithinActivityTimeRange(activity.time, timeRange);
+      const matchesType = typeFilter === "All Types" || activity.category === typeFilter;
+      const matchesAccount = accountFilter === "All Accounts" || activity.actorRole === accountFilter;
+      const matchesTimeRange = isWithinActivityTimeRange(activity.timestamp, timeRange);
       return matchesQuery && matchesType && matchesAccount && matchesTimeRange;
     });
-  }, [query, typeFilter, accountFilter, timeRange]);
+  }, [accountFilter, logs, query, timeRange, typeFilter]);
 
   return (
     <PageMotion>
@@ -92,22 +92,22 @@ export function ITSystemLogsPage() {
             <tbody className="divide-y divide-gray-100 text-gray-800">
               {filteredActivities.map((activity) => (
                 <tr key={activity.id} onClick={() => setSelectedActivity(activity)} className="hover:bg-tgreen-dark/5 cursor-pointer transition">
-                  <td className="px-3 py-4 font-mono text-xs whitespace-nowrap text-gray-500 lg:px-4">{activity.time}</td>
+                  <td className="px-3 py-4 font-mono text-xs whitespace-nowrap text-gray-500 lg:px-4">{formatLogTimestamp(activity.timestamp)}</td>
                   <td className="px-3 py-4 whitespace-nowrap lg:px-4">
-                    <TypeBadge type={activity.type} />
+                    <TypeBadge type={activity.category} />
                   </td>
                   <td className="px-3 py-4 text-xs whitespace-nowrap lg:px-4">
-                    <span className="block truncate font-bold text-gray-900">{activity.initiatedBy}</span>
-                    <span className="text-[10px] font-semibold text-gray-500 uppercase">{activity.actorType}</span>
+                    <span className="block truncate font-bold text-gray-900">{activity.actor}</span>
+                    <span className="text-[10px] font-semibold text-gray-500 uppercase">{activity.actorRole}</span>
                   </td>
-                  <td className="truncate px-3 py-4 text-xs whitespace-nowrap text-gray-600 lg:px-4">{activity.target ?? activity.enterprise ?? activity.accountName ?? "System"}</td>
+                  <td className="truncate px-3 py-4 text-xs whitespace-nowrap text-gray-600 lg:px-4">{activity.target}</td>
                   <td className="px-3 py-4 text-xs leading-relaxed text-gray-600 lg:px-4">{activity.summary}</td>
                 </tr>
               ))}
               {filteredActivities.length === 0 && (
                 <tr>
                   <td colSpan={5}>
-                    <EmptyState icon={Activity} title="No system activity" description="System activity records will appear here once users, devices, and automated events are connected." />
+                    <EmptyState icon={Activity} title={isLoading ? "Loading system activity" : "No system activity"} description={isLoading ? "Fetching live IT and system activity." : "System activity records will appear here once users, accounts, and automated events are connected."} />
                   </td>
                 </tr>
               )}
@@ -125,17 +125,17 @@ export function ITSystemLogsPage() {
   );
 }
 
-function getTypeOptions(accountFilter: string) {
+function getTypeOptions(logs: SystemLog[], accountFilter: string) {
   if (accountFilter === "All Accounts") return defaultTypeOptions;
-  const relevantActivities = systemActivities.filter((activity) => activity.actorType === accountFilter);
-  const types = new Set(relevantActivities.map((activity) => activity.type));
+  const relevantActivities = logs.filter((activity) => activity.actorRole === accountFilter);
+  const types = new Set(relevantActivities.map((activity) => activity.category));
   return ["All Types", ...Array.from(types).sort()];
 }
 
-function getAccountOptions(typeFilter: string) {
+function getAccountOptions(logs: SystemLog[], typeFilter: string) {
   if (typeFilter === "All Types") return defaultAccountOptions;
-  const relevantActivities = systemActivities.filter((activity) => activity.type === typeFilter);
-  const accounts = new Set(relevantActivities.map((activity) => activity.actorType));
+  const relevantActivities = logs.filter((activity) => activity.category === typeFilter);
+  const accounts = new Set(relevantActivities.map((activity) => activity.actorRole));
   return ["All Accounts", ...Array.from(accounts).sort()];
 }
 
@@ -149,9 +149,7 @@ function FilterSelect({ value, onChange, options }: { value: string; onChange: (
   );
 }
 
-function ActivityDetailsModal({ activity, onClose }: { activity: SystemActivity; onClose: () => void }) {
-  const relatedEntity = activity.enterprise ? <Detail label="Enterprise" value={activity.enterprise} /> : activity.accountName ? <Detail label="Account" value={activity.accountName} /> : null;
-
+function ActivityDetailsModal({ activity, onClose }: { activity: SystemLog; onClose: () => void }) {
   return (
     <ModalPortal>
       <motion.div className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -172,12 +170,11 @@ function ActivityDetailsModal({ activity, onClose }: { activity: SystemActivity;
             </button>
           </header>
           <div className="grid gap-4 p-6 md:grid-cols-2">
-            <Detail label="Type" value={activity.type} />
-            <Detail label="Actor" value={`${activity.initiatedBy} (${activity.actorType})`} />
-            <Detail label="Timestamp" value={activity.time} />
-            <Detail label="Target" value={activity.target ?? "N/A"} />
-            {relatedEntity}
-            {activity.device && <Detail label="Device" value={activity.device} />}
+            <Detail label="Type" value={activity.category} />
+            <Detail label="Actor" value={`${activity.actor} (${activity.actorRole})`} />
+            <Detail label="Timestamp" value={formatLogTimestamp(activity.timestamp)} />
+            <Detail label="Target" value={activity.target} />
+            <Detail label="Action" value={activity.action} />
             <div className="md:col-span-2">
               <Detail label="Summary" value={activity.summary} />
             </div>
@@ -188,14 +185,13 @@ function ActivityDetailsModal({ activity, onClose }: { activity: SystemActivity;
   );
 }
 
-function TypeBadge({ type }: { type: SystemActivityType }) {
-  const classes: Record<SystemActivityType, string> = {
-    LOGIN: "bg-blue-50 text-blue-700",
-    CONNECTION: "bg-emerald-50 text-emerald-700",
-    "ACCOUNT CONFIG": "bg-indigo-50 text-indigo-700",
-    "ENTERPRISE CONFIG": "bg-cyan-50 text-cyan-700",
-    "IT ACTION": "bg-violet-50 text-violet-700",
-    SYSTEM: "bg-slate-100 text-slate-700",
+function TypeBadge({ type }: { type: SystemLogCategory }) {
+  const classes: Record<SystemLogCategory, string> = {
+    "IT Activity": "bg-violet-50 text-violet-700",
+    "Staff Submission": "bg-teal-50 text-teal-700",
+    "Staff Operation": "bg-emerald-50 text-emerald-700",
+    "Admin Operation": "bg-indigo-50 text-indigo-700",
+    System: "bg-slate-100 text-slate-700",
   };
   return <span className={`rounded-full px-3 py-1 text-[10px] font-bold whitespace-nowrap uppercase ${classes[type]}`}>{type}</span>;
 }
@@ -207,4 +203,9 @@ function Detail({ label, value }: { label: string; value: ReactNode }) {
       <p className="text-sm leading-relaxed font-semibold text-gray-900">{value}</p>
     </div>
   );
+}
+
+function formatLogTimestamp(timestamp: string) {
+  const date = new Date(timestamp);
+  return Number.isNaN(date.getTime()) ? timestamp : date.toLocaleString();
 }

@@ -1,4 +1,5 @@
 import { Bell, ChevronDown, LogOut, Shield, User } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
@@ -6,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { routes } from "../../../app/routers/routes";
 import { useAuthStore } from "../../../app/store/authStore";
 import { useHeaderStore } from "../../../app/store/headerStore";
+import { logoutService } from "../../../features/login/services";
 import { getRoleProfilePath, getRoleSecurityPath } from "../../utils";
 import type { UserRole } from "../../types/role.types";
 import { roleAccessLabel } from "./navigation";
@@ -19,6 +21,7 @@ export function GlobalHeader({ role }: GlobalHeaderProps) {
   const logout = useAuthStore((state) => state.logout);
   const { title, description } = useHeaderStore();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const profile = {
@@ -39,11 +42,18 @@ export function GlobalHeader({ role }: GlobalHeaderProps) {
     [profile.name],
   );
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setShowProfileMenu(false);
-    logout();
-    toast.success("Secure logout complete.");
-    navigate(routes.login, { replace: true });
+    try {
+      await logoutService();
+    } catch {
+      toast.error("Logout log was not recorded, but your local session was cleared.");
+    } finally {
+      queryClient.removeQueries({ queryKey: ["current-user"] });
+      logout();
+      toast.success("Secure logout complete.");
+      navigate(routes.login, { replace: true });
+    }
   };
 
   const openAccountPage = (page: "profile" | "security") => {

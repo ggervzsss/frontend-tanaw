@@ -1,4 +1,5 @@
 import type { FormEvent } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../app/store/authStore";
@@ -7,6 +8,7 @@ import { loginService } from "../services";
 
 export function useLogin() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const setSession = useAuthStore((state) => state.setSession);
 
   const handleLoginSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -17,6 +19,7 @@ export function useLogin() {
 
     try {
       const session = await loginService({ clientId, encryptionKey });
+      queryClient.removeQueries({ queryKey: ["current-user"] });
       setSession(session);
       if (session.user.mustChangePassword) {
         toast.success("Temporary credentials verified");

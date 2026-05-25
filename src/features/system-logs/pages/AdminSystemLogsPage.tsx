@@ -2,11 +2,11 @@ import { Activity, AlertTriangle, Search, ShieldCheck, UserCog, Users } from "lu
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
-import { useSystemLogStore } from "../../../app/store";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
 import { EmptyState, ModalPortal, PageMotion, stagger } from "../../../shared/components/ui";
+import { useActivityLogs } from "../../../shared/hooks/useActivityLogs";
 import type { LogSeverity, SystemLog, SystemLogActorRole, SystemLogCategory } from "../../../shared/types";
 import { activityTimeRanges, isWithinActivityTimeRange } from "../../../shared/utils";
 import type { ActivityTimeRange } from "../../../shared/utils";
@@ -20,7 +20,7 @@ const actorFilters: ActorFilter[] = ["All Actors", "Admin", "IT Personnel", "LGU
 const severityFilters: SeverityFilter[] = ["All Severities", "Critical", "Warning", "Info", "Success"];
 
 export function AdminSystemLogsPage() {
-  const logs = useSystemLogStore((state) => state.logs);
+  const { logs, isLoading } = useActivityLogs();
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("All Categories");
   const [actorFilter, setActorFilter] = useState<ActorFilter>("All Actors");
@@ -118,7 +118,7 @@ export function AdminSystemLogsPage() {
               {filteredLogs.length === 0 && (
                 <tr>
                   <td colSpan={6}>
-                    <EmptyState icon={Activity} title="No system logs" description="Centralized audit records will appear here once backend logging is connected." />
+                    <EmptyState icon={Activity} title={isLoading ? "Loading working logs" : "No working logs"} description={isLoading ? "Fetching live activity records." : "Centralized audit records will appear here once system activity is recorded."} />
                   </td>
                 </tr>
               )}

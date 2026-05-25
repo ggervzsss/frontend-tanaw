@@ -6,6 +6,7 @@ import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
 import { EmptyState, PageMotion } from "../../../shared/components/ui";
+import { recordActivityLog } from "../../../shared/services/activityLogs";
 import type { AlertSeverity, PriorityAlert, PriorityAlertStatus, PriorityAlertType } from "../../../shared/types";
 import { AlertDetailsModal, AlertStatusBadge, ResolutionBadge, SeverityBadge } from "../components";
 
@@ -48,6 +49,19 @@ export function ITAlertsPage() {
 
   const handleStatusChange = (alert: PriorityAlert, status: PriorityAlertStatus) => {
     updateAlertStatus(alert.id, status, authUser?.displayName ?? "IT Personnel", "IT Personnel");
+    void recordActivityLog({
+      category: "IT Activity",
+      severity: status === "Resolved" ? "Success" : alert.severity,
+      action: `Alert ${status}`,
+      target: alert.enterprise ?? alert.requester,
+      summary: `${authUser?.displayName ?? "IT Personnel"} marked ${alert.id} (${alert.type}) as ${status}.`,
+      sourceId: alert.id,
+      metadata: {
+        previousStatus: alert.status,
+        newStatus: status,
+        resolutionMode: alert.resolutionMode,
+      },
+    });
   };
 
   return (

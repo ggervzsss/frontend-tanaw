@@ -22,5 +22,5 @@ export async function loginService(_credentials: LoginCredentials): Promise<Logi
 }
 
 export async function logoutService(): Promise<void> {
-  return Promise.resolve();
+  await apiClient.post("/auth/logout");
 }

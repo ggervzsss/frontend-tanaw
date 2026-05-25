@@ -50,6 +50,12 @@ export const roleNavigation: Record<UserRole, NavigationItem[]> = {
       path: routes.staff.finalReportsAudit,
       icon: FileCheck2,
     },
+    {
+      id: "system-logs",
+      label: "Activity Logs",
+      path: routes.staff.systemLogs,
+      icon: FileText,
+    },
   ],
   it: [
     {

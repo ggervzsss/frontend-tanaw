@@ -1,5 +1,8 @@
 import { useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Outlet, useLocation } from "react-router-dom";
+import { useAuthStore } from "../../../app/store/authStore";
+import { getCurrentUser } from "../../services/accountManagement";
 import type { UserRole } from "../../types/role.types";
 import { GlobalHeader } from "./GlobalHeader";
 import { GlobalSidebar } from "./GlobalSidebar";
@@ -11,6 +14,21 @@ type AccountLayoutProps = {
 export function AccountLayout({ role }: AccountLayoutProps) {
   const mainRef = useRef<HTMLElement>(null);
   const { pathname } = useLocation();
+  const token = useAuthStore((state) => state.token);
+  const updateUser = useAuthStore((state) => state.updateUser);
+
+  const currentUserQuery = useQuery({
+    queryKey: ["current-user", token],
+    queryFn: getCurrentUser,
+    enabled: Boolean(token),
+    staleTime: 60_000,
+  });
+
+  useEffect(() => {
+    if (currentUserQuery.data) {
+      updateUser(currentUserQuery.data);
+    }
+  }, [currentUserQuery.data, updateUser]);
 
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0, left: 0 });

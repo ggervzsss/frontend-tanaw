@@ -16,6 +16,11 @@ type ProfileUser = {
   email: string;
   department: string;
   phone: string;
+  enterpriseName: string;
+  enterpriseId: string;
+  category: string;
+  barangay: string;
+  address: string;
 };
 
 type ThemePreference = "light" | "dark" | "system";
@@ -43,10 +48,15 @@ function useAccountProfile(): ProfileUser {
   const authUser = useAuthStore((state) => state.user);
 
   return {
-    name: authUser?.displayName ?? "TANAW User",
+    name: authUser?.managerName ?? authUser?.displayName ?? "TANAW User",
     email: authUser?.email ?? "",
     department: authUser?.title ?? "City Tourism Operations",
-    phone: "",
+    phone: authUser?.phone ?? "",
+    enterpriseName: authUser?.enterpriseName ?? "",
+    enterpriseId: authUser?.enterpriseId ?? "",
+    category: authUser?.category ?? "",
+    barangay: authUser?.barangay ?? "",
+    address: authUser?.address ?? "",
   };
 }
 
@@ -55,7 +65,13 @@ export function AccountProfilePage({ role }: AccountPageProps) {
   const user = useAccountProfile();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const identity = roleIdentity[role];
+  const identity = {
+    node: role === "enterprise" ? user.enterpriseName || "Enterprise Account" : roleIdentity[role].node,
+    affiliation:
+      role === "enterprise"
+        ? [user.category || "Registered Enterprise", user.barangay ? `Barangay ${user.barangay}` : ""].filter(Boolean).join(" - ")
+        : roleIdentity[role].affiliation,
+  };
   const initials = useMemo(
     () =>
       user.name
@@ -105,10 +121,12 @@ export function AccountProfilePage({ role }: AccountPageProps) {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Full Name" defaultValue={user.name} />
-              <Field label="Professional Email" defaultValue={user.email} type="email" />
-              <Field label="Department" defaultValue={user.department} />
+              <Field label={role === "enterprise" ? "Contact Person / Manager" : "Full Name"} defaultValue={user.name} />
+              <Field label={role === "enterprise" ? "Business Email" : "Professional Email"} defaultValue={user.email} type="email" />
+              <Field label={role === "enterprise" ? "Enterprise Name" : "Department"} defaultValue={role === "enterprise" ? user.enterpriseName : user.department} />
               <Field label="Phone" defaultValue={user.phone} type="tel" />
+              {role === "enterprise" && <Field label="Registered Address" defaultValue={user.address} />}
+              {role === "enterprise" && <Field label="Barangay" defaultValue={user.barangay} />}
             </div>
           </div>
         </Panel>
@@ -119,7 +137,7 @@ export function AccountProfilePage({ role }: AccountPageProps) {
             <div className="grid gap-4 md:grid-cols-3">
               <ReadOnlyField label="Current Node" value={identity.node} />
               <ReadOnlyField label="Affiliation" value={identity.affiliation} />
-              <ReadOnlyField label="Directory ID" value={authUser?.id ?? "Not assigned"} />
+              <ReadOnlyField label={role === "enterprise" ? "Enterprise ID" : "Directory ID"} value={role === "enterprise" ? user.enterpriseId || "Not assigned" : authUser?.id ?? "Not assigned"} />
             </div>
             <p className="mt-4 text-xs font-medium text-slate-500">Structural role and affiliation changes are controlled through LGU account management.</p>
           </div>
@@ -286,6 +304,7 @@ function Field({ label, defaultValue, type = "text", placeholder }: { label: str
     <label className="block">
       <span className="mb-2 block text-xs font-bold tracking-wide text-slate-500 uppercase">{label}</span>
       <input
+        key={`${label}-${defaultValue}`}
         type={type}
         defaultValue={defaultValue}
         placeholder={placeholder}

@@ -1,8 +1,9 @@
 import L, { type GeoJSONOptions, type Layer } from "leaflet";
-import { Activity, ArrowLeft, Building2, ChevronDown, Clock, Map as MapIcon, MapPin, PanelLeftClose, PanelLeftOpen, Phone, Radio, Search, TrendingUp, Users, X } from "lucide-react";
+import { Activity, ArrowLeft, Building2, ChevronDown, Clock, Map as MapIcon, MapPin, PanelLeftClose, PanelLeftOpen, Phone, Radio, RefreshCw, Search, TrendingUp, Users, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAuthStore } from "../../../app/store/authStore";
 import { ModalPortal } from "../../../shared/components/ui";
 import { listEnterpriseAccounts, type AccountSummary } from "../../../shared/services/accountManagement";
 import type { EnterpriseStatus, GatewayStatus, MapEnterprise } from "../../../shared/types";
@@ -100,10 +101,12 @@ export function AdminEnterpriseMap() {
   const [selectedBarangayName, setSelectedBarangayName] = useState<string | null>(null);
   const [selectedEnterpriseId, setSelectedEnterpriseId] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const enterpriseAccountsQuery = useQuery({ queryKey: ["enterprise-accounts"], queryFn: listEnterpriseAccounts });
+  const token = useAuthStore((state) => state.token);
+  const enterpriseAccountsQuery = useQuery({ queryKey: ["enterprise-accounts", token], queryFn: listEnterpriseAccounts, enabled: Boolean(token) });
   const enterpriseAccounts = enterpriseAccountsQuery.data ?? [];
   const mapEnterprises = useMemo(() => enterpriseAccounts.map(toMapEnterprise).filter((enterprise): enterprise is MapEnterprise => enterprise !== null), [enterpriseAccounts]);
-  const unpinnedEnterpriseCount = enterpriseAccounts.filter((enterprise) => enterprise.latitude === null || enterprise.longitude === null).length;
+  const unpinnedEnterprises = useMemo(() => enterpriseAccounts.filter((enterprise) => enterprise.latitude === null || enterprise.longitude === null), [enterpriseAccounts]);
+  const unpinnedEnterpriseCount = unpinnedEnterprises.length;
 
   const boundaryFeatureCount = useMemo(() => boundary?.features.filter(isBoundaryPolygonFeature).length ?? 0, [boundary]);
 
@@ -141,6 +144,10 @@ export function AdminEnterpriseMap() {
   }, [barangaySearch, boundary, enterpriseCountsByBarangay]);
 
   const selectedBarangayEnterprises = useMemo(() => (selectedBarangayName ? getEnterprisesByBarangay(mapEnterprises, selectedBarangayName) : []), [mapEnterprises, selectedBarangayName]);
+  const selectedBarangayUnpinnedEnterprises = useMemo(
+    () => (selectedBarangayName ? unpinnedEnterprises.filter((enterprise) => normalizeBarangayName(enterprise.barangay ?? "Unassigned") === normalizeBarangayName(selectedBarangayName)) : []),
+    [selectedBarangayName, unpinnedEnterprises],
+  );
   const visibleEnterprises = selectedBarangayName ? selectedBarangayEnterprises : mapEnterprises;
   const selectedEnterprise = selectedEnterpriseId === null ? null : (mapEnterprises.find((enterprise) => enterprise.id === selectedEnterpriseId) ?? null);
 
@@ -496,7 +503,9 @@ export function AdminEnterpriseMap() {
                         ? "Loading refined boundaries"
                         : isBoundaryError
                           ? "Boundary layer unavailable"
-                          : enterpriseAccountsQuery.isLoading
+                          : enterpriseAccountsQuery.isError
+                            ? "Enterprise registry unavailable"
+                            : enterpriseAccountsQuery.isLoading
                             ? "Loading enterprises"
                             : `${boundaryFeatureCount} barangay boundaries`}
                   </p>
@@ -597,7 +606,7 @@ export function AdminEnterpriseMap() {
                             ].join(" ")}
                           >
                             <span>All Barangays</span>
-                            <span className="rounded-sm bg-black/35 px-1.5 py-0.5 font-mono text-[8px] font-bold opacity-60">{mapEnterprises.length}</span>
+                            <span className="rounded-sm bg-black/35 px-1.5 py-0.5 font-mono text-[8px] font-bold opacity-60">{enterpriseAccounts.length}</span>
                           </button>
                           {barangayDirectoryItems.map((item) => (
                             <button
@@ -654,7 +663,7 @@ export function AdminEnterpriseMap() {
                           <p className="mt-1 text-[9px] font-bold tracking-widest text-white/65 uppercase">Enterprises within this barangay</p>
                         </div>
                         <span className="shrink-0 rounded border border-white/15 bg-black/35 px-2 py-1 font-mono text-[9px] font-black tracking-widest text-white uppercase">
-                          {selectedBarangayEnterprises.length}
+                          {selectedBarangayEnterprises.length + selectedBarangayUnpinnedEnterprises.length}
                         </span>
                       </div>
                     </div>
@@ -666,7 +675,7 @@ export function AdminEnterpriseMap() {
                           <Building2 size={13} className="text-tanaw-sky" />
                           Enterprises within this Barangay
                         </h3>
-                        <span className="text-[9px] font-bold tracking-widest text-white/65 uppercase">{selectedBarangayEnterprises.length}</span>
+                        <span className="text-[9px] font-bold tracking-widest text-white/65 uppercase">{selectedBarangayEnterprises.length + selectedBarangayUnpinnedEnterprises.length}</span>
                       </div>
                       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                         {selectedBarangayEnterprises.map((enterprise, index) => (
@@ -679,14 +688,17 @@ export function AdminEnterpriseMap() {
                             <EnterpriseMapCard enterprise={enterprise} selected={selectedEnterpriseId === enterprise.id} onClick={() => setSelectedEnterpriseId(enterprise.id)} />
                           </motion.div>
                         ))}
-                        {selectedBarangayEnterprises.length === 0 && (
+                        {selectedBarangayUnpinnedEnterprises.map((enterprise) => (
+                          <UnpinnedEnterpriseCard key={enterprise.id} enterprise={enterprise} />
+                        ))}
+                        {selectedBarangayEnterprises.length === 0 && selectedBarangayUnpinnedEnterprises.length === 0 && (
                           <motion.div
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.22, ease: "easeOut" }}
                             className="rounded-lg border border-white/15 bg-black/20 p-6 text-center text-[10px] font-bold tracking-widest text-white/65 uppercase"
                           >
-                            No registered enterprises found for this barangay yet.
+                            {enterpriseAccountsQuery.isError ? "Unable to load enterprise registry." : "No registered enterprises found for this barangay yet."}
                           </motion.div>
                         )}
                       </div>
@@ -716,8 +728,7 @@ export function AdminEnterpriseMap() {
                           All Enterprises
                         </h3>
                         <span className="text-[9px] font-bold tracking-widest text-white/65 uppercase">
-                          {mapEnterprises.length}
-                          {unpinnedEnterpriseCount > 0 ? ` pinned / ${unpinnedEnterpriseCount} unpinned` : ""}
+                          {unpinnedEnterpriseCount > 0 ? `${mapEnterprises.length} pinned / ${unpinnedEnterpriseCount} unpinned` : enterpriseAccounts.length}
                         </span>
                       </div>
                       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
@@ -732,9 +743,28 @@ export function AdminEnterpriseMap() {
                             }}
                           />
                         ))}
-                        {mapEnterprises.length === 0 && (
+                        {unpinnedEnterprises.map((enterprise) => (
+                          <UnpinnedEnterpriseCard key={enterprise.id} enterprise={enterprise} />
+                        ))}
+                        {enterpriseAccounts.length === 0 && (
                           <div className="rounded-lg border border-white/15 bg-black/20 p-6 text-center text-[10px] font-bold tracking-widest text-white/65 uppercase">
-                            {enterpriseAccountsQuery.isLoading ? "Loading enterprises..." : "No pinned enterprise locations yet."}
+                            {enterpriseAccountsQuery.isError ? (
+                              <div className="flex flex-col items-center gap-3">
+                                <span>Unable to load enterprise registry.</span>
+                                <button
+                                  type="button"
+                                  onClick={() => enterpriseAccountsQuery.refetch()}
+                                  className="focus:ring-tanaw-sky inline-flex items-center gap-1.5 rounded border border-white/20 bg-white/10 px-2 py-1 text-[9px] font-black tracking-widest text-white transition hover:bg-white/15 focus:ring-2 focus:outline-none"
+                                >
+                                  <RefreshCw size={11} />
+                                  Retry
+                                </button>
+                              </div>
+                            ) : enterpriseAccountsQuery.isLoading ? (
+                              "Loading enterprises..."
+                            ) : (
+                              "No pinned enterprise locations yet."
+                            )}
                           </div>
                         )}
                       </div>
@@ -874,6 +904,28 @@ function EnterpriseMapCard({ enterprise, selected, onClick }: { enterprise: MapE
         <span className="text-right font-bold text-white">{enterprise.estimatedUniqueCount.toLocaleString()}</span>
       </div>
     </button>
+  );
+}
+
+function UnpinnedEnterpriseCard({ enterprise }: { enterprise: AccountSummary }) {
+  return (
+    <div className="w-full rounded-lg border border-dashed border-white/15 bg-slate-950/25 p-3 text-left shadow-sm shadow-black/15">
+      <div className="mb-2 flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h4 className="text-[12px] leading-tight font-bold text-white">{enterprise.enterpriseName ?? enterprise.displayName}</h4>
+          <div className="mt-1 flex items-center gap-1.5 text-[9px] font-bold tracking-widest text-white/70 uppercase">
+            <MapPin size={10} className="shrink-0" />
+            <span className="truncate">{enterprise.address ?? enterprise.geocodedAddress ?? "Address not provided"}</span>
+          </div>
+        </div>
+        <span className="flex shrink-0 items-center rounded border border-amber-400/30 bg-amber-900/35 px-1.5 py-0.5 text-[9px] font-black tracking-widest text-amber-100 uppercase">Not Pinned</span>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2 border-t border-white/15 pt-2 font-mono text-[10px]">
+        <span className="truncate text-white/70">{enterprise.category ?? "Uncategorized"}</span>
+        <span className="truncate text-right font-bold text-white">{enterprise.barangay ?? "Unassigned"}</span>
+      </div>
+    </div>
   );
 }
 

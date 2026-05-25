@@ -1,8 +1,8 @@
 import L from "leaflet";
-import { Building2, Eye, KeyRound, LocateFixed, MapPin, Search, UserCheck, Users, XCircle } from "lucide-react";
+import { Building2, Check, ChevronDown, Eye, KeyRound, LocateFixed, MapPin, Search, UserCheck, Users, XCircle } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
@@ -171,6 +171,8 @@ function RegisterEnterpriseModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement | null>(null);
   const [location, setLocation] = useState<LocationDraft | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedBarangay, setSelectedBarangay] = useState("");
   const createMutation = useMutation({
     mutationFn: createEnterpriseAccount,
     onSuccess: async () => {
@@ -200,7 +202,7 @@ function RegisterEnterpriseModal({ onClose }: { onClose: () => void }) {
     if (!formRef.current) return;
 
     const formData = new FormData(formRef.current);
-    const barangay = findChoiceValue(String(formData.get("barangay") ?? ""), sanPedroBarangays.map((item): ChoiceOption => [item, item]));
+    const barangay = String(formData.get("barangay") ?? "");
     const address = String(formData.get("address") ?? "").trim();
 
     if (!barangay || !address) {
@@ -218,8 +220,8 @@ function RegisterEnterpriseModal({ onClose }: { onClose: () => void }) {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const category = findChoiceValue(String(formData.get("category") ?? ""), enterpriseCategories.map((item): ChoiceOption => [item.value, item.label]));
-    const barangay = findChoiceValue(String(formData.get("barangay") ?? ""), sanPedroBarangays.map((item): ChoiceOption => [item, item]));
+    const category = String(formData.get("category") ?? "");
+    const barangay = String(formData.get("barangay") ?? "");
 
     if (!category || !barangay) {
       toast.error("Choose a valid enterprise type and barangay from the list.");
@@ -252,13 +254,13 @@ function RegisterEnterpriseModal({ onClose }: { onClose: () => void }) {
     <ModalFrame title="Register Enterprise" onClose={onClose}>
       <form ref={formRef} onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <FormField name="enterpriseName" label="Enterprise Name" required />
-        <SearchableChoiceField name="category" label="Enterprise Type / Category" options={enterpriseCategories.map((category): ChoiceOption => [category.value, category.label])} required />
+        <SearchableDropdownField name="category" label="Enterprise Type / Category" options={enterpriseCategories.map((category): ChoiceOption => [category.value, category.label])} value={selectedCategory} onChange={setSelectedCategory} required />
         <FormField name="managerName" label="Contact Person / Manager" required />
         <FormField name="email" label="Contact Email" type="email" required />
         <FormField name="contactNumber" label="Contact Number" />
         <FormField name="enterpriseId" label="Enterprise ID Seed" placeholder="Leave blank to use enterprise name" />
         <FormField name="address" label="Block / Lot / Street" required />
-        <SearchableChoiceField name="barangay" label="Barangay" options={sanPedroBarangays.map((item): ChoiceOption => [item, item])} required />
+        <SearchableDropdownField name="barangay" label="Barangay" options={sanPedroBarangays.map((item): ChoiceOption => [item, item])} value={selectedBarangay} onChange={setSelectedBarangay} required />
         <div className="md:col-span-2">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -476,35 +478,140 @@ function FormField({ name, label, type = "text", required = false, placeholder }
   );
 }
 
-function SearchableChoiceField({ name, label, options, required = false }: { name: string; label: string; options: readonly ChoiceOption[]; required?: boolean }) {
-  const listId = `${name}-choices`;
+function SearchableDropdownField({
+  name,
+  label,
+  options,
+  value,
+  onChange,
+  required = false,
+}: {
+  name: string;
+  label: string;
+  options: readonly ChoiceOption[];
+  value: string;
+  onChange: (value: string) => void;
+  required?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [menuStyle, setMenuStyle] = useState<{ top: number; left: number; width: number; maxHeight: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const selectedOption = options.find(([optionValue]) => optionValue === value);
+  const filteredOptions = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+    if (!normalizedSearch) return options;
+    return options.filter(([optionValue, optionLabel]) => `${optionValue} ${optionLabel}`.toLowerCase().includes(normalizedSearch));
+  }, [options, search]);
+
+  const updateMenuPosition = useCallback(() => {
+    const button = buttonRef.current;
+    if (!button) return;
+
+    const rect = button.getBoundingClientRect();
+    const viewportPadding = 12;
+    const gap = 6;
+    const spaceBelow = window.innerHeight - rect.bottom - viewportPadding;
+    const spaceAbove = rect.top - viewportPadding;
+    const openAbove = spaceBelow < 240 && spaceAbove > spaceBelow;
+    const availableSpace = Math.max(openAbove ? spaceAbove : spaceBelow, 160);
+    const maxHeight = Math.min(280, availableSpace - gap);
+    const left = Math.max(viewportPadding, Math.min(rect.left, window.innerWidth - rect.width - viewportPadding));
+    const top = openAbove ? Math.max(viewportPadding, rect.top - maxHeight - gap) : Math.min(rect.bottom + gap, window.innerHeight - maxHeight - viewportPadding);
+
+    setMenuStyle({ top, left, width: rect.width, maxHeight });
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSearch("");
+      setMenuStyle(null);
+      return;
+    }
+
+    updateMenuPosition();
+    window.addEventListener("resize", updateMenuPosition);
+    window.addEventListener("scroll", updateMenuPosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updateMenuPosition);
+      window.removeEventListener("scroll", updateMenuPosition, true);
+    };
+  }, [isOpen, updateMenuPosition]);
+
+  const handleToggle = () => {
+    if (!isOpen) {
+      updateMenuPosition();
+    }
+    setIsOpen((current) => !current);
+  };
 
   return (
-    <label className="block">
+    <div className="relative">
       <span className="mb-1 block text-[10px] font-bold text-gray-500 uppercase">{label}</span>
-      <input
-        name={name}
-        list={listId}
-        required={required}
-        autoComplete="off"
-        placeholder={`Search ${label.toLowerCase()}`}
-        className="focus:ring-tgreen-dark w-full rounded-lg border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-1"
-      />
-      <datalist id={listId}>
-        {options.map(([optionValue, label]) => (
-          <option key={optionValue} value={label}>
-            {optionValue !== label ? optionValue : undefined}
-          </option>
-        ))}
-      </datalist>
-    </label>
-  );
-}
+      <input name={name} value={value} required={required} readOnly className="sr-only" tabIndex={-1} />
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={handleToggle}
+        aria-expanded={isOpen}
+        className="focus:ring-tgreen-dark flex w-full items-center justify-between gap-3 rounded-lg border border-gray-300 bg-white p-3 text-left text-sm outline-none transition focus:ring-1"
+      >
+        <span className={selectedOption ? "font-semibold text-gray-900" : "text-gray-400"}>{selectedOption?.[1] ?? `Select ${label.toLowerCase()}`}</span>
+        <ChevronDown size={16} className={`shrink-0 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </button>
 
-function findChoiceValue(input: string, options: readonly ChoiceOption[]) {
-  const normalizedInput = input.trim().toLowerCase();
-  const match = options.find(([value, label]) => value.toLowerCase() === normalizedInput || label.toLowerCase() === normalizedInput);
-  return match?.[0] ?? "";
+      <AnimatePresence>
+        {isOpen && menuStyle && (
+          <ModalPortal>
+            <div className="fixed inset-0 z-[1000]" onMouseDown={() => setIsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: -6, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.98 }}
+              transition={{ duration: 0.14, ease: "easeOut" }}
+              style={{ top: menuStyle.top, left: menuStyle.left, width: menuStyle.width, maxHeight: menuStyle.maxHeight }}
+              className="fixed z-[1001] flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl"
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <div className="shrink-0 border-b border-gray-100 p-2">
+                <label className="relative block">
+                  <Search size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    autoFocus
+                    placeholder={`Search ${label.toLowerCase()}`}
+                    className="focus:ring-tgreen-dark w-full rounded-md border border-gray-200 bg-gray-50 py-2 pr-3 pl-9 text-sm outline-none focus:ring-1"
+                  />
+                </label>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto p-1.5">
+                {filteredOptions.map(([optionValue, optionLabel]) => {
+                  const selected = value === optionValue;
+                  return (
+                    <button
+                      key={optionValue}
+                      type="button"
+                      onClick={() => {
+                        onChange(optionValue);
+                        setIsOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-sm transition ${selected ? "bg-emerald-50 font-semibold text-emerald-800" : "text-gray-700 hover:bg-gray-50"}`}
+                    >
+                      <span>{optionLabel}</span>
+                      {selected && <Check size={15} className="text-emerald-700" />}
+                    </button>
+                  );
+                })}
+                {filteredOptions.length === 0 && <div className="px-3 py-4 text-center text-xs font-semibold text-gray-400">No matching options</div>}
+              </div>
+            </motion.div>
+          </ModalPortal>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
 
 function Badge({ children, tone = "slate" }: { children: ReactNode; tone?: "green" | "slate" }) {

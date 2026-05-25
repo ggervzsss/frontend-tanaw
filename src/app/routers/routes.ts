@@ -28,6 +28,7 @@ export const routes = {
     batchReports: "/staff/batch-reports",
     finalReportsAudit: "/staff/final-reports-audit",
     analytics: "/staff/analytics",
+    systemLogs: "/staff/system-logs",
     profile: "/staff/profile",
     security: "/staff/security",
   },

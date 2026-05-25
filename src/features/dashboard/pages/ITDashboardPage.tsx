@@ -9,18 +9,20 @@ import { AlertDetailsModal, PriorityAlertListItem } from "../../alerts-monitor/c
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { EmptyState, ModalPortal, PageMotion, stagger } from "../../../shared/components/ui";
-import { enterprises, lguAccounts, systemActivities } from "../../../shared/data";
-import type { PriorityAlert, SystemActivity } from "../../../shared/types";
+import { useActivityLogs } from "../../../shared/hooks/useActivityLogs";
+import { enterprises, lguAccounts } from "../../../shared/data";
+import type { PriorityAlert, SystemLog } from "../../../shared/types";
 
 export function ITDashboardPage() {
-  const [selectedActivity, setSelectedActivity] = useState<SystemActivity | null>(null);
+  const { logs, isLoading: logsLoading } = useActivityLogs();
+  const [selectedActivity, setSelectedActivity] = useState<SystemLog | null>(null);
   const [selectedAlert, setSelectedAlert] = useState<PriorityAlert | null>(null);
   const priorityAlerts = useAlertStore((state) => state.alerts).filter((alert) => alert.owner === "IT");
   const activeAlertsCount = priorityAlerts.filter((alert) => alert.status !== "Resolved").length;
   const activeLguAccounts = lguAccounts.filter((account) => account.status === "Active").length;
   const activeEnterprises = enterprises.filter((enterprise) => enterprise.gatewayStatus !== "Closed").length;
   const gatewaysOnline = enterprises.filter((enterprise) => enterprise.gatewayStatus === "Connected").length;
-  const recentActivities = systemActivities.slice(0, 7);
+  const recentActivities = logs.slice(0, 7);
 
   const actionableAlerts = priorityAlerts.filter((alert) => alert.status !== "Resolved").slice(0, 4);
 
@@ -63,16 +65,14 @@ export function ITDashboardPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {recentActivities.map((activity) => {
-                    const displayName = activity.enterprise ?? activity.accountName ?? activity.initiatedBy;
-
                     return (
                       <tr key={activity.id} onClick={() => setSelectedActivity(activity)} className="hover:bg-tgreen-dark/5 cursor-pointer transition">
-                        <td className="py-3 pr-1.5 pl-2.5 font-mono text-[10px] leading-snug text-gray-500 lg:pr-2 lg:pl-3">{formatCompactTimestamp(activity.time)}</td>
+                        <td className="py-3 pr-1.5 pl-2.5 font-mono text-[10px] leading-snug text-gray-500 lg:pr-2 lg:pl-3">{formatCompactTimestamp(activity.timestamp)}</td>
                         <td className="text-charcoal-800 px-2.5 py-3 text-[11px] leading-snug font-semibold lg:px-3">
                           <span className="line-clamp-3">{activity.summary}</span>
                         </td>
                         <td className="px-2.5 py-3 text-[10px] leading-snug font-semibold wrap-break-word text-gray-600 lg:px-3">
-                          <span className="line-clamp-3">{displayName}</span>
+                          <span className="line-clamp-3">{activity.actor}</span>
                         </td>
                       </tr>
                     );
@@ -81,7 +81,7 @@ export function ITDashboardPage() {
               </table>
             </div>
             {recentActivities.length === 0 && (
-              <EmptyState icon={Activity} title="No recent activity" description="System activity records will appear here once the logging source is connected." />
+              <EmptyState icon={Activity} title={logsLoading ? "Loading recent activity" : "No recent activity"} description={logsLoading ? "Fetching live activity records." : "System activity records will appear here once the logging source is connected."} />
             )}
           </div>
         </section>
@@ -120,12 +120,11 @@ export function ITDashboardPage() {
 }
 
 function formatCompactTimestamp(timestamp: string) {
-  return timestamp.replace("2026-", "");
+  const date = new Date(timestamp);
+  return Number.isNaN(date.getTime()) ? timestamp.replace("2026-", "") : date.toLocaleString();
 }
 
-function ActivityDetailsModal({ activity, onClose }: { activity: SystemActivity; onClose: () => void }) {
-  const relatedEntity = activity.enterprise ? <Detail label="Enterprise" value={activity.enterprise} /> : activity.accountName ? <Detail label="Account" value={activity.accountName} /> : null;
-
+function ActivityDetailsModal({ activity, onClose }: { activity: SystemLog; onClose: () => void }) {
   return (
     <ModalPortal>
       <motion.div className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -146,12 +145,11 @@ function ActivityDetailsModal({ activity, onClose }: { activity: SystemActivity;
             </button>
           </header>
           <div className="grid gap-4 p-6 md:grid-cols-2">
-            <Detail label="Type" value={activity.type} />
-            <Detail label="Actor" value={`${activity.initiatedBy} (${activity.actorType})`} />
-            <Detail label="Timestamp" value={activity.time} />
-            <Detail label="Target" value={activity.target ?? "N/A"} />
-            {relatedEntity}
-            {activity.device && <Detail label="Device" value={activity.device} />}
+            <Detail label="Type" value={activity.category} />
+            <Detail label="Actor" value={`${activity.actor} (${activity.actorRole})`} />
+            <Detail label="Timestamp" value={formatCompactTimestamp(activity.timestamp)} />
+            <Detail label="Target" value={activity.target} />
+            <Detail label="Action" value={activity.action} />
             <div className="md:col-span-2">
               <Detail label="Summary" value={activity.summary} />
             </div>

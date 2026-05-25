@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Navigate, useNavigate } from "react-router-dom";
 import { KeyRound } from "lucide-react";
@@ -10,6 +11,7 @@ import { LoginBackground, LoginBrandHeader, LoginCard } from "../components";
 
 export function ChangePasswordPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
   const setSession = useAuthStore((state) => state.setSession);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,6 +43,7 @@ export function ChangePasswordPage() {
     setIsSubmitting(true);
     try {
       const session = await changePassword(currentPassword, newPassword);
+      queryClient.removeQueries({ queryKey: ["current-user"] });
       setSession(session);
       toast.success("Password updated");
       navigate(getRoleDashboardPath(session.user.role), { replace: true });

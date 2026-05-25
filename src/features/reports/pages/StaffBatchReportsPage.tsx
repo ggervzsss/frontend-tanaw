@@ -9,6 +9,7 @@ import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
 import { EmptyState, PageMotion, ModalPortal } from "../../../shared/components/ui";
+import { recordActivityLog } from "../../../shared/services/activityLogs";
 import { listReportEnterprises } from "../../../shared/services/reporting";
 import type { IntakeReport, ReportEnterprise } from "../../../shared/types";
 import { ReportReviewModal, ReportStatusBadge } from "../components";
@@ -160,17 +161,53 @@ export function StaffBatchReportsPage() {
       toast.error("No ready reports available for consolidation.");
       return;
     }
+    void recordActivityLog({
+      category: "Staff Operation",
+      severity: "Success",
+      action: "Generate Final Report",
+      target: finalReport.id,
+      summary: `${authUser?.displayName ?? "LGU Staff"} generated ${finalReport.id} from ${readyReports.length} ready submissions.`,
+      sourceId: finalReport.id,
+      metadata: {
+        reportCount: readyReports.length,
+        period: finalReport.period,
+      },
+    });
     toast.success(`${finalReport.id} generated for Final Reports Audit.`);
   };
 
   const handleAccept = (report: IntakeReport) => {
     updateReportStatus(report.id, "Ready to Consolidate", "Accepted for consolidation.");
+    void recordActivityLog({
+      category: "Staff Operation",
+      severity: "Success",
+      action: "Accept Report",
+      target: report.enterprise,
+      summary: `${authUser?.displayName ?? "LGU Staff"} marked ${report.id} from ${report.enterprise} ready for consolidation.`,
+      sourceId: report.id,
+      metadata: {
+        reportStatus: "Ready to Consolidate",
+        period: report.period,
+      },
+    });
     setSelectedReport(null);
     toast.success(`${report.id} marked ready for consolidation.`);
   };
 
   const handleReturn = (report: IntakeReport) => {
     updateReportStatus(report.id, "Returned", "Returned for revision after staff review.");
+    void recordActivityLog({
+      category: "Staff Operation",
+      severity: "Warning",
+      action: "Return Report",
+      target: report.enterprise,
+      summary: `${authUser?.displayName ?? "LGU Staff"} returned ${report.id} from ${report.enterprise} for revision.`,
+      sourceId: report.id,
+      metadata: {
+        reportStatus: "Returned",
+        period: report.period,
+      },
+    });
     setSelectedReport(null);
     toast.success(`${report.id} returned for revision.`);
   };

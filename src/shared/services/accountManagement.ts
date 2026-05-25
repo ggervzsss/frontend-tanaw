@@ -123,3 +123,8 @@ export async function changePassword(currentPassword: string, newPassword: strin
   const response = await apiClient.post("/auth/change-password", { currentPassword, newPassword });
   return response.data as { token: string; user: AuthUser };
 }
+
+export async function getCurrentUser() {
+  const response = await apiClient.get<AuthUser>("/auth/me");
+  return response.data;
+}

@@ -1,7 +1,7 @@
 import { Bell, ChevronDown, LogOut, Shield, User } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { routes } from "../../../app/routers/routes";
@@ -23,6 +23,7 @@ export function GlobalHeader({ role }: GlobalHeaderProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
 
   const profile = {
     name: authUser?.displayName ?? "TANAW User",
@@ -61,6 +62,19 @@ export function GlobalHeader({ role }: GlobalHeaderProps) {
     navigate(page === "profile" ? getRoleProfilePath(role) : getRoleSecurityPath(role));
   };
 
+  useEffect(() => {
+    if (!showProfileMenu) return undefined;
+
+    const closeOnOutsidePointerDown = (event: PointerEvent) => {
+      if (!profileMenuRef.current?.contains(event.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsidePointerDown);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePointerDown);
+  }, [showProfileMenu]);
+
   return (
     <header className="z-10 flex h-16 items-center justify-between border-b border-white/70 bg-slate-100/80 px-8 backdrop-blur max-sm:px-4">
       {/* Left Section: Page Title & Subtitle */}
@@ -84,7 +98,7 @@ export function GlobalHeader({ role }: GlobalHeaderProps) {
           <span className="bg-tanaw-red absolute top-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white" />
         </button>
 
-        <div className="relative">
+        <div ref={profileMenuRef} className="relative">
           <button
             type="button"
             aria-label="Open account menu"
@@ -96,7 +110,7 @@ export function GlobalHeader({ role }: GlobalHeaderProps) {
               <p className="text-tanaw-navy text-sm leading-none font-bold">{profile.name}</p>
               <p className="text-[10px] text-gray-500">{roleAccessLabel[role]}</p>
             </div>
-            <ChevronDown size={14} className="ml-1 text-gray-400" />
+            <ChevronDown size={14} className={`ml-1 text-gray-400 transition-transform duration-200 ${showProfileMenu ? "rotate-180" : ""}`} />
           </button>
 
           <AnimatePresence>

@@ -1,4 +1,5 @@
 import { Activity, Bell, Building2, Users, Wifi } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -10,18 +11,22 @@ import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { EmptyState, ModalPortal, PageMotion, stagger } from "../../../shared/components/ui";
 import { useActivityLogs } from "../../../shared/hooks/useActivityLogs";
-import { enterprises, lguAccounts } from "../../../shared/data";
+import { listEnterpriseAccounts, listLguAccounts } from "../../../shared/services/accountManagement";
 import type { PriorityAlert, SystemLog } from "../../../shared/types";
 
 export function ITDashboardPage() {
   const { logs, isLoading: logsLoading } = useActivityLogs();
+  const lguAccountsQuery = useQuery({ queryKey: ["lgu-accounts"], queryFn: listLguAccounts });
+  const enterpriseAccountsQuery = useQuery({ queryKey: ["enterprise-accounts"], queryFn: listEnterpriseAccounts });
   const [selectedActivity, setSelectedActivity] = useState<SystemLog | null>(null);
   const [selectedAlert, setSelectedAlert] = useState<PriorityAlert | null>(null);
   const priorityAlerts = useAlertStore((state) => state.alerts).filter((alert) => alert.owner === "IT");
   const activeAlertsCount = priorityAlerts.filter((alert) => alert.status !== "Resolved").length;
-  const activeLguAccounts = lguAccounts.filter((account) => account.status === "Active").length;
-  const activeEnterprises = enterprises.filter((enterprise) => enterprise.gatewayStatus !== "Closed").length;
-  const gatewaysOnline = enterprises.filter((enterprise) => enterprise.gatewayStatus === "Connected").length;
+  const lguAccounts = lguAccountsQuery.data ?? [];
+  const enterpriseAccounts = enterpriseAccountsQuery.data ?? [];
+  const activeLguAccounts = lguAccounts.filter((account) => account.status === "active").length;
+  const activeEnterprises = enterpriseAccounts.filter((enterprise) => enterprise.status === "active").length;
+  const gatewaysOnline = enterpriseAccounts.filter((enterprise) => enterprise.gatewayStatus?.toLowerCase() === "connected").length;
   const recentActivities = logs.slice(0, 7);
 
   const actionableAlerts = priorityAlerts.filter((alert) => alert.status !== "Resolved").slice(0, 4);
@@ -31,11 +36,14 @@ export function ITDashboardPage() {
       <PageHeader title="Dashboard" description="Operational overview for accounts, enterprise connectivity, camera health, and recent system activity." />
 
       <motion.section className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4" variants={stagger}>
-        <MetricCard label="LGU Accounts" value={activeLguAccounts} foot="Active account registry" color="#065f46" icon={Users} />
-        <MetricCard label="Active Enterprises" value={activeEnterprises} foot="Not marked closed" color="#2563eb" icon={Building2} />
-        <MetricCard label="Gateways Online" value={gatewaysOnline} foot="Synced edge gateways" color="#10b981" icon={Wifi} />
+        <MetricCard label="LGU Accounts" value={lguAccountsQuery.isLoading ? "..." : activeLguAccounts} foot="Active account registry" color="#065f46" icon={Users} />
+        <MetricCard label="Active Enterprises" value={enterpriseAccountsQuery.isLoading ? "..." : activeEnterprises} foot="Can access TANAW" color="#2563eb" icon={Building2} />
+        <MetricCard label="Gateways Online" value={enterpriseAccountsQuery.isLoading ? "..." : gatewaysOnline} foot="Connected edge gateways" color="#10b981" icon={Wifi} />
         <MetricCard label="Priority Alerts" value={activeAlertsCount} foot="Requires IT action" color="#dc2626" footClassName="text-red-600" icon={Bell} />
       </motion.section>
+      {(lguAccountsQuery.isError || enterpriseAccountsQuery.isError) && (
+        <p className="mt-3 text-xs font-semibold text-red-600">Some dashboard metrics could not be loaded from the database. Refresh or check the API connection.</p>
+      )}
 
       <div className="mt-6 grid grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-6 max-xl:grid-cols-1">
         <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">

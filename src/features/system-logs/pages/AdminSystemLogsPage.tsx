@@ -15,7 +15,7 @@ type CategoryFilter = "All Categories" | SystemLogCategory;
 type ActorFilter = "All Actors" | SystemLogActorRole;
 type SeverityFilter = "All Severities" | LogSeverity;
 
-const categoryFilters: CategoryFilter[] = ["All Categories", "IT Activity", "Staff Submission", "Staff Operation", "Admin Operation", "System"];
+const categoryFilters: CategoryFilter[] = ["All Categories", "IT Activity", "Staff Submission", "Staff Operation", "Admin Operation", "Enterprise Activity", "System"];
 const actorFilters: ActorFilter[] = ["All Actors", "Admin", "IT Personnel", "LGU Staff", "Enterprise Account", "System"];
 const severityFilters: SeverityFilter[] = ["All Severities", "Critical", "Warning", "Info", "Success"];
 
@@ -153,6 +153,7 @@ function CategoryBadge({ category }: { category: SystemLogCategory }) {
     "Staff Submission": "border-teal-200 bg-teal-50 text-teal-700",
     "Staff Operation": "border-emerald-200 bg-emerald-50 text-emerald-700",
     "Admin Operation": "border-indigo-200 bg-indigo-50 text-indigo-700",
+    "Enterprise Activity": "border-amber-200 bg-amber-50 text-amber-700",
     System: "border-gray-200 bg-gray-100 text-gray-600",
   };
   return <span className={`rounded border px-2.5 py-1 text-[10px] font-bold tracking-wide whitespace-nowrap uppercase ${classes[category]}`}>{category}</span>;

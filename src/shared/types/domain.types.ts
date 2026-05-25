@@ -89,7 +89,7 @@ export type PipelineHealth = {
   warnings: PipelineAlert[];
 };
 
-export type SystemLogCategory = "IT Activity" | "Staff Submission" | "Staff Operation" | "Admin Operation" | "System";
+export type SystemLogCategory = "IT Activity" | "Staff Submission" | "Staff Operation" | "Admin Operation" | "Enterprise Activity" | "System";
 export type SystemLogActorRole = "Admin" | "IT Personnel" | "LGU Staff" | "Enterprise Account" | "System";
 
 export type SystemLog = {

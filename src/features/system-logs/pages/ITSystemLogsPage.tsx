@@ -10,8 +10,8 @@ import type { SystemLog, SystemLogCategory } from "../../../shared/types";
 import { activityTimeRanges, isWithinActivityTimeRange } from "../../../shared/utils";
 import type { ActivityTimeRange } from "../../../shared/utils";
 
-const defaultTypeOptions = ["All Types", "IT Activity", "System"];
-const defaultAccountOptions = ["All Accounts", "IT Personnel", "System"];
+const defaultTypeOptions = ["All Types", "IT Activity", "Enterprise Activity", "System"];
+const defaultAccountOptions = ["All Accounts", "IT Personnel", "Enterprise Account", "System"];
 
 export function ITSystemLogsPage() {
   const { logs, isLoading } = useActivityLogs();
@@ -191,6 +191,7 @@ function TypeBadge({ type }: { type: SystemLogCategory }) {
     "Staff Submission": "bg-teal-50 text-teal-700",
     "Staff Operation": "bg-emerald-50 text-emerald-700",
     "Admin Operation": "bg-indigo-50 text-indigo-700",
+    "Enterprise Activity": "bg-amber-50 text-amber-700",
     System: "bg-slate-100 text-slate-700",
   };
   return <span className={`rounded-full px-3 py-1 text-[10px] font-bold whitespace-nowrap uppercase ${classes[type]}`}>{type}</span>;

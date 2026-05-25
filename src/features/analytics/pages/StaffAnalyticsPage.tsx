@@ -2,11 +2,13 @@ import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Activity, ClipboardCheck, Clock, Users } from "lucide-react";
 import { motion } from "motion/react";
+import { useQuery } from "@tanstack/react-query";
 import { useReportStore } from "../../../app/store/reportStore";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { EmptyState, PageMotion, stagger } from "../../../shared/components/ui";
-import type { IntakeReport } from "../../../shared/types";
+import { listReportEnterprises } from "../../../shared/services/reporting";
+import type { IntakeReport, ReportEnterprise } from "../../../shared/types";
 
 const MONTH_ORDER = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -18,12 +20,18 @@ type AnalyticsPeriod = {
   year: string;
 };
 
+type EnterpriseReportRow = {
+  enterprise: ReportEnterprise;
+  report: IntakeReport | null;
+};
+
 function getReportYear(report: IntakeReport) {
   return report.period.match(/\d{4}/)?.[0] ?? null;
 }
 
-function getAnalyticsPeriods(reports: IntakeReport[]) {
+function getAnalyticsPeriods(reports: IntakeReport[], currentPeriod: AnalyticsPeriod) {
   const periodMap = new Map<string, AnalyticsPeriod>();
+  periodMap.set(currentPeriod.key, currentPeriod);
 
   reports.forEach((report) => {
     const year = getReportYear(report);
@@ -54,6 +62,20 @@ function reportHasSubmission(report: IntakeReport) {
   return report.submitted !== "Not submitted";
 }
 
+function getCurrentAnalyticsPeriod(date = new Date()): AnalyticsPeriod {
+  const monthIndex = date.getMonth();
+  const month = MONTH_ORDER[monthIndex];
+  const year = String(date.getFullYear());
+
+  return {
+    key: `${year}-${String(monthIndex + 1).padStart(2, "0")}`,
+    label: `${month} ${year}`,
+    monthIndex,
+    reports: [],
+    year,
+  };
+}
+
 function getTrendLabel(activeReports: IntakeReport[], comparisonPeriod?: AnalyticsPeriod) {
   if (!comparisonPeriod) return "No earlier reporting period";
 
@@ -68,25 +90,31 @@ function getTrendLabel(activeReports: IntakeReport[], comparisonPeriod?: Analyti
 
 export function StaffAnalyticsPage() {
   const reports = useReportStore((state) => state.reports);
+  const reportEnterprisesQuery = useQuery({ queryKey: ["report-enterprises"], queryFn: listReportEnterprises });
+  const reportEnterprises = reportEnterprisesQuery.data ?? [];
   const [selectedPeriodKey, setSelectedPeriodKey] = useState<string | null>(null);
 
-  const periods = useMemo(() => getAnalyticsPeriods(reports), [reports]);
+  const currentPeriod = useMemo(() => getCurrentAnalyticsPeriod(), []);
+  const periods = useMemo(() => getAnalyticsPeriods(reports, currentPeriod), [currentPeriod, reports]);
   const activePeriodIndex = Math.max(
     periods.findIndex((period) => period.key === selectedPeriodKey),
     0,
   );
   const activePeriod = periods[activePeriodIndex];
   const activeReports = activePeriod?.reports ?? [];
-  const submittedReports = activeReports.filter(reportHasSubmission);
-  const totalReports = activeReports.length;
+  const enterpriseRows = useMemo(() => getEnterpriseReportRows(reportEnterprises, activeReports), [activeReports, reportEnterprises]);
+  const submittedRows = enterpriseRows.filter((row) => row.report && reportHasSubmission(row.report));
+  const submittedReports = submittedRows.map((row) => row.report).filter((report): report is IntakeReport => report !== null);
+  const totalReports = reportEnterprises.length;
   const submissionRate = totalReports === 0 ? 0 : Math.round((submittedReports.length / totalReports) * 100);
   const comparisonPeriod = periods[activePeriodIndex + 1];
-  const chartData = activeReports.map((report) => ({
-    name: report.enterprise,
-    entries: report.metrics.entry,
-    unique: report.metrics.unique,
+  const chartData = enterpriseRows.map(({ enterprise, report }) => ({
+    name: enterprise.name,
+    entries: report?.metrics.entry ?? 0,
+    unique: report?.metrics.unique ?? 0,
+    status: report && reportHasSubmission(report) ? "Submitted" : "Missing",
   }));
-  const submissionLog = [...submittedReports].sort((a, b) => b.submitted.localeCompare(a.submitted));
+  const complianceRows = [...enterpriseRows].sort((a, b) => Number(Boolean(b.report && reportHasSubmission(b.report))) - Number(Boolean(a.report && reportHasSubmission(a.report))) || a.enterprise.name.localeCompare(b.enterprise.name));
 
   return (
     <PageMotion>
@@ -135,8 +163,10 @@ export function StaffAnalyticsPage() {
         <section className="col-span-2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <h3 className="mb-6 text-sm font-semibold text-gray-900">Enterprise Traffic Comparison</h3>
           <div className="h-72">
-            {chartData.length === 0 ? (
-              <EmptyState icon={Activity} title="No traffic data" description="Enterprise traffic comparisons will appear here once reporting submissions are available." minHeightClassName="min-h-72" />
+            {reportEnterprisesQuery.isLoading ? (
+              <EmptyState icon={Activity} title="Loading enterprises" description="Fetching registered enterprise accounts for analytics." minHeightClassName="min-h-72" />
+            ) : chartData.length === 0 ? (
+              <EmptyState icon={Activity} title="No registered enterprises" description="Enterprise traffic comparisons will appear here once enterprise accounts are registered." minHeightClassName="min-h-72" />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
@@ -164,21 +194,24 @@ export function StaffAnalyticsPage() {
 
         <section className="flex flex-col rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-900">Submission Log</h3>
+            <h3 className="text-sm font-semibold text-gray-900">Compliance Status</h3>
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
             </span>
           </div>
           <div className="max-h-75 space-y-4 overflow-y-auto pr-1">
-            {submissionLog.map((report) => (
-              <SubmissionLogItem key={report.id} enterprise={report.enterprise} timestamp={report.submitted} />
+            {complianceRows.map(({ enterprise, report }) => (
+              <ComplianceStatusItem key={enterprise.id} enterprise={enterprise} report={report} />
             ))}
-            {submissionLog.length === 0 && (
+            {reportEnterprisesQuery.isLoading && (
+              <EmptyState icon={ClipboardCheck} title="Loading registry" description="Fetching registered enterprise accounts." minHeightClassName="min-h-45" />
+            )}
+            {!reportEnterprisesQuery.isLoading && complianceRows.length === 0 && (
               <EmptyState
                 icon={ClipboardCheck}
-                title="No submissions"
-                description={`Submissions for ${activePeriod?.label ?? "this reporting period"} will appear here once reports are received.`}
+                title="No registered enterprises"
+                description="Compliance status will appear once enterprise accounts are registered."
                 minHeightClassName="min-h-45"
               />
             )}
@@ -189,16 +222,27 @@ export function StaffAnalyticsPage() {
   );
 }
 
-function SubmissionLogItem({ enterprise, timestamp }: { enterprise: string; timestamp: string }) {
+function getEnterpriseReportRows(enterprises: ReportEnterprise[], reports: IntakeReport[]): EnterpriseReportRow[] {
+  return enterprises.map((enterprise) => ({
+    enterprise,
+    report: reports.find((report) => report.enterpriseId === enterprise.id) ?? null,
+  }));
+}
+
+function ComplianceStatusItem({ enterprise, report }: { enterprise: ReportEnterprise; report: IntakeReport | null }) {
+  const submitted = Boolean(report && reportHasSubmission(report));
+
   return (
-    <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-3.5 transition hover:shadow-sm">
+    <div className={`rounded-lg border p-3.5 transition hover:shadow-sm ${submitted ? "border-emerald-100 bg-emerald-50" : "border-amber-100 bg-amber-50"}`}>
       <div className="flex items-center justify-between">
-        <span className="text-xs font-bold tracking-wide text-emerald-800 uppercase">{enterprise}</span>
-        <span className="flex items-center gap-1 font-mono text-[10px] text-gray-500">
-          <Clock size={10} /> {timestamp}
+        <span className={`text-xs font-bold tracking-wide uppercase ${submitted ? "text-emerald-800" : "text-amber-800"}`}>{enterprise.name}</span>
+        <span className="flex shrink-0 items-center gap-1 font-mono text-[10px] text-gray-500">
+          <Clock size={10} /> {report?.submitted ?? "Missing"}
         </span>
       </div>
-      <p className="mt-1 text-xs leading-normal text-emerald-700">Submitted monthly report.</p>
+      <p className={`mt-1 text-xs leading-normal ${submitted ? "text-emerald-700" : "text-amber-700"}`}>
+        {submitted ? `Submitted ${report?.id ?? "report"}.` : `No submission recorded for ${enterprise.barangay}.`}
+      </p>
     </div>
   );
 }

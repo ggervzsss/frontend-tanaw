@@ -1,5 +1,6 @@
 import { Archive, Bell, Building2, CheckCircle2, FileSignature, FileText, Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../../app/store/authStore";
@@ -8,7 +9,7 @@ import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
 import { EmptyState, PageMotion, ModalPortal } from "../../../shared/components/ui";
-import { reportEnterprises } from "../../../shared/data";
+import { listReportEnterprises } from "../../../shared/services/reporting";
 import type { IntakeReport, ReportEnterprise } from "../../../shared/types";
 import { ReportReviewModal, ReportStatusBadge } from "../components";
 
@@ -67,6 +68,8 @@ export function StaffBatchReportsPage() {
   const reports = useReportStore((state) => state.reports);
   const updateReportStatus = useReportStore((state) => state.updateReportStatus);
   const generateFinalReport = useReportStore((state) => state.generateFinalReport);
+  const reportEnterprisesQuery = useQuery({ queryKey: ["report-enterprises"], queryFn: listReportEnterprises });
+  const reportEnterprises = reportEnterprisesQuery.data ?? [];
   const currentPeriod = getCurrentSubmissionPeriod();
   const defaultPeriod = getDefaultSubmissionPeriod(reports, currentPeriod);
   const [query, setQuery] = useState("");
@@ -77,23 +80,26 @@ export function StaffBatchReportsPage() {
 
   // Derive unique months and years dynamically from live intake report data
   const availableMonths = useMemo(() => {
-    const months = Array.from(new Set(reports.map((r) => r.month)));
+    const months = Array.from(new Set([currentPeriod.month, ...reports.map((r) => r.month)]));
     return months.sort((a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b));
-  }, [reports]);
+  }, [currentPeriod.month, reports]);
 
   const availableYears = useMemo(() => {
     const years = Array.from(
       new Set(
-        reports
+        [
+          currentPeriod.year,
+          ...reports
           .map((r) => {
             const match = r.period.match(/\d{4}/);
             return match ? match[0] : null;
           })
           .filter(Boolean) as string[],
+        ]
       ),
     );
     return years.sort((a, b) => Number(b) - Number(a));
-  }, [reports]);
+  }, [currentPeriod.year, reports]);
 
   // Reports matching the selected period. The filters are history viewers only.
   const filteredByPeriod = useMemo(() => {
@@ -106,11 +112,10 @@ export function StaffBatchReportsPage() {
   }, [reports, filteredByPeriod]);
 
   const readyReports = filteredByPeriod.filter((r) => r.status === "Ready to Consolidate");
-  const missingReports = filteredByPeriod.filter((r) => r.status === "Missing");
 
   // Generate is only enabled when every enterprise has a Ready to Consolidate report
   const allReady =
-    filteredByPeriod.length > 0 &&
+    reportEnterprises.length > 0 &&
     reportEnterprises.every((ent) => {
       const report = filteredByPeriod.find((r) => r.enterpriseId === ent.id);
       return report?.status === "Ready to Consolidate";
@@ -118,7 +123,7 @@ export function StaffBatchReportsPage() {
 
   // All consolidated — cycle is complete
   const allConsolidated =
-    filteredByPeriod.length > 0 &&
+    reportEnterprises.length > 0 &&
     reportEnterprises.every((ent) => {
       const report = filteredByPeriod.find((r) => r.enterpriseId === ent.id);
       return report?.status === "Consolidated";
@@ -141,8 +146,9 @@ export function StaffBatchReportsPage() {
           const normalizedQuery = query.trim().toLowerCase();
           return !normalizedQuery || [row.enterprise.name, row.enterprise.category, row.enterprise.barangay, row.currentReport?.id ?? ""].some((v) => v.toLowerCase().includes(normalizedQuery));
         }),
-    [filteredByPeriod, nonPeriodReports, query],
+    [filteredByPeriod, nonPeriodReports, query, reportEnterprises],
   );
+  const missingReports = enterpriseRows.filter((row) => row.status === "Missing");
 
   const handleGenerate = () => {
     if (!allReady) return;
@@ -174,7 +180,7 @@ export function StaffBatchReportsPage() {
       <PageHeader title="Batch Reports" description="Enterprise-level compliance review before DOT report consolidation." />
 
       <section className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
-        <MetricCard label="Registered Enterprises" value={reportEnterprises.length} foot="Required to submit" color="#065f46" icon={Building2} />
+        <MetricCard label="Registered Enterprises" value={reportEnterprises.length} foot={reportEnterprisesQuery.isLoading ? "Loading registry" : "Required to submit"} color="#065f46" icon={Building2} />
         <MetricCard label="Ready Reports" value={readyReports.length} foot="Available for consolidation" color="#10b981" icon={CheckCircle2} />
         <MetricCard label="Missing Submissions" value={missingReports.length} foot="Needs follow-up" color="#dc2626" footClassName="text-red-600" icon={FileText} />
         <MetricCard label="Archived Reports" value={nonPeriodReports.length} foot="Past submissions" color="#2563eb" icon={Archive} />
@@ -265,7 +271,11 @@ export function StaffBatchReportsPage() {
               {enterpriseRows.length === 0 && (
                 <tr>
                   <td colSpan={5}>
-                    <EmptyState icon={Building2} title="No report enterprises" description="Enterprise report rows will appear here once registered establishments are connected to reporting." />
+                    <EmptyState
+                      icon={Building2}
+                      title={reportEnterprisesQuery.isLoading ? "Loading enterprises" : "No report enterprises"}
+                      description={reportEnterprisesQuery.isLoading ? "Fetching registered enterprise accounts." : "Enterprise report rows will appear here once registered establishments are connected to reporting."}
+                    />
                   </td>
                 </tr>
               )}

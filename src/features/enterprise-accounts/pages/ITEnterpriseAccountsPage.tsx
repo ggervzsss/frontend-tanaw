@@ -2,7 +2,7 @@ import L from "leaflet";
 import { Building2, Check, ChevronDown, Eye, KeyRound, LocateFixed, MapPin, Search, UserCheck, Users, XCircle } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, type KeyboardEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
@@ -496,13 +496,29 @@ function SearchableDropdownField({
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [menuStyle, setMenuStyle] = useState<{ top: number; left: number; width: number; maxHeight: number } | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const activeOptionRef = useRef<HTMLButtonElement | null>(null);
   const selectedOption = options.find(([optionValue]) => optionValue === value);
   const filteredOptions = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
     if (!normalizedSearch) return options;
     return options.filter(([optionValue, optionLabel]) => `${optionValue} ${optionLabel}`.toLowerCase().includes(normalizedSearch));
   }, [options, search]);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [search]);
+
+  useEffect(() => {
+    if (!isOpen || filteredOptions.length === 0) return;
+    setActiveIndex((current) => Math.min(current, filteredOptions.length - 1));
+  }, [filteredOptions.length, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    activeOptionRef.current?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex, isOpen]);
 
   const updateMenuPosition = useCallback(() => {
     const button = buttonRef.current;
@@ -512,12 +528,10 @@ function SearchableDropdownField({
     const viewportPadding = 12;
     const gap = 6;
     const spaceBelow = window.innerHeight - rect.bottom - viewportPadding;
-    const spaceAbove = rect.top - viewportPadding;
-    const openAbove = spaceBelow < 240 && spaceAbove > spaceBelow;
-    const availableSpace = Math.max(openAbove ? spaceAbove : spaceBelow, 160);
-    const maxHeight = Math.min(280, availableSpace - gap);
+    const availableSpace = Math.max(spaceBelow - gap, 96);
+    const maxHeight = Math.min(280, availableSpace);
     const left = Math.max(viewportPadding, Math.min(rect.left, window.innerWidth - rect.width - viewportPadding));
-    const top = openAbove ? Math.max(viewportPadding, rect.top - maxHeight - gap) : Math.min(rect.bottom + gap, window.innerHeight - maxHeight - viewportPadding);
+    const top = rect.bottom + gap;
 
     setMenuStyle({ top, left, width: rect.width, maxHeight });
   }, []);
@@ -546,8 +560,51 @@ function SearchableDropdownField({
     setIsOpen((current) => !current);
   };
 
+  const selectOption = (optionValue: string) => {
+    onChange(optionValue);
+    setIsOpen(false);
+  };
+
+  const handleDropdownKeyDown = (event: KeyboardEvent) => {
+    if (!isOpen && (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      updateMenuPosition();
+      setIsOpen(true);
+      return;
+    }
+
+    if (!isOpen) return;
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveIndex((current) => Math.min(current + 1, Math.max(filteredOptions.length - 1, 0)));
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveIndex((current) => Math.max(current - 1, 0));
+      return;
+    }
+
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const option = filteredOptions[activeIndex];
+      if (option) {
+        selectOption(option[0]);
+      }
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setIsOpen(false);
+      buttonRef.current?.focus();
+    }
+  };
+
   return (
-    <div className="relative">
+    <div className="relative" onKeyDown={handleDropdownKeyDown}>
       <span className="mb-1 block text-[10px] font-bold text-gray-500 uppercase">{label}</span>
       <input name={name} value={value} required={required} readOnly className="sr-only" tabIndex={-1} />
       <button
@@ -555,6 +612,7 @@ function SearchableDropdownField({
         type="button"
         onClick={handleToggle}
         aria-expanded={isOpen}
+        aria-haspopup="listbox"
         className="focus:ring-tgreen-dark flex w-full items-center justify-between gap-3 rounded-lg border border-gray-300 bg-white p-3 text-left text-sm outline-none transition focus:ring-1"
       >
         <span className={selectedOption ? "font-semibold text-gray-900" : "text-gray-400"}>{selectedOption?.[1] ?? `Select ${label.toLowerCase()}`}</span>
@@ -582,22 +640,30 @@ function SearchableDropdownField({
                     onChange={(event) => setSearch(event.target.value)}
                     autoFocus
                     placeholder={`Search ${label.toLowerCase()}`}
+                    role="combobox"
+                    aria-expanded={isOpen}
                     className="focus:ring-tgreen-dark w-full rounded-md border border-gray-200 bg-gray-50 py-2 pr-3 pl-9 text-sm outline-none focus:ring-1"
                   />
                 </label>
               </div>
-              <div className="min-h-0 flex-1 overflow-y-auto p-1.5">
-                {filteredOptions.map(([optionValue, optionLabel]) => {
+              <div className="min-h-0 flex-1 overflow-y-auto p-1.5" role="listbox">
+                {filteredOptions.map(([optionValue, optionLabel], index) => {
                   const selected = value === optionValue;
+                  const active = index === activeIndex;
                   return (
                     <button
                       key={optionValue}
+                      ref={active ? activeOptionRef : null}
                       type="button"
                       onClick={() => {
-                        onChange(optionValue);
-                        setIsOpen(false);
+                        selectOption(optionValue);
                       }}
-                      className={`flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-sm transition ${selected ? "bg-emerald-50 font-semibold text-emerald-800" : "text-gray-700 hover:bg-gray-50"}`}
+                      onMouseEnter={() => setActiveIndex(index)}
+                      role="option"
+                      aria-selected={selected}
+                      className={`flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-sm transition ${
+                        active ? "bg-emerald-50 font-semibold text-emerald-800" : selected ? "font-semibold text-emerald-800" : "text-gray-700 hover:bg-gray-50"
+                      }`}
                     >
                       <span>{optionLabel}</span>
                       {selected && <Check size={15} className="text-emerald-700" />}

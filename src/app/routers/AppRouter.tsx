@@ -10,7 +10,7 @@ import { ChangePasswordPage, EnterpriseAccessPage, LoginPage } from "../../featu
 import { AdminMapViewPage } from "../../features/mapview";
 import { StaffBatchReportsPage, StaffFinalReportsAuditPage } from "../../features/reports";
 import { ITSystemSettingsPage } from "../../features/system-settings";
-import { AdminSystemLogsPage, ITSystemLogsPage } from "../../features/system-logs";
+import { AdminSystemLogsPage, ITSystemLogsPage, StaffSystemLogsPage } from "../../features/system-logs";
 import { AccountLayout } from "../../shared/components/layout";
 import { getRoleDashboardPath } from "../../shared/utils/routeUtils";
 import { useAuthStore } from "../store/authStore";
@@ -78,6 +78,7 @@ export function AppRouter() {
         <Route path="batch-reports" element={<StaffBatchReportsPage />} />
         <Route path="final-reports-audit" element={<StaffFinalReportsAuditPage />} />
         <Route path="analytics" element={<StaffAnalyticsPage />} />
+        <Route path="system-logs" element={<StaffSystemLogsPage />} />
         <Route path="profile" element={<AccountProfilePage role="staff" />} />
         <Route path="security" element={<AccountSecurityPage />} />
       </Route>

@@ -5,7 +5,7 @@ export type AlertSeverity = "Info" | "Warning" | "Critical";
 export type LogSeverity = AlertSeverity | "Success";
 
 export type MapEnterprise = {
-  id: number;
+  id: string;
   name: string;
   barangay: string;
   category: string;

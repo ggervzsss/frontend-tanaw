@@ -12,6 +12,12 @@ export type AccountSummary = {
   managerName: string | null;
   barangay: string | null;
   address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  locationSource: string | null;
+  locationConfidence: number | null;
+  geocodedAddress: string | null;
+  locationUpdatedAt: string | null;
   enterpriseId: string | null;
   gatewayStatus: string | null;
   displayName: string;
@@ -51,6 +57,26 @@ export type CreateEnterpriseAccountPayload = {
   barangay: string;
   address: string;
   enterpriseId?: string;
+  latitude?: number;
+  longitude?: number;
+  locationSource?: string;
+  locationConfidence?: number;
+  geocodedAddress?: string;
+};
+
+export type EnterpriseGeocodePayload = {
+  enterpriseName?: string;
+  barangay: string;
+  address: string;
+};
+
+export type EnterpriseGeocodeResult = {
+  latitude: number;
+  longitude: number;
+  displayAddress: string;
+  confidence: number | null;
+  provider: string;
+  source: string;
 };
 
 export async function listLguAccounts() {
@@ -70,6 +96,11 @@ export async function listEnterpriseAccounts() {
 
 export async function createEnterpriseAccount(payload: CreateEnterpriseAccountPayload) {
   const response = await apiClient.post<AccountSummary>("/accounts/enterprises", payload);
+  return response.data;
+}
+
+export async function geocodeEnterpriseAddress(payload: EnterpriseGeocodePayload) {
+  const response = await apiClient.post<EnterpriseGeocodeResult>("/accounts/enterprises/geocode", payload);
   return response.data;
 }
 

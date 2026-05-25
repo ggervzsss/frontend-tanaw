@@ -1,7 +1,8 @@
-import { Building2, Eye, KeyRound, Search, UserCheck, Users, XCircle } from "lucide-react";
+import L from "leaflet";
+import { Building2, Eye, KeyRound, LocateFixed, MapPin, Search, UserCheck, Users, XCircle } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type FormEvent, type ReactNode, useMemo, useState } from "react";
+import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
@@ -12,6 +13,7 @@ import {
   type AccountSummary,
   type CreateEnterpriseAccountPayload,
   createEnterpriseAccount,
+  geocodeEnterpriseAddress,
   listEnterpriseAccounts,
   resetAccountPassword,
   updateAccountStatus,
@@ -19,6 +21,20 @@ import {
 
 type StatusFilter = "all" | "active" | "inactive";
 type ChoiceOption = readonly [string, string];
+type LocationDraft = {
+  latitude: number;
+  longitude: number;
+  source: "geocoded" | "manual" | "adjusted";
+  confidence?: number | null;
+  displayAddress?: string;
+  provider?: string;
+};
+
+const sanPedroFallbackCenter: L.LatLngTuple = [14.3413, 121.0446];
+const sanPedroRelaxedFallbackBounds: L.LatLngBoundsExpression = [
+  [14.235, 120.945],
+  [14.418, 121.131],
+];
 
 export function ITEnterpriseAccountsPage() {
   const queryClient = useQueryClient();
@@ -153,6 +169,8 @@ export function ITEnterpriseAccountsPage() {
 
 function RegisterEnterpriseModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const [location, setLocation] = useState<LocationDraft | null>(null);
   const createMutation = useMutation({
     mutationFn: createEnterpriseAccount,
     onSuccess: async () => {
@@ -162,6 +180,40 @@ function RegisterEnterpriseModal({ onClose }: { onClose: () => void }) {
     },
     onError: () => toast.error("Unable to create enterprise account"),
   });
+  const geocodeMutation = useMutation({
+    mutationFn: geocodeEnterpriseAddress,
+    onSuccess: (result) => {
+      setLocation({
+        latitude: result.latitude,
+        longitude: result.longitude,
+        source: "geocoded",
+        confidence: result.confidence,
+        displayAddress: result.displayAddress,
+        provider: result.provider,
+      });
+      toast.success("Location marker placed");
+    },
+    onError: () => toast.error("Unable to locate this address. Place the marker manually on the map."),
+  });
+
+  const handleLocateAddress = () => {
+    if (!formRef.current) return;
+
+    const formData = new FormData(formRef.current);
+    const barangay = findChoiceValue(String(formData.get("barangay") ?? ""), sanPedroBarangays.map((item): ChoiceOption => [item, item]));
+    const address = String(formData.get("address") ?? "").trim();
+
+    if (!barangay || !address) {
+      toast.error("Enter the address and choose a barangay before locating.");
+      return;
+    }
+
+    geocodeMutation.mutate({
+      enterpriseName: String(formData.get("enterpriseName") ?? "").trim() || undefined,
+      barangay,
+      address,
+    });
+  };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -183,13 +235,22 @@ function RegisterEnterpriseModal({ onClose }: { onClose: () => void }) {
       barangay,
       address: String(formData.get("address") ?? ""),
       enterpriseId: String(formData.get("enterpriseId") ?? "") || undefined,
+      ...(location
+        ? {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            locationSource: location.source,
+            locationConfidence: location.confidence ?? undefined,
+            geocodedAddress: location.displayAddress,
+          }
+        : {}),
     };
     createMutation.mutate(payload);
   };
 
   return (
     <ModalFrame title="Register Enterprise" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <form ref={formRef} onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <FormField name="enterpriseName" label="Enterprise Name" required />
         <SearchableChoiceField name="category" label="Enterprise Type / Category" options={enterpriseCategories.map((category): ChoiceOption => [category.value, category.label])} required />
         <FormField name="managerName" label="Contact Person / Manager" required />
@@ -198,11 +259,29 @@ function RegisterEnterpriseModal({ onClose }: { onClose: () => void }) {
         <FormField name="enterpriseId" label="Enterprise ID Seed" placeholder="Leave blank to use enterprise name" />
         <FormField name="address" label="Block / Lot / Street" required />
         <SearchableChoiceField name="barangay" label="Barangay" options={sanPedroBarangays.map((item): ChoiceOption => [item, item])} required />
+        <div className="md:col-span-2">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold tracking-wide text-gray-500 uppercase">Map Location</p>
+              <p className="text-xs text-gray-500">{location ? getLocationSummary(location) : "No marker confirmed yet. Locate the address or click the map."}</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleLocateAddress}
+              disabled={geocodeMutation.isPending}
+              className="bg-tgreen-dark hover:bg-tgreen-light inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-xs font-bold text-white shadow-sm transition disabled:opacity-70"
+            >
+              <LocateFixed size={15} />
+              {geocodeMutation.isPending ? "Locating..." : "Locate Address"}
+            </button>
+          </div>
+          <LocationPicker location={location} onChange={setLocation} />
+        </div>
         <div className="flex items-start gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4 md:col-span-2">
           <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500 text-[10px] font-black text-white">i</span>
           <p className="text-xs leading-relaxed text-blue-700">
             Once this enterprise is saved, the system will automatically generate login credentials and record the development email/SMS message in Dev Log. The enterprise user will be required to
-            change their password upon first login. The saved address will include San Pedro, Laguna 4023 automatically.
+            change their password upon first login. The saved address will include San Pedro, Laguna 4023 automatically. The marker location will be used in Map View.
           </p>
         </div>
         <button disabled={createMutation.isPending} className="bg-tgreen-dark hover:bg-tgreen-light rounded-lg p-3 text-sm font-bold text-white transition disabled:opacity-70 md:col-span-2">
@@ -219,6 +298,7 @@ function EnterpriseDetailsModal({ enterprise, onClose }: { enterprise: AccountSu
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Detail label="Enterprise" value={enterprise.enterpriseName ?? enterprise.displayName} />
         <Detail label="Registered Address" value={enterprise.address ?? "Not provided"} />
+        <Detail label="Map Location" value={enterprise.latitude !== null && enterprise.longitude !== null ? `${enterprise.latitude.toFixed(6)}, ${enterprise.longitude.toFixed(6)}` : "Not pinned"} />
         <Detail label="Category" value={enterprise.category ?? "Not provided"} />
         <Detail label="Contact Manager" value={enterprise.managerName ?? "Not provided"} />
         <Detail label="Contact Email" value={enterprise.email} />
@@ -227,9 +307,111 @@ function EnterpriseDetailsModal({ enterprise, onClose }: { enterprise: AccountSu
         <Detail label="Enterprise ID" value={enterprise.enterpriseId ?? "Pending"} />
         <Detail label="Account Status" value={enterprise.status} />
         <Detail label="Must Change Password" value={enterprise.mustChangePassword ? "Yes" : "No"} />
+        <Detail label="Location Source" value={enterprise.locationSource ?? "Not provided"} />
       </div>
     </ModalFrame>
   );
+}
+
+function LocationPicker({ location, onChange }: { location: LocationDraft | null; onChange: (location: LocationDraft) => void }) {
+  const mapContainerId = "enterprise-location-picker";
+  const mapRef = useRef<L.Map | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
+  const latestLocationRef = useRef<LocationDraft | null>(location);
+
+  useEffect(() => {
+    latestLocationRef.current = location;
+  }, [location]);
+
+  useEffect(() => {
+    if (mapRef.current) return undefined;
+
+    const map = L.map(mapContainerId, {
+      center: sanPedroFallbackCenter,
+      zoom: 13,
+      maxBounds: sanPedroRelaxedFallbackBounds,
+      maxBoundsViscosity: 0.45,
+      minZoom: 11.2,
+      maxZoom: 18,
+      zoomControl: false,
+    });
+    mapRef.current = map;
+
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+    }).addTo(map);
+    L.control.zoom({ position: "bottomright" }).addTo(map);
+    map.on("click", (event) => {
+      onChange({
+        latitude: event.latlng.lat,
+        longitude: event.latlng.lng,
+        source: markerRef.current ? "adjusted" : "manual",
+      });
+    });
+
+    const timers = [0, 160, 320].map((delay) =>
+      window.setTimeout(() => {
+        map.invalidateSize({ pan: false });
+      }, delay),
+    );
+
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      markerRef.current?.remove();
+      markerRef.current = null;
+      map.remove();
+      mapRef.current = null;
+    };
+  }, [onChange]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !location) return;
+
+    const nextLatLng: L.LatLngTuple = [location.latitude, location.longitude];
+    if (!markerRef.current) {
+      markerRef.current = L.marker(nextLatLng, {
+        draggable: true,
+        icon: L.divIcon({
+          className: "tanaw-location-preview-pin",
+          iconAnchor: [10, 10],
+          html: `<span style="background:#065f46;width:22px;height:22px;display:block;border-radius:50%;border:4px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,.35);"></span>`,
+        }),
+      }).addTo(map);
+
+      markerRef.current.on("dragend", () => {
+        const position = markerRef.current?.getLatLng();
+        const latestLocation = latestLocationRef.current;
+        if (!position) return;
+        onChange({
+          ...(latestLocation ?? {}),
+          latitude: position.lat,
+          longitude: position.lng,
+          source: latestLocation?.source === "manual" ? "manual" : "adjusted",
+        });
+      });
+    } else {
+      markerRef.current.setLatLng(nextLatLng);
+    }
+
+    map.flyTo(nextLatLng, Math.max(map.getZoom(), 15), { animate: true, duration: 0.55 });
+  }, [location, onChange]);
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
+      <div id={mapContainerId} className="h-72 w-full" />
+      <div className="flex items-center gap-2 border-t border-gray-200 bg-white px-3 py-2 text-xs text-gray-500">
+        <MapPin size={14} className="text-tgreen-dark shrink-0" />
+        <span className="truncate">{location?.displayAddress ?? "Click the map to place a marker, or drag the marker to correct it."}</span>
+      </div>
+    </div>
+  );
+}
+
+function getLocationSummary(location: LocationDraft) {
+  const confidence = typeof location.confidence === "number" ? `, ${Math.round(location.confidence * 100)}% confidence` : "";
+  return `${location.source} marker at ${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}${confidence}`;
 }
 
 function ModalFrame({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {

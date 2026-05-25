@@ -1,10 +1,11 @@
 import L, { type GeoJSONOptions, type Layer } from "leaflet";
 import { Activity, ArrowLeft, Building2, ChevronDown, Clock, Map as MapIcon, MapPin, PanelLeftClose, PanelLeftOpen, Phone, Radio, Search, TrendingUp, Users, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { useQuery } from "@tanstack/react-query";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ModalPortal } from "../../../shared/components/ui";
-import { mapEnterprises } from "../../../shared/data";
-import type { EnterpriseStatus, MapEnterprise } from "../../../shared/types";
+import { listEnterpriseAccounts, type AccountSummary } from "../../../shared/services/accountManagement";
+import type { EnterpriseStatus, GatewayStatus, MapEnterprise } from "../../../shared/types";
 
 type GeoJsonFeatureCollection = GeoJSON.FeatureCollection;
 
@@ -86,7 +87,7 @@ export function AdminEnterpriseMap() {
   const mapRef = useRef<L.Map | null>(null);
   const boundaryLayerRef = useRef<L.GeoJSON | null>(null);
   const activeBoundaryRef = useRef<L.Path | null>(null);
-  const markersRef = useRef<Record<number, L.Marker>>({});
+  const markersRef = useRef<Record<string, L.Marker>>({});
   const selectedBarangayNameRef = useRef<string | null>(null);
   const hasInitialOverviewFitRef = useRef(false);
 
@@ -97,8 +98,12 @@ export function AdminEnterpriseMap() {
   const [showBoundaries, setShowBoundaries] = useState(true);
   const [barangaySearch, setBarangaySearch] = useState("");
   const [selectedBarangayName, setSelectedBarangayName] = useState<string | null>(null);
-  const [selectedEnterpriseId, setSelectedEnterpriseId] = useState<number | null>(null);
+  const [selectedEnterpriseId, setSelectedEnterpriseId] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const enterpriseAccountsQuery = useQuery({ queryKey: ["enterprise-accounts"], queryFn: listEnterpriseAccounts });
+  const enterpriseAccounts = enterpriseAccountsQuery.data ?? [];
+  const mapEnterprises = useMemo(() => enterpriseAccounts.map(toMapEnterprise).filter((enterprise): enterprise is MapEnterprise => enterprise !== null), [enterpriseAccounts]);
+  const unpinnedEnterpriseCount = enterpriseAccounts.filter((enterprise) => enterprise.latitude === null || enterprise.longitude === null).length;
 
   const boundaryFeatureCount = useMemo(() => boundary?.features.filter(isBoundaryPolygonFeature).length ?? 0, [boundary]);
 
@@ -111,7 +116,7 @@ export function AdminEnterpriseMap() {
     });
 
     return counts;
-  }, []);
+  }, [mapEnterprises]);
 
   const barangayDirectoryItems = useMemo(() => {
     const searchKey = normalizeBarangayName(barangaySearch);
@@ -135,7 +140,7 @@ export function AdminEnterpriseMap() {
       .sort((left, right) => left.label.localeCompare(right.label));
   }, [barangaySearch, boundary, enterpriseCountsByBarangay]);
 
-  const selectedBarangayEnterprises = useMemo(() => (selectedBarangayName ? getEnterprisesByBarangay(selectedBarangayName) : []), [selectedBarangayName]);
+  const selectedBarangayEnterprises = useMemo(() => (selectedBarangayName ? getEnterprisesByBarangay(mapEnterprises, selectedBarangayName) : []), [mapEnterprises, selectedBarangayName]);
   const visibleEnterprises = selectedBarangayName ? selectedBarangayEnterprises : mapEnterprises;
   const selectedEnterprise = selectedEnterpriseId === null ? null : (mapEnterprises.find((enterprise) => enterprise.id === selectedEnterpriseId) ?? null);
 
@@ -441,7 +446,7 @@ export function AdminEnterpriseMap() {
       easeLinearity: 0.25,
     });
     markersRef.current[selectedEnterpriseId].openPopup();
-  }, [selectedEnterpriseId]);
+  }, [mapEnterprises, selectedEnterpriseId]);
 
   return (
     <div className="border-tanaw-gray bg-tanaw-gray relative min-h-0 flex-1 overflow-hidden rounded-xl border shadow-sm max-sm:min-h-140">
@@ -491,7 +496,9 @@ export function AdminEnterpriseMap() {
                         ? "Loading refined boundaries"
                         : isBoundaryError
                           ? "Boundary layer unavailable"
-                          : `${boundaryFeatureCount} barangay boundaries`}
+                          : enterpriseAccountsQuery.isLoading
+                            ? "Loading enterprises"
+                            : `${boundaryFeatureCount} barangay boundaries`}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -708,7 +715,10 @@ export function AdminEnterpriseMap() {
                           <Building2 size={13} className="text-tanaw-sky" />
                           All Enterprises
                         </h3>
-                        <span className="text-[9px] font-bold tracking-widest text-white/65 uppercase">{mapEnterprises.length}</span>
+                        <span className="text-[9px] font-bold tracking-widest text-white/65 uppercase">
+                          {mapEnterprises.length}
+                          {unpinnedEnterpriseCount > 0 ? ` pinned / ${unpinnedEnterpriseCount} unpinned` : ""}
+                        </span>
                       </div>
                       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                         {mapEnterprises.map((enterprise) => (
@@ -722,6 +732,11 @@ export function AdminEnterpriseMap() {
                             }}
                           />
                         ))}
+                        {mapEnterprises.length === 0 && (
+                          <div className="rounded-lg border border-white/15 bg-black/20 p-6 text-center text-[10px] font-bold tracking-widest text-white/65 uppercase">
+                            {enterpriseAccountsQuery.isLoading ? "Loading enterprises..." : "No pinned enterprise locations yet."}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </motion.div>
@@ -964,9 +979,39 @@ function getBarangayLabel(featureItem: GeoJSON.Feature | undefined) {
   return getFeatureValue(featureItem, ["display_name", "official_barangay", "name", "alt_name"], "Unnamed Barangay");
 }
 
-function getEnterprisesByBarangay(barangayName: string) {
+function getEnterprisesByBarangay(enterprises: MapEnterprise[], barangayName: string) {
   const selectedKey = normalizeBarangayName(barangayName);
-  return mapEnterprises.filter((enterprise) => normalizeBarangayName(enterprise.barangay) === selectedKey);
+  return enterprises.filter((enterprise) => normalizeBarangayName(enterprise.barangay) === selectedKey);
+}
+
+function toMapEnterprise(account: AccountSummary): MapEnterprise | null {
+  if (account.latitude === null || account.longitude === null) return null;
+
+  return {
+    id: account.id,
+    name: account.enterpriseName ?? account.displayName,
+    barangay: account.barangay ?? "Unassigned",
+    category: account.category ?? "Uncategorized",
+    fullAddress: account.address ?? account.geocodedAddress ?? "Address not provided",
+    lat: account.latitude,
+    lng: account.longitude,
+    totalLiveOccupancy: 0,
+    estimatedUniqueCount: 0,
+    status: getEnterpriseMapStatus(account),
+    contact: account.phone ?? account.email,
+    lastSync: account.locationUpdatedAt ? new Date(account.locationUpdatedAt).toLocaleString() : undefined,
+    gatewayStatus: getGatewayStatus(account.gatewayStatus),
+  };
+}
+
+function getEnterpriseMapStatus(account: AccountSummary): EnterpriseStatus {
+  if (account.status === "inactive") return "Warning";
+  return "Normal";
+}
+
+function getGatewayStatus(value: string | null): GatewayStatus {
+  const statuses: GatewayStatus[] = ["Connected", "Sync Delayed", "Offline", "Not Linked", "Closed"];
+  return statuses.find((status) => status === value) ?? "Not Linked";
 }
 
 function fitMapToSanPedroBounds(map: L.Map, layer: L.GeoJSON | null) {

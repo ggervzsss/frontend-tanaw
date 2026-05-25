@@ -118,7 +118,11 @@ export function AdminSystemLogsPage() {
               {filteredLogs.length === 0 && (
                 <tr>
                   <td colSpan={6}>
-                    <EmptyState icon={Activity} title={isLoading ? "Loading working logs" : "No working logs"} description={isLoading ? "Fetching live activity records." : "Centralized audit records will appear here once system activity is recorded."} />
+                    <EmptyState
+                      icon={Activity}
+                      title={isLoading ? "Loading working logs" : "No working logs"}
+                      description={isLoading ? "Fetching live activity records." : "Centralized audit records will appear here once system activity is recorded."}
+                    />
                   </td>
                 </tr>
               )}

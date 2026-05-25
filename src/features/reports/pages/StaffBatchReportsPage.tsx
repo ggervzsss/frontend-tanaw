@@ -87,17 +87,15 @@ export function StaffBatchReportsPage() {
 
   const availableYears = useMemo(() => {
     const years = Array.from(
-      new Set(
-        [
-          currentPeriod.year,
-          ...reports
+      new Set([
+        currentPeriod.year,
+        ...(reports
           .map((r) => {
             const match = r.period.match(/\d{4}/);
             return match ? match[0] : null;
           })
-          .filter(Boolean) as string[],
-        ]
-      ),
+          .filter(Boolean) as string[]),
+      ]),
     );
     return years.sort((a, b) => Number(b) - Number(a));
   }, [currentPeriod.year, reports]);
@@ -217,7 +215,13 @@ export function StaffBatchReportsPage() {
       <PageHeader title="Batch Reports" description="Enterprise-level compliance review before DOT report consolidation." />
 
       <section className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
-        <MetricCard label="Registered Enterprises" value={reportEnterprises.length} foot={reportEnterprisesQuery.isLoading ? "Loading registry" : "Required to submit"} color="#065f46" icon={Building2} />
+        <MetricCard
+          label="Registered Enterprises"
+          value={reportEnterprises.length}
+          foot={reportEnterprisesQuery.isLoading ? "Loading registry" : "Required to submit"}
+          color="#065f46"
+          icon={Building2}
+        />
         <MetricCard label="Ready Reports" value={readyReports.length} foot="Available for consolidation" color="#10b981" icon={CheckCircle2} />
         <MetricCard label="Missing Submissions" value={missingReports.length} foot="Needs follow-up" color="#dc2626" footClassName="text-red-600" icon={FileText} />
         <MetricCard label="Archived Reports" value={nonPeriodReports.length} foot="Past submissions" color="#2563eb" icon={Archive} />
@@ -311,7 +315,11 @@ export function StaffBatchReportsPage() {
                     <EmptyState
                       icon={Building2}
                       title={reportEnterprisesQuery.isLoading ? "Loading enterprises" : "No report enterprises"}
-                      description={reportEnterprisesQuery.isLoading ? "Fetching registered enterprise accounts." : "Enterprise report rows will appear here once registered establishments are connected to reporting."}
+                      description={
+                        reportEnterprisesQuery.isLoading
+                          ? "Fetching registered enterprise accounts."
+                          : "Enterprise report rows will appear here once registered establishments are connected to reporting."
+                      }
                     />
                   </td>
                 </tr>
@@ -426,7 +434,9 @@ function ReportSection({ title, reports, empty, onOpenReport }: { title: string;
             </div>
           </button>
         ))}
-        {reports.length === 0 && <EmptyState icon={FileText} title={empty} description="Relevant submissions will appear here once reports are received from enterprises." minHeightClassName="min-h-40" />}
+        {reports.length === 0 && (
+          <EmptyState icon={FileText} title={empty} description="Relevant submissions will appear here once reports are received from enterprises." minHeightClassName="min-h-40" />
+        )}
       </div>
     </section>
   );

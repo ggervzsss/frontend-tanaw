@@ -43,7 +43,11 @@ export function ITDevLogPage() {
               className="focus:ring-tgreen-dark w-full rounded-lg border border-slate-300 bg-white py-2 pr-4 pl-9 text-sm text-slate-900 transition outline-none focus:ring-1"
             />
           </div>
-          <select value={channel} onChange={(event) => setChannel(event.target.value as ChannelFilter)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none">
+          <select
+            value={channel}
+            onChange={(event) => setChannel(event.target.value as ChannelFilter)}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none"
+          >
             <option value="all">All Channels</option>
             <option value="email">Email</option>
             <option value="sms">SMS</option>

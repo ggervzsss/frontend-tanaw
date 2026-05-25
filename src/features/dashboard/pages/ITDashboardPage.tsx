@@ -81,7 +81,11 @@ export function ITDashboardPage() {
               </table>
             </div>
             {recentActivities.length === 0 && (
-              <EmptyState icon={Activity} title={logsLoading ? "Loading recent activity" : "No recent activity"} description={logsLoading ? "Fetching live activity records." : "System activity records will appear here once the logging source is connected."} />
+              <EmptyState
+                icon={Activity}
+                title={logsLoading ? "Loading recent activity" : "No recent activity"}
+                description={logsLoading ? "Fetching live activity records." : "System activity records will appear here once the logging source is connected."}
+              />
             )}
           </div>
         </section>
@@ -103,9 +107,7 @@ export function ITDashboardPage() {
               {actionableAlerts.map((alert) => (
                 <PriorityAlertListItem key={alert.id} alert={alert} onOpen={setSelectedAlert} />
               ))}
-              {actionableAlerts.length === 0 && (
-                <EmptyState icon={Bell} title="No priority alerts" description="Alerts requiring IT attention will appear here once alert ingestion is implemented." />
-              )}
+              {actionableAlerts.length === 0 && <EmptyState icon={Bell} title="No priority alerts" description="Alerts requiring IT attention will appear here once alert ingestion is implemented." />}
             </div>
           </section>
         </aside>

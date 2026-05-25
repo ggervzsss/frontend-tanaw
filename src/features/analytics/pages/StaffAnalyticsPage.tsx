@@ -114,7 +114,9 @@ export function StaffAnalyticsPage() {
     unique: report?.metrics.unique ?? 0,
     status: report && reportHasSubmission(report) ? "Submitted" : "Missing",
   }));
-  const complianceRows = [...enterpriseRows].sort((a, b) => Number(Boolean(b.report && reportHasSubmission(b.report))) - Number(Boolean(a.report && reportHasSubmission(a.report))) || a.enterprise.name.localeCompare(b.enterprise.name));
+  const complianceRows = [...enterpriseRows].sort(
+    (a, b) => Number(Boolean(b.report && reportHasSubmission(b.report))) - Number(Boolean(a.report && reportHasSubmission(a.report))) || a.enterprise.name.localeCompare(b.enterprise.name),
+  );
 
   return (
     <PageMotion>
@@ -166,7 +168,12 @@ export function StaffAnalyticsPage() {
             {reportEnterprisesQuery.isLoading ? (
               <EmptyState icon={Activity} title="Loading enterprises" description="Fetching registered enterprise accounts for analytics." minHeightClassName="min-h-72" />
             ) : chartData.length === 0 ? (
-              <EmptyState icon={Activity} title="No registered enterprises" description="Enterprise traffic comparisons will appear here once enterprise accounts are registered." minHeightClassName="min-h-72" />
+              <EmptyState
+                icon={Activity}
+                title="No registered enterprises"
+                description="Enterprise traffic comparisons will appear here once enterprise accounts are registered."
+                minHeightClassName="min-h-72"
+              />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
@@ -204,16 +211,9 @@ export function StaffAnalyticsPage() {
             {complianceRows.map(({ enterprise, report }) => (
               <ComplianceStatusItem key={enterprise.id} enterprise={enterprise} report={report} />
             ))}
-            {reportEnterprisesQuery.isLoading && (
-              <EmptyState icon={ClipboardCheck} title="Loading registry" description="Fetching registered enterprise accounts." minHeightClassName="min-h-45" />
-            )}
+            {reportEnterprisesQuery.isLoading && <EmptyState icon={ClipboardCheck} title="Loading registry" description="Fetching registered enterprise accounts." minHeightClassName="min-h-45" />}
             {!reportEnterprisesQuery.isLoading && complianceRows.length === 0 && (
-              <EmptyState
-                icon={ClipboardCheck}
-                title="No registered enterprises"
-                description="Compliance status will appear once enterprise accounts are registered."
-                minHeightClassName="min-h-45"
-              />
+              <EmptyState icon={ClipboardCheck} title="No registered enterprises" description="Compliance status will appear once enterprise accounts are registered." minHeightClassName="min-h-45" />
             )}
           </div>
         </section>

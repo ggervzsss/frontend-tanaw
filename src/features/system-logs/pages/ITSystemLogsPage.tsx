@@ -26,14 +26,14 @@ export function ITSystemLogsPage() {
 
   const handleTypeFilterChange = (value: string) => {
     setTypeFilter(value);
-      if (!getAccountOptions(logs, value).includes(accountFilter)) {
+    if (!getAccountOptions(logs, value).includes(accountFilter)) {
       setAccountFilter("All Accounts");
     }
   };
 
   const handleAccountFilterChange = (value: string) => {
     setAccountFilter(value);
-      if (!getTypeOptions(logs, value).includes(typeFilter)) {
+    if (!getTypeOptions(logs, value).includes(typeFilter)) {
       setTypeFilter("All Types");
     }
   };
@@ -107,7 +107,11 @@ export function ITSystemLogsPage() {
               {filteredActivities.length === 0 && (
                 <tr>
                   <td colSpan={5}>
-                    <EmptyState icon={Activity} title={isLoading ? "Loading system activity" : "No system activity"} description={isLoading ? "Fetching live IT and system activity." : "System activity records will appear here once users, accounts, and automated events are connected."} />
+                    <EmptyState
+                      icon={Activity}
+                      title={isLoading ? "Loading system activity" : "No system activity"}
+                      description={isLoading ? "Fetching live IT and system activity." : "System activity records will appear here once users, accounts, and automated events are connected."}
+                    />
                   </td>
                 </tr>
               )}

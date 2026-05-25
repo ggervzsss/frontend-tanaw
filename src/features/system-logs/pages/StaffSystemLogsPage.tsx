@@ -96,7 +96,11 @@ export function StaffSystemLogsPage() {
               {filteredLogs.length === 0 && (
                 <tr>
                   <td colSpan={5}>
-                    <EmptyState icon={Activity} title={isLoading ? "Loading activity logs" : "No staff activity logs"} description={isLoading ? "Fetching live submission activity." : "Submission and report-processing logs will appear here once staff activity is recorded."} />
+                    <EmptyState
+                      icon={Activity}
+                      title={isLoading ? "Loading activity logs" : "No staff activity logs"}
+                      description={isLoading ? "Fetching live submission activity." : "Submission and report-processing logs will appear here once staff activity is recorded."}
+                    />
                   </td>
                 </tr>
               )}
@@ -134,7 +138,12 @@ function LogDetailsModal({ log, onClose }: { log: SystemLog; onClose: () => void
   return (
     <ModalPortal>
       <motion.div className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-        <motion.section className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-2xl" initial={{ opacity: 0, y: 12, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12, scale: 0.98 }}>
+        <motion.section
+          className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-2xl"
+          initial={{ opacity: 0, y: 12, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 12, scale: 0.98 }}
+        >
           <header className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
             <div>
               <p className="font-mono text-[10px] font-bold text-gray-400">{log.id}</p>

@@ -506,8 +506,8 @@ export function AdminEnterpriseMap() {
                           : enterpriseAccountsQuery.isError
                             ? "Enterprise registry unavailable"
                             : enterpriseAccountsQuery.isLoading
-                            ? "Loading enterprises"
-                            : `${boundaryFeatureCount} barangay boundaries`}
+                              ? "Loading enterprises"
+                              : `${boundaryFeatureCount} barangay boundaries`}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

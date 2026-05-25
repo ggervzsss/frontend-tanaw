@@ -79,7 +79,14 @@ export function ITEnterpriseAccountsPage() {
       <section className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
         <MetricCard label="Enterprise Accounts" value={accounts.length} foot="Registered entities" color="#2563eb" icon={Building2} />
         <MetricCard label="Active Enterprises" value={accounts.filter((enterprise) => enterprise.status === "active").length} foot="Can access TANAW" color="#065f46" icon={UserCheck} />
-        <MetricCard label="Inactive Enterprises" value={accounts.filter((enterprise) => enterprise.status === "inactive").length} foot="Access disabled" color="#64748b" footClassName="text-slate-600" icon={XCircle} />
+        <MetricCard
+          label="Inactive Enterprises"
+          value={accounts.filter((enterprise) => enterprise.status === "inactive").length}
+          foot="Access disabled"
+          color="#64748b"
+          footClassName="text-slate-600"
+          icon={XCircle}
+        />
         <MetricCard label="Barangays Covered" value={new Set(accounts.map((enterprise) => enterprise.barangay).filter(Boolean)).size} foot="With registered enterprises" color="#7c3aed" icon={Users} />
       </section>
 
@@ -95,8 +102,21 @@ export function ITEnterpriseAccountsPage() {
             />
           </div>
           <FilterSelect value={barangay} onChange={setBarangay} options={barangays.map((item): [string, string] => [item, item])} />
-          <FilterSelect value={status} onChange={(value) => setStatus(value as StatusFilter)} options={[["all", "All Statuses"], ["active", "Active"], ["inactive", "Inactive"]] as const} />
-          <button onClick={() => setRegisterOpen(true)} className="bg-tgreen-dark hover:bg-tgreen-light inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition">
+          <FilterSelect
+            value={status}
+            onChange={(value) => setStatus(value as StatusFilter)}
+            options={
+              [
+                ["all", "All Statuses"],
+                ["active", "Active"],
+                ["inactive", "Inactive"],
+              ] as const
+            }
+          />
+          <button
+            onClick={() => setRegisterOpen(true)}
+            className="bg-tgreen-dark hover:bg-tgreen-light inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition"
+          >
             <Building2 size={16} /> Register Enterprise
           </button>
         </div>
@@ -150,7 +170,11 @@ export function ITEnterpriseAccountsPage() {
               {filteredEnterprises.length === 0 && (
                 <tr>
                   <td colSpan={6}>
-                    <EmptyState icon={Building2} title="No enterprise accounts" description={accountsQuery.isLoading ? "Loading accounts..." : "Register an enterprise to generate development credentials."} />
+                    <EmptyState
+                      icon={Building2}
+                      title="No enterprise accounts"
+                      description={accountsQuery.isLoading ? "Loading accounts..." : "Register an enterprise to generate development credentials."}
+                    />
                   </td>
                 </tr>
               )}
@@ -254,13 +278,27 @@ function RegisterEnterpriseModal({ onClose }: { onClose: () => void }) {
     <ModalFrame title="Register Enterprise" onClose={onClose}>
       <form ref={formRef} onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <FormField name="enterpriseName" label="Enterprise Name" required />
-        <SearchableDropdownField name="category" label="Enterprise Type / Category" options={enterpriseCategories.map((category): ChoiceOption => [category.value, category.label])} value={selectedCategory} onChange={setSelectedCategory} required />
+        <SearchableDropdownField
+          name="category"
+          label="Enterprise Type / Category"
+          options={enterpriseCategories.map((category): ChoiceOption => [category.value, category.label])}
+          value={selectedCategory}
+          onChange={setSelectedCategory}
+          required
+        />
         <FormField name="managerName" label="Contact Person / Manager" required />
         <FormField name="email" label="Contact Email" type="email" required />
         <FormField name="contactNumber" label="Contact Number" />
         <FormField name="enterpriseId" label="Enterprise ID Seed" placeholder="Leave blank to use enterprise name" />
         <FormField name="address" label="Block / Lot / Street" required />
-        <SearchableDropdownField name="barangay" label="Barangay" options={sanPedroBarangays.map((item): ChoiceOption => [item, item])} value={selectedBarangay} onChange={setSelectedBarangay} required />
+        <SearchableDropdownField
+          name="barangay"
+          label="Barangay"
+          options={sanPedroBarangays.map((item): ChoiceOption => [item, item])}
+          value={selectedBarangay}
+          onChange={setSelectedBarangay}
+          required
+        />
         <div className="md:col-span-2">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -454,7 +492,13 @@ function FilterSelect({ value, onChange, options }: { value: string; onChange: (
 
 function IconAction({ label, icon, onClick }: { label: string; icon: ReactNode; onClick: () => void }) {
   return (
-    <button type="button" title={label} aria-label={label} onClick={onClick} className="hover:border-tgreen-dark hover:text-tgreen-dark rounded-lg border border-gray-200 bg-white p-2 text-gray-500 transition">
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      onClick={onClick}
+      className="hover:border-tgreen-dark hover:text-tgreen-dark rounded-lg border border-gray-200 bg-white p-2 text-gray-500 transition"
+    >
       {icon}
     </button>
   );
@@ -473,7 +517,13 @@ function FormField({ name, label, type = "text", required = false, placeholder }
   return (
     <label className="block">
       <span className="mb-1 block text-[10px] font-bold text-gray-500 uppercase">{label}</span>
-      <input name={name} type={type} required={required} placeholder={placeholder} className="focus:ring-tgreen-dark w-full rounded-lg border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-1" />
+      <input
+        name={name}
+        type={type}
+        required={required}
+        placeholder={placeholder}
+        className="focus:ring-tgreen-dark w-full rounded-lg border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-1"
+      />
     </label>
   );
 }
@@ -613,7 +663,7 @@ function SearchableDropdownField({
         onClick={handleToggle}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        className="focus:ring-tgreen-dark flex w-full items-center justify-between gap-3 rounded-lg border border-gray-300 bg-white p-3 text-left text-sm outline-none transition focus:ring-1"
+        className="focus:ring-tgreen-dark flex w-full items-center justify-between gap-3 rounded-lg border border-gray-300 bg-white p-3 text-left text-sm transition outline-none focus:ring-1"
       >
         <span className={selectedOption ? "font-semibold text-gray-900" : "text-gray-400"}>{selectedOption?.[1] ?? `Select ${label.toLowerCase()}`}</span>
         <ChevronDown size={16} className={`shrink-0 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />

@@ -7,14 +7,7 @@ import { MetricCard } from "../../../shared/components/cards";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel } from "../../../shared/components/panel";
 import { EmptyState, ModalPortal, PageMotion } from "../../../shared/components/ui";
-import {
-  type AccountSummary,
-  type CreateLguAccountPayload,
-  createLguAccount,
-  listLguAccounts,
-  resetAccountPassword,
-  updateAccountStatus,
-} from "../../../shared/services/accountManagement";
+import { type AccountSummary, type CreateLguAccountPayload, createLguAccount, listLguAccounts, resetAccountPassword, updateAccountStatus } from "../../../shared/services/accountManagement";
 
 type RoleFilter = "all" | "admin" | "it" | "staff";
 type StatusFilter = "active" | "inactive";
@@ -83,9 +76,32 @@ export function ITLguAccountsPage() {
               className="focus:ring-tgreen-dark w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-9 text-sm text-gray-900 transition outline-none focus:ring-1"
             />
           </div>
-          <FilterSelect value={role} onChange={(value) => setRole(value as RoleFilter)} options={[["all", "All Roles"], ["admin", "Admin"], ["it", "IT Personnel"], ["staff", "LGU Staff"]] as const} />
-          <FilterSelect value={status} onChange={(value) => setStatus(value as StatusFilter)} options={[["active", "Active"], ["inactive", "Inactive"]] as const} />
-          <button onClick={() => setCreateOpen(true)} className="bg-tgreen-dark hover:bg-tgreen-light inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition">
+          <FilterSelect
+            value={role}
+            onChange={(value) => setRole(value as RoleFilter)}
+            options={
+              [
+                ["all", "All Roles"],
+                ["admin", "Admin"],
+                ["it", "IT Personnel"],
+                ["staff", "LGU Staff"],
+              ] as const
+            }
+          />
+          <FilterSelect
+            value={status}
+            onChange={(value) => setStatus(value as StatusFilter)}
+            options={
+              [
+                ["active", "Active"],
+                ["inactive", "Inactive"],
+              ] as const
+            }
+          />
+          <button
+            onClick={() => setCreateOpen(true)}
+            className="bg-tgreen-dark hover:bg-tgreen-light inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition"
+          >
             <UserPlus size={16} /> Create LGU Account
           </button>
         </div>
@@ -234,13 +250,13 @@ function ModalFrame({ title, children, onClose }: { title: string; children: Rea
           exit={{ opacity: 0, y: 12, scale: 0.98 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
         >
-        <header className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
-          <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-          <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-white hover:text-gray-900">
-            Close
-          </button>
-        </header>
-        <div className="p-6">{children}</div>
+          <header className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+            <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-white hover:text-gray-900">
+              Close
+            </button>
+          </header>
+          <div className="p-6">{children}</div>
         </motion.section>
       </motion.div>
     </ModalPortal>
@@ -261,7 +277,13 @@ function FilterSelect({ value, onChange, options }: { value: string; onChange: (
 
 function IconAction({ label, icon, onClick }: { label: string; icon: ReactNode; onClick: () => void }) {
   return (
-    <button type="button" title={label} aria-label={label} onClick={onClick} className="hover:border-tgreen-dark hover:text-tgreen-dark rounded-lg border border-gray-200 bg-white p-2 text-gray-500 transition">
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      onClick={onClick}
+      className="hover:border-tgreen-dark hover:text-tgreen-dark rounded-lg border border-gray-200 bg-white p-2 text-gray-500 transition"
+    >
       {icon}
     </button>
   );
@@ -420,7 +442,7 @@ function SearchableDropdownField({
         onClick={handleToggle}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        className="focus:ring-tgreen-dark flex w-full items-center justify-between gap-3 rounded-lg border border-gray-300 bg-white p-3 text-left text-sm outline-none transition focus:ring-1"
+        className="focus:ring-tgreen-dark flex w-full items-center justify-between gap-3 rounded-lg border border-gray-300 bg-white p-3 text-left text-sm transition outline-none focus:ring-1"
       >
         <span className={selectedOption ? "font-semibold text-gray-900" : "text-gray-400"}>{selectedOption?.[1] ?? `Select ${label.toLowerCase()}`}</span>
         <ChevronDown size={16} className={`shrink-0 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />

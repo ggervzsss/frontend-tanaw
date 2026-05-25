@@ -67,10 +67,7 @@ export function AccountProfilePage({ role }: AccountPageProps) {
   const [isSuccess, setIsSuccess] = useState(false);
   const identity = {
     node: role === "enterprise" ? user.enterpriseName || "Enterprise Account" : roleIdentity[role].node,
-    affiliation:
-      role === "enterprise"
-        ? [user.category || "Registered Enterprise", user.barangay ? `Barangay ${user.barangay}` : ""].filter(Boolean).join(" - ")
-        : roleIdentity[role].affiliation,
+    affiliation: role === "enterprise" ? [user.category || "Registered Enterprise", user.barangay ? `Barangay ${user.barangay}` : ""].filter(Boolean).join(" - ") : roleIdentity[role].affiliation,
   };
   const initials = useMemo(
     () =>
@@ -137,7 +134,7 @@ export function AccountProfilePage({ role }: AccountPageProps) {
             <div className="grid gap-4 md:grid-cols-3">
               <ReadOnlyField label="Current Node" value={identity.node} />
               <ReadOnlyField label="Affiliation" value={identity.affiliation} />
-              <ReadOnlyField label={role === "enterprise" ? "Enterprise ID" : "Directory ID"} value={role === "enterprise" ? user.enterpriseId || "Not assigned" : authUser?.id ?? "Not assigned"} />
+              <ReadOnlyField label={role === "enterprise" ? "Enterprise ID" : "Directory ID"} value={role === "enterprise" ? user.enterpriseId || "Not assigned" : (authUser?.id ?? "Not assigned")} />
             </div>
             <p className="mt-4 text-xs font-medium text-slate-500">Structural role and affiliation changes are controlled through LGU account management.</p>
           </div>

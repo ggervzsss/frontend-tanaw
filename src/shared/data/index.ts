@@ -1,16 +1,4 @@
-import type {
-  Enterprise,
-  EnterpriseAccount,
-  FinalReport,
-  IntakeReport,
-  LguAccount,
-  MapEnterprise,
-  PipelineHealth,
-  PriorityAlert,
-  ReportEnterprise,
-  SystemActivity,
-  SystemLog,
-} from "../types";
+import type { Enterprise, EnterpriseAccount, FinalReport, IntakeReport, LguAccount, MapEnterprise, PipelineHealth, PriorityAlert, ReportEnterprise, SystemActivity, SystemLog } from "../types";
 
 export const enterpriseAccounts: EnterpriseAccount[] = [];
 export const enterprises: Enterprise[] = [];

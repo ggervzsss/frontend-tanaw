@@ -303,21 +303,7 @@ export function AccountSecurityPage() {
   );
 }
 
-function Field({
-  label,
-  defaultValue,
-  name,
-  type = "text",
-  placeholder,
-  minLength,
-}: {
-  label: string;
-  defaultValue: string;
-  name?: string;
-  type?: string;
-  placeholder?: string;
-  minLength?: number;
-}) {
+function Field({ label, defaultValue, name, type = "text", placeholder, minLength }: { label: string; defaultValue: string; name?: string; type?: string; placeholder?: string; minLength?: number }) {
   return (
     <label className="block">
       <span className="mb-2 block text-xs font-bold tracking-wide text-slate-500 uppercase">{label}</span>

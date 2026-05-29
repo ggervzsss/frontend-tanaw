@@ -4,15 +4,15 @@ import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { routes } from "../../../app/routers/routes";
-import { useAlertStore } from "../../../app/store";
-import { AlertDetailsModal, PriorityAlertListItem } from "../../alerts-monitor/components";
-import { MetricCard } from "../../../shared/components/cards";
-import { PageHeader } from "../../../shared/components/layout";
-import { EmptyState, ModalPortal, PageMotion, stagger } from "../../../shared/components/ui";
-import { useActivityLogs } from "../../../shared/hooks/useActivityLogs";
-import { listEnterpriseAccounts, listLguAccounts } from "../../../shared/services/accountManagement";
-import type { PriorityAlert, SystemLog } from "../../../shared/types";
+import { routes } from "@/app/routers/routes";
+import { useAlertStore } from "@/app/store";
+import { AlertDetailsModal, PriorityAlertListItem } from "@/features/alerts-monitor/components";
+import { MetricCard } from "@/shared/components/cards";
+import { PageHeader } from "@/shared/components/layout";
+import { EmptyState, ModalPortal, PageMotion, stagger } from "@/shared/components/ui";
+import { useActivityLogs } from "@/shared/hooks/useActivityLogs";
+import { listEnterpriseAccounts, listLguAccounts } from "@/shared/services/accountManagement";
+import type { PriorityAlert, SystemLog } from "@/shared/types";
 
 export function ITDashboardPage() {
   const { logs, isLoading: logsLoading } = useActivityLogs();

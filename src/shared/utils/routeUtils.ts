@@ -1,4 +1,4 @@
-import { routes } from "../../app/routers/routes";
+import { routes } from "@/app/routers/routes";
 import type { UserRole } from "../types/role.types";
 
 export function getRoleDashboardPath(role: UserRole): string {

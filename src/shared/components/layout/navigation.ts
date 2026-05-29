@@ -1,6 +1,6 @@
 import { BarChart3, Bell, Building2, FileCheck2, FileText, Inbox, Layers, LayoutDashboard, MapPinned, Settings, Users } from "lucide-react";
 import type { ComponentType } from "react";
-import { routes } from "../../../app/routers/routes";
+import { routes } from "@/app/routers/routes";
 import type { UserRole } from "../../types/role.types";
 
 export type NavigationItem = {

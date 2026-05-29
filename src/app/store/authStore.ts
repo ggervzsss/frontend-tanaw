@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { AuthUser, UserRole } from "../../shared/types/role.types";
+import type { AuthUser, UserRole } from "@/shared/types/role.types";
 
 type AuthState = {
   token: string | null;

@@ -3,14 +3,16 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAx
 import { Activity, ClipboardCheck, Clock, Users } from "lucide-react";
 import { motion } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
-import { useReportStore } from "../../../app/store/reportStore";
-import { MetricCard } from "../../../shared/components/cards";
-import { PageHeader } from "../../../shared/components/layout";
-import { EmptyState, PageMotion, stagger } from "../../../shared/components/ui";
-import { listReportEnterprises } from "../../../shared/services/reporting";
-import type { IntakeReport, ReportEnterprise } from "../../../shared/types";
+import { useReportStore } from "@/app/store/reportStore";
+import { MetricCard } from "@/shared/components/cards";
+import { PageHeader } from "@/shared/components/layout";
+import { EmptyState, PageMotion, stagger } from "@/shared/components/ui";
+import { listReportEnterprises } from "@/shared/services/reporting";
+import type { IntakeReport, ReportEnterprise } from "@/shared/types";
 
 const MONTH_ORDER = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const EMPTY_REPORT_ENTERPRISES: ReportEnterprise[] = [];
+const EMPTY_INTAKE_REPORTS: IntakeReport[] = [];
 
 type AnalyticsPeriod = {
   key: string;
@@ -91,7 +93,7 @@ function getTrendLabel(activeReports: IntakeReport[], comparisonPeriod?: Analyti
 export function StaffAnalyticsPage() {
   const reports = useReportStore((state) => state.reports);
   const reportEnterprisesQuery = useQuery({ queryKey: ["report-enterprises"], queryFn: listReportEnterprises });
-  const reportEnterprises = reportEnterprisesQuery.data ?? [];
+  const reportEnterprises = reportEnterprisesQuery.data ?? EMPTY_REPORT_ENTERPRISES;
   const [selectedPeriodKey, setSelectedPeriodKey] = useState<string | null>(null);
 
   const currentPeriod = useMemo(() => getCurrentAnalyticsPeriod(), []);
@@ -101,7 +103,7 @@ export function StaffAnalyticsPage() {
     0,
   );
   const activePeriod = periods[activePeriodIndex];
-  const activeReports = activePeriod?.reports ?? [];
+  const activeReports = activePeriod?.reports ?? EMPTY_INTAKE_REPORTS;
   const enterpriseRows = useMemo(() => getEnterpriseReportRows(reportEnterprises, activeReports), [activeReports, reportEnterprises]);
   const submittedRows = enterpriseRows.filter((row) => row.report && reportHasSubmission(row.report));
   const submittedReports = submittedRows.map((row) => row.report).filter((report): report is IntakeReport => report !== null);

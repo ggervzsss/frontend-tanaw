@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { systemLogs as initialSystemLogs } from "../../shared/data";
-import type { SystemLog } from "../../shared/types";
+import { systemLogs as initialSystemLogs } from "@/shared/data";
+import type { SystemLog } from "@/shared/types";
 
 type NewSystemLog = Omit<SystemLog, "id" | "timestamp"> & {
   id?: string;

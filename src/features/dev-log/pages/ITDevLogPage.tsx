@@ -1,12 +1,13 @@
 import { Inbox, Mail, MessageSquareText, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { PageHeader } from "../../../shared/components/layout";
-import { Panel, PanelHeader } from "../../../shared/components/panel";
-import { EmptyState, PageMotion } from "../../../shared/components/ui";
-import { listDevDeliveries } from "../../../shared/services/accountManagement";
+import { PageHeader } from "@/shared/components/layout";
+import { Panel, PanelHeader } from "@/shared/components/panel";
+import { EmptyState, PageMotion } from "@/shared/components/ui";
+import { listDevDeliveries, type DevDelivery } from "@/shared/services/accountManagement";
 
 type ChannelFilter = "all" | "email" | "sms";
+const EMPTY_DELIVERIES: DevDelivery[] = [];
 
 export function ITDevLogPage() {
   const [query, setQuery] = useState("");
@@ -17,7 +18,7 @@ export function ITDevLogPage() {
     refetchInterval: 10_000,
   });
 
-  const deliveries = deliveriesQuery.data ?? [];
+  const deliveries = deliveriesQuery.data ?? EMPTY_DELIVERIES;
   const filteredDeliveries = useMemo(
     () =>
       deliveries.filter((delivery) => {

@@ -1,10 +1,10 @@
 import { Archive, ArchiveRestore, CheckCircle, Download, Printer, X } from "lucide-react";
 import { motion } from "motion/react";
 import toast from "react-hot-toast";
-import { useReportStore } from "../../../app/store/reportStore";
-import { ModalPortal } from "../../../shared/components/ui";
-import { CITY_SEAL } from "../../../shared/constants/branding";
-import type { FinalReport } from "../../../shared/types";
+import { useReportStore } from "@/app/store/reportStore";
+import { ModalPortal } from "@/shared/components/ui";
+import { CITY_SEAL } from "@/shared/constants/branding";
+import type { FinalReport } from "@/shared/types";
 import { DotFinalReportTable } from "./DotReportTable";
 
 type FinalReportViewerProps = {

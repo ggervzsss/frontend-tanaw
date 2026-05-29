@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { routes } from "../../../app/routers/routes";
-import { useAuthStore } from "../../../app/store/authStore";
+import { routes } from "@/app/routers/routes";
+import { useAuthStore } from "@/app/store/authStore";
 import { getCurrentUser } from "../../services/accountManagement";
 import type { UserRole } from "../../types/role.types";
 import { GlobalHeader } from "./GlobalHeader";

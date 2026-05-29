@@ -2,13 +2,13 @@ import { Check, Database, Download, Key, Monitor, MonitorSmartphone, Moon, Refre
 import { useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, type ReactNode, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { useAuthStore } from "../../../app/store/authStore";
-import { PageHeader } from "../../../shared/components/layout";
-import { Panel, PanelHeader } from "../../../shared/components/panel";
-import { PageMotion } from "../../../shared/components/ui";
-import { changePassword } from "../../../shared/services/accountManagement";
-import type { UserRole } from "../../../shared/types/role.types";
-import { roleAccessLabel, rolePortalLabel } from "../../../shared/components/layout/navigation";
+import { useAuthStore } from "@/app/store/authStore";
+import { PageHeader } from "@/shared/components/layout";
+import { Panel, PanelHeader } from "@/shared/components/panel";
+import { PageMotion } from "@/shared/components/ui";
+import { changePassword } from "@/shared/services/accountManagement";
+import type { UserRole } from "@/shared/types/role.types";
+import { roleAccessLabel, rolePortalLabel } from "@/shared/components/layout/navigation";
 
 type AccountPageProps = {
   role: UserRole;

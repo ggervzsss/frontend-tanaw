@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
-import { routes } from "../../../app/routers/routes";
-import { useAuthStore } from "../../../app/store/authStore";
-import { getRoleDashboardPath } from "../../../shared/utils/routeUtils";
+import { routes } from "@/app/routers/routes";
+import { useAuthStore } from "@/app/store/authStore";
+import { getRoleDashboardPath } from "@/shared/utils/routeUtils";
 import { LoginBackground, LoginBrandHeader, LoginCard, LoginForm } from "../components";
 import { useLogin } from "../hooks";
 

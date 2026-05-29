@@ -1,4 +1,4 @@
-import type { FinalReport, IntakeReport } from "../../../shared/types";
+import type { FinalReport, IntakeReport } from "@/shared/types";
 
 type Demographics = {
   provMale: number;

@@ -1,13 +1,13 @@
 import { AlertTriangle, Bell, CheckCircle2, Clock3, Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
-import { useAlertStore, useAuthStore } from "../../../app/store";
-import { MetricCard } from "../../../shared/components/cards";
-import { PageHeader } from "../../../shared/components/layout";
-import { Panel } from "../../../shared/components/panel";
-import { EmptyState, PageMotion } from "../../../shared/components/ui";
-import { recordActivityLog } from "../../../shared/services/activityLogs";
-import type { AlertSeverity, PriorityAlert, PriorityAlertStatus, PriorityAlertType } from "../../../shared/types";
+import { useAlertStore, useAuthStore } from "@/app/store";
+import { MetricCard } from "@/shared/components/cards";
+import { PageHeader } from "@/shared/components/layout";
+import { Panel } from "@/shared/components/panel";
+import { EmptyState, FilterSelect, PageMotion } from "@/shared/components/ui";
+import { recordActivityLog } from "@/shared/services/activityLogs";
+import type { AlertSeverity, PriorityAlert, PriorityAlertStatus, PriorityAlertType } from "@/shared/types";
 import { AlertDetailsModal, AlertStatusBadge, ResolutionBadge, SeverityBadge } from "../components";
 
 type SeverityFilter = "All Severities" | AlertSeverity;
@@ -167,16 +167,6 @@ export function ITAlertsPage() {
 
       <AnimatePresence>{selectedAlert && <AlertDetailsModal alert={selectedAlert} onClose={() => setSelectedAlert(null)} />}</AnimatePresence>
     </PageMotion>
-  );
-}
-
-function FilterSelect({ value, onChange, options }: { value: string; onChange: (value: string) => void; options: readonly string[] }) {
-  return (
-    <select value={value} onChange={(event) => onChange(event.target.value)} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none">
-      {options.map((option) => (
-        <option key={option}>{option}</option>
-      ))}
-    </select>
   );
 }
 

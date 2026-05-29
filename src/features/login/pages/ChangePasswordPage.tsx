@@ -3,10 +3,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Navigate, useNavigate } from "react-router-dom";
 import { KeyRound } from "lucide-react";
-import { routes } from "../../../app/routers/routes";
-import { useAuthStore } from "../../../app/store/authStore";
-import { changePassword } from "../../../shared/services/accountManagement";
-import { getRoleDashboardPath } from "../../../shared/utils/routeUtils";
+import { routes } from "@/app/routers/routes";
+import { useAuthStore } from "@/app/store/authStore";
+import { changePassword } from "@/shared/services/accountManagement";
+import { getRoleDashboardPath } from "@/shared/utils/routeUtils";
 import { LoginBackground, LoginBrandHeader, LoginCard } from "../components";
 
 export function ChangePasswordPage() {

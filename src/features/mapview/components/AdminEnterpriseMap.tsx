@@ -1,87 +1,38 @@
 import L, { type GeoJSONOptions, type Layer } from "leaflet";
-import { Activity, ArrowLeft, Building2, ChevronDown, Clock, Map as MapIcon, MapPin, PanelLeftClose, PanelLeftOpen, Phone, Radio, RefreshCw, Search, TrendingUp, Users, X } from "lucide-react";
+import { Activity, ArrowLeft, Building2, ChevronDown, Map as MapIcon, MapPin, PanelLeftClose, PanelLeftOpen, RefreshCw, Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useAuthStore } from "../../../app/store/authStore";
-import { ModalPortal } from "../../../shared/components/ui";
-import { listEnterpriseAccounts, type AccountSummary } from "../../../shared/services/accountManagement";
-import type { EnterpriseStatus, GatewayStatus, MapEnterprise } from "../../../shared/types";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAuthStore } from "@/app/store/authStore";
+import { listEnterpriseAccounts, type AccountSummary } from "@/shared/services/accountManagement";
+import type { MapEnterprise } from "@/shared/types";
+import {
+  activeBoundaryStyle,
+  createBoundaryPopupHtml,
+  createBoundaryTooltipHtml,
+  createPopupHtml,
+  createTooltipHtml,
+  dimmedBoundaryStyle,
+  fitMapToSanPedroBounds,
+  getBarangayLabel,
+  getDarkStatusBadgeClass,
+  getEnterpriseStatusColor,
+  getEnterprisesByBarangay,
+  getFeatureValue,
+  getGeoJsonColor,
+  hoverBoundaryStyle,
+  isBoundaryPolygonFeature,
+  normalizeBarangayName,
+  normalizeGeoJson,
+  sanPedroFallbackCenter,
+  sanPedroRelaxedFallbackBounds,
+  SAN_PEDRO_BARANGAYS_URL,
+  toMapEnterprise,
+  type GeoJsonFeatureCollection,
+} from "../utils";
+import { EnterpriseDetailsModal } from "./EnterpriseDetailsModal";
 
-type GeoJsonFeatureCollection = GeoJSON.FeatureCollection;
-
-const SAN_PEDRO_BARANGAYS_URL = "/data/san_pedro_barangays_clean_v4.geojson";
-
-const sanPedroFallbackCenter: L.LatLngTuple = [14.3413, 121.0446];
-
-const sanPedroRelaxedFallbackBounds: L.LatLngBoundsExpression = [
-  [14.235, 120.945],
-  [14.418, 121.131],
-];
-
-const barangayColors: Record<string, string> = {
-  bagongsilang: "#C7E9F1",
-  bayanbayanan: "#A6D8A8",
-  calendola: "#BDE0B0",
-  chrysanthemum: "#F6F1D1",
-  cuyab: "#BDE0B0",
-  estrella: "#C7E9F1",
-  fatima: "#F6F1D1",
-  gsis: "#B5D1FF",
-  landayan: "#D8C9A7",
-  langgam: "#FFC8A2",
-  laram: "#B5D1FF",
-  magsaysay: "#DCCCF5",
-  maharlika: "#A2D9A1",
-  narra: "#D8C9A7",
-  nueva: "#C7E9F1",
-  pacita1: "#DE802B",
-  pacita2: "#A2D9A1",
-  poblacion: "#F6F1D1",
-  rosario: "#C084FC",
-  riverside: "#BDE0B0",
-  sampaguita: "#DCCCF5",
-  sanantonio: "#5C6F2B",
-  sanlorenzo: "#93C5FD",
-  sanroque: "#B5D1FF",
-  sanvicente: "#FFC8A2",
-  santonino: "#FFD200",
-  unitedbayanihan: "#A2D9A1",
-  unitedbetterliving: "#B5D1FF",
-};
-
-const fallbackBarangayColors = ["#A2D9A1", "#F6F1D1", "#B5D1FF", "#FFC8A2", "#DCCCF5", "#C7E9F1"];
-
-const barangayFilterAliases: Record<string, string> = {
-  brgypacitai: "pacita1",
-  brgypacitaii: "pacita2",
-  pacitai: "pacita1",
-  pacitaone: "pacita1",
-  pacitaii: "pacita2",
-  pacitatwo: "pacita2",
-  sanlorenzoruiz: "sanlorenzo",
-};
-
-const activeBoundaryStyle: L.PathOptions = {
-  color: "#4f7cff",
-  fillOpacity: 0.62,
-  opacity: 0.94,
-  weight: 2.6,
-};
-
-const dimmedBoundaryStyle: L.PathOptions = {
-  color: "#2a3063",
-  fillOpacity: 0.26,
-  opacity: 0.68,
-  weight: 1.05,
-};
-
-const hoverBoundaryStyle: L.PathOptions = {
-  color: "#d7e4ff",
-  fillOpacity: 0.58,
-  opacity: 0.92,
-  weight: 2,
-};
+const EMPTY_ENTERPRISE_ACCOUNTS: AccountSummary[] = [];
 
 export function AdminEnterpriseMap() {
   const mapContainerId = "admin-enterprise-map";
@@ -103,7 +54,7 @@ export function AdminEnterpriseMap() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const token = useAuthStore((state) => state.token);
   const enterpriseAccountsQuery = useQuery({ queryKey: ["enterprise-accounts", token], queryFn: listEnterpriseAccounts, enabled: Boolean(token) });
-  const enterpriseAccounts = enterpriseAccountsQuery.data ?? [];
+  const enterpriseAccounts = enterpriseAccountsQuery.data ?? EMPTY_ENTERPRISE_ACCOUNTS;
   const mapEnterprises = useMemo(() => enterpriseAccounts.map(toMapEnterprise).filter((enterprise): enterprise is MapEnterprise => enterprise !== null), [enterpriseAccounts]);
   const unpinnedEnterprises = useMemo(() => enterpriseAccounts.filter((enterprise) => enterprise.latitude === null || enterprise.longitude === null), [enterpriseAccounts]);
   const unpinnedEnterpriseCount = unpinnedEnterprises.length;
@@ -798,82 +749,6 @@ export function AdminEnterpriseMap() {
   );
 }
 
-function EnterpriseDetailsModal({ enterprise, onClose }: { enterprise: MapEnterprise; onClose: () => void }) {
-  return (
-    <ModalPortal>
-      <motion.div
-        className="fixed inset-0 z-999 flex min-h-dvh items-center justify-center overflow-y-auto bg-slate-950/55 p-3 backdrop-blur-[3px] sm:p-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.18, ease: "easeOut" }}
-        onClick={onClose}
-      >
-        <motion.section
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="enterprise-details-title"
-          className="my-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-white/10 bg-slate-950/70 text-white shadow-2xl backdrop-blur-md sm:max-h-[calc(100dvh-3rem)]"
-          initial={{ opacity: 0, scale: 0.96, y: 12 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: 12 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          onClick={(event) => event.stopPropagation()}
-        >
-          <div className="shrink-0 border-b border-white/10 bg-black/25 px-4 py-4 sm:px-5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <p className="flex items-center gap-2 text-[10px] font-black tracking-widest text-white/70 uppercase">
-                  <Building2 size={14} className="text-tanaw-sky" />
-                  Enterprise Details
-                </p>
-                <h3 id="enterprise-details-title" className="mt-1 text-lg leading-tight font-black text-white sm:text-xl">
-                  {enterprise.name}
-                </h3>
-                <p className="mt-1 text-[10px] leading-relaxed font-bold tracking-widest text-white/75 uppercase sm:text-[11px]">
-                  {enterprise.category} - Barangay {enterprise.barangay}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="Close enterprise details"
-                className="focus:ring-tanaw-sky flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-white/75 transition hover:bg-white/20 hover:text-white focus:ring-2 focus:outline-none"
-              >
-                <X size={18} />
-              </button>
-            </div>
-          </div>
-
-          <div className="min-h-0 overflow-y-auto bg-black/10 p-4 sm:p-5">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <EnterpriseMetricCard icon={<Activity size={16} />} label="Total Live Occupancy" value={enterprise.totalLiveOccupancy.toLocaleString()} />
-              <EnterpriseMetricCard icon={<Users size={16} />} label="Est. Unique Count" value={enterprise.estimatedUniqueCount.toLocaleString()} />
-              <EnterpriseMetricCard icon={<Building2 size={16} />} label="Category" value={enterprise.category} />
-              <EnterpriseMetricCard
-                icon={<Radio size={16} />}
-                label="Status"
-                value={
-                  <span className={`inline-flex rounded border px-2 py-1 text-[10px] font-black tracking-widest uppercase ${getDarkStatusBadgeClass(enterprise.status)}`}>{enterprise.status}</span>
-                }
-              />
-              <EnterpriseMetricCard className="sm:col-span-2" icon={<MapPin size={16} />} label="Full Address" value={enterprise.fullAddress} />
-            </div>
-
-            <div className="mt-4 grid gap-3 rounded-lg border border-white/10 bg-white/5 p-4 text-sm text-white sm:grid-cols-2">
-              <EnterpriseDetailRow icon={<Radio size={14} />} label="Gateway" value={enterprise.gatewayStatus ?? "Not Linked"} />
-              <EnterpriseDetailRow icon={<Clock size={14} />} label="Last sync" value={enterprise.lastSync ?? "No sync recorded"} />
-              <EnterpriseDetailRow icon={<Phone size={14} />} label="Contact" value={enterprise.contact ?? "No contact listed"} />
-              <EnterpriseDetailRow icon={<TrendingUp size={14} />} label="Trend" value={enterprise.trend ?? "Stable"} />
-              <EnterpriseDetailRow className="sm:col-span-2" icon={<Clock size={14} />} label="Operating hours" value={enterprise.operatingHours ?? "Not specified"} />
-            </div>
-          </div>
-        </motion.section>
-      </motion.div>
-    </ModalPortal>
-  );
-}
-
 function EnterpriseMapCard({ enterprise, selected, onClick }: { enterprise: MapEnterprise; selected: boolean; onClick: () => void }) {
   return (
     <button
@@ -927,209 +802,4 @@ function UnpinnedEnterpriseCard({ enterprise }: { enterprise: AccountSummary }) 
       </div>
     </div>
   );
-}
-
-function EnterpriseMetricCard({ icon, label, value, className = "" }: { icon: ReactNode; label: string; value: ReactNode; className?: string }) {
-  return (
-    <div className={`rounded-lg border border-white/10 bg-white/5 p-4 shadow-sm ${className}`}>
-      <div className="text-tanaw-sky flex items-center gap-2">
-        {icon}
-        <p className="text-[10px] font-black tracking-widest text-white/60 uppercase">{label}</p>
-      </div>
-      <div className="mt-2 text-lg leading-tight font-black text-white max-sm:text-base">{value}</div>
-    </div>
-  );
-}
-
-function EnterpriseDetailRow({ icon, label, value, className = "" }: { icon: ReactNode; label: string; value: string; className?: string }) {
-  return (
-    <div className={`flex min-w-0 items-start gap-2 ${className}`}>
-      <span className="text-tanaw-sky mt-0.5">{icon}</span>
-      <div className="min-w-0">
-        <p className="text-[9px] font-black tracking-widest text-white/50 uppercase">{label}</p>
-        <p className="mt-0.5 font-bold wrap-break-word text-white/90">{value}</p>
-      </div>
-    </div>
-  );
-}
-
-function normalizeGeoJson(payload: GeoJsonFeatureCollection): GeoJsonFeatureCollection {
-  return {
-    ...payload,
-    features: payload.features.map((featureItem) => {
-      if (featureItem.geometry?.type !== "MultiPolygon" || !isPolygonCoordinates(featureItem.geometry.coordinates)) {
-        return featureItem;
-      }
-
-      const coordinates = (featureItem.geometry.coordinates as unknown as GeoJSON.Position[][]).map((ring): GeoJSON.Position[][] => [ring]);
-
-      return {
-        ...featureItem,
-        geometry: {
-          ...featureItem.geometry,
-          coordinates,
-        },
-      };
-    }),
-  };
-}
-
-function isPosition(value: unknown): value is GeoJSON.Position {
-  return Array.isArray(value) && typeof value[0] === "number" && typeof value[1] === "number";
-}
-
-function isPolygonCoordinates(coordinates: unknown): coordinates is GeoJSON.Position[][] {
-  return Array.isArray(coordinates) && coordinates.length > 0 && Array.isArray(coordinates[0]) && isPosition(coordinates[0][0]);
-}
-
-function isBoundaryPolygonFeature(featureItem: GeoJSON.Feature) {
-  return featureItem.geometry?.type === "Polygon" || featureItem.geometry?.type === "MultiPolygon";
-}
-
-function normalizeBarangayName(value: string) {
-  const normalized = value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\bbarangay\b/g, "")
-    .replace(/\bbrgy\b/g, "")
-    .replace(/\./g, "")
-    .replace(/[^a-z0-9]/g, "");
-
-  return barangayFilterAliases[normalized] ?? normalized;
-}
-
-function getGeoJsonColor(name: string) {
-  const normalized = normalizeBarangayName(name);
-  const mappedColor = barangayColors[normalized];
-  if (mappedColor) return mappedColor;
-
-  let hash = 0;
-  for (let index = 0; index < normalized.length; index += 1) {
-    hash = (hash << 5) - hash + normalized.charCodeAt(index);
-    hash |= 0;
-  }
-
-  return fallbackBarangayColors[Math.abs(hash) % fallbackBarangayColors.length];
-}
-
-function getFeatureValue(featureItem: GeoJSON.Feature | undefined, keys: string[], fallback = "") {
-  const properties = featureItem?.properties;
-  if (!properties) return fallback;
-
-  for (const key of keys) {
-    const value = properties[key];
-    if (typeof value === "string" || typeof value === "number") {
-      return String(value);
-    }
-  }
-
-  return fallback;
-}
-
-function getBarangayLabel(featureItem: GeoJSON.Feature | undefined) {
-  return getFeatureValue(featureItem, ["display_name", "official_barangay", "name", "alt_name"], "Unnamed Barangay");
-}
-
-function getEnterprisesByBarangay(enterprises: MapEnterprise[], barangayName: string) {
-  const selectedKey = normalizeBarangayName(barangayName);
-  return enterprises.filter((enterprise) => normalizeBarangayName(enterprise.barangay) === selectedKey);
-}
-
-function toMapEnterprise(account: AccountSummary): MapEnterprise | null {
-  if (account.latitude === null || account.longitude === null) return null;
-
-  return {
-    id: account.id,
-    name: account.enterpriseName ?? account.displayName,
-    barangay: account.barangay ?? "Unassigned",
-    category: account.category ?? "Uncategorized",
-    fullAddress: account.address ?? account.geocodedAddress ?? "Address not provided",
-    lat: account.latitude,
-    lng: account.longitude,
-    totalLiveOccupancy: 0,
-    estimatedUniqueCount: 0,
-    status: getEnterpriseMapStatus(account),
-    contact: account.phone ?? account.email,
-    lastSync: account.locationUpdatedAt ? new Date(account.locationUpdatedAt).toLocaleString() : undefined,
-    gatewayStatus: getGatewayStatus(account.gatewayStatus),
-  };
-}
-
-function getEnterpriseMapStatus(account: AccountSummary): EnterpriseStatus {
-  if (account.status === "inactive") return "Warning";
-  return "Normal";
-}
-
-function getGatewayStatus(value: string | null): GatewayStatus {
-  const statuses: GatewayStatus[] = ["Connected", "Sync Delayed", "Offline", "Not Linked", "Closed"];
-  return statuses.find((status) => status === value) ?? "Not Linked";
-}
-
-function fitMapToSanPedroBounds(map: L.Map, layer: L.GeoJSON | null) {
-  if (!layer) return;
-
-  const bounds = layer.getBounds();
-  if (!bounds.isValid()) return;
-
-  const initialViewBounds = bounds.pad(0.36);
-  const interactionBounds = bounds.pad(1.05);
-  const minZoomReferenceBounds = bounds.pad(0.62);
-
-  map.setMaxBounds(interactionBounds);
-  map.setMinZoom(Math.max(11.2, map.getBoundsZoom(minZoomReferenceBounds, true) - 0.72));
-  map.fitBounds(initialViewBounds, {
-    maxZoom: 13.45,
-    padding: [48, 48],
-  });
-}
-
-function getEnterpriseStatusColor(status: EnterpriseStatus | "No Data") {
-  if (status === "Critical") return "#a40e0e";
-  if (status === "Warning") return "#ff6204";
-  if (status === "Normal") return "#055b25";
-  return "#64748b";
-}
-
-function getDarkStatusBadgeClass(status: EnterpriseStatus | "No Data") {
-  if (status === "Critical") return "border-red-500/30 bg-red-900/40 text-[#ff8a8a]";
-  if (status === "Warning") return "border-orange-500/30 bg-orange-900/40 text-[#ffb08a]";
-  if (status === "Normal") return "border-green-500/30 bg-green-900/40 text-[#8affb0]";
-  return "border-slate-400/25 bg-slate-900/45 text-slate-200";
-}
-
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"']/g, (character) => {
-    const entities: Record<string, string> = {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;",
-    };
-
-    return entities[character];
-  });
-}
-
-function createBoundaryTooltipHtml(name: string) {
-  return `<div style="font-family:Bai Jamjuree,sans-serif;font-size:11px;font-weight:800;color:#2a3063;padding:2px 4px;text-transform:uppercase;">${escapeHtml(name)}</div>`;
-}
-
-function createBoundaryPopupHtml(featureItem: GeoJSON.Feature) {
-  const name = escapeHtml(getBarangayLabel(featureItem));
-  const type = escapeHtml(getFeatureValue(featureItem, ["type"], "barangay"));
-  const postalCode = escapeHtml(getFeatureValue(featureItem, ["postal_code", "addr:postcode"], "4023"));
-
-  return `<div style="font-family:Bai Jamjuree,sans-serif;min-width:190px;padding:4px;"><h3 style="margin:0 0 2px;color:#2a3063;font-weight:800;font-size:13px;">${name}</h3><p style="margin:0 0 8px;font-size:9px;color:#666;text-transform:uppercase;letter-spacing:1px;">San Pedro, Laguna ${postalCode}</p><span style="font-size:9px;color:#055b25;font-weight:800;padding:2px 5px;border:1px solid #055b25;border-radius:3px;text-transform:uppercase;">${type} boundary</span></div>`;
-}
-
-function createTooltipHtml(enterprise: MapEnterprise, color: string) {
-  const occupancyShare = Math.min(100, Math.round((enterprise.totalLiveOccupancy / Math.max(1, enterprise.estimatedUniqueCount)) * 100));
-
-  return `<div style="font-family:Bai Jamjuree,sans-serif;min-width:140px;"><h4 style="margin:0;font-size:11px;font-weight:800;color:#2a3063;">${escapeHtml(enterprise.name)}</h4><p style="margin:2px 0 0;font-size:9px;color:#666;text-transform:uppercase;">${escapeHtml(enterprise.category)} - ${escapeHtml(enterprise.barangay)}</p><div style="margin-top:5px;height:4px;background:#e5e5e5;border-radius:2px;"><div style="height:100%;width:${occupancyShare}%;background:${color};border-radius:2px;"></div></div></div>`;
-}
-
-function createPopupHtml(enterprise: MapEnterprise, color: string) {
-  return `<div style="font-family:Bai Jamjuree,sans-serif;min-width:220px;padding:4px;"><h3 style="margin:0 0 2px;color:#2a3063;font-weight:800;font-size:13px;">${escapeHtml(enterprise.name)}</h3><p style="font-size:9px;color:#666;text-transform:uppercase;letter-spacing:1px;">${escapeHtml(enterprise.category)} - ${escapeHtml(enterprise.barangay)}</p><p style="font-size:10px;color:#2a3063;font-weight:800;">${enterprise.totalLiveOccupancy.toLocaleString()} live occupancy | ${enterprise.estimatedUniqueCount.toLocaleString()} est. unique</p><span style="font-size:9px;color:${color};font-weight:800;padding:2px 4px;border:1px solid ${color};border-radius:2px;text-transform:uppercase;">${enterprise.status}</span></div>`;
 }

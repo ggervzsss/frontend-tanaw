@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { ReactNode } from "react";
-import { useHeaderStore } from "../../../app/store/headerStore";
+import { useHeaderStore } from "@/app/store/headerStore";
 
 type PageHeaderProps = {
   title: string;

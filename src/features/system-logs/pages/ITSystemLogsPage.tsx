@@ -2,13 +2,13 @@ import { Activity, Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
-import { PageHeader } from "../../../shared/components/layout";
-import { Panel } from "../../../shared/components/panel";
-import { EmptyState, ModalPortal, PageMotion } from "../../../shared/components/ui";
-import { useActivityLogs } from "../../../shared/hooks/useActivityLogs";
-import type { SystemLog, SystemLogCategory } from "../../../shared/types";
-import { activityTimeRanges, isWithinActivityTimeRange } from "../../../shared/utils";
-import type { ActivityTimeRange } from "../../../shared/utils";
+import { PageHeader } from "@/shared/components/layout";
+import { Panel } from "@/shared/components/panel";
+import { EmptyState, FilterSelect, ModalPortal, PageMotion } from "@/shared/components/ui";
+import { useActivityLogs } from "@/shared/hooks/useActivityLogs";
+import type { SystemLog, SystemLogCategory } from "@/shared/types";
+import { activityTimeRanges, isWithinActivityTimeRange } from "@/shared/utils";
+import type { ActivityTimeRange } from "@/shared/utils";
 
 const defaultTypeOptions = ["All Types", "IT Activity", "Enterprise Activity", "System"];
 const defaultAccountOptions = ["All Accounts", "IT Personnel", "Enterprise Account", "System"];
@@ -141,16 +141,6 @@ function getAccountOptions(logs: SystemLog[], typeFilter: string) {
   const relevantActivities = logs.filter((activity) => activity.category === typeFilter);
   const accounts = new Set(relevantActivities.map((activity) => activity.actorRole));
   return ["All Accounts", ...Array.from(accounts).sort()];
-}
-
-function FilterSelect({ value, onChange, options }: { value: string; onChange: (value: string) => void; options: readonly string[] }) {
-  return (
-    <select value={value} onChange={(event) => onChange(event.target.value)} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none">
-      {options.map((option) => (
-        <option key={option}>{option}</option>
-      ))}
-    </select>
-  );
 }
 
 function ActivityDetailsModal({ activity, onClose }: { activity: SystemLog; onClose: () => void }) {

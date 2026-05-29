@@ -1,4 +1,4 @@
-import type { FinalReportStatus, ReportStatus } from "../../../shared/types";
+import type { FinalReportStatus, ReportStatus } from "@/shared/types";
 
 export function ReportStatusBadge({ status }: { status: ReportStatus | FinalReportStatus }) {
   const classes =

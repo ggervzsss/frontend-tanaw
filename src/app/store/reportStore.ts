@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { finalReports as initialFinalReports, intakeReports as initialReports, reportEnterprises } from "../../shared/data";
-import type { FinalReport, FinalReportStatus, IntakeReport, ReportStatus } from "../../shared/types";
+import { finalReports as initialFinalReports, intakeReports as initialReports, reportEnterprises } from "@/shared/data";
+import type { FinalReport, FinalReportStatus, IntakeReport, ReportStatus } from "@/shared/types";
 import { useSystemLogStore } from "./systemLogStore";
 
 type ReportState = {

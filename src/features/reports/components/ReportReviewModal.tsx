@@ -1,7 +1,7 @@
 import { Printer, X } from "lucide-react";
 import { motion } from "motion/react";
-import { ModalPortal } from "../../../shared/components/ui";
-import type { IntakeReport } from "../../../shared/types";
+import { ModalPortal } from "@/shared/components/ui";
+import type { IntakeReport } from "@/shared/types";
 import { DotSingleReportTable } from "./DotReportTable";
 import { ReportStatusBadge } from "./ReportStatusBadge";
 

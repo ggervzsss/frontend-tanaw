@@ -1,5 +1,5 @@
-import { PageHeader } from "../../../shared/components/layout";
-import { PageMotion } from "../../../shared/components/ui";
+import { PageHeader } from "@/shared/components/layout";
+import { PageMotion } from "@/shared/components/ui";
 import { AdminEnterpriseMap } from "../components/AdminEnterpriseMap";
 
 export function AdminMapViewPage() {

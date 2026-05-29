@@ -1,5 +1,5 @@
-import type { AuthUser } from "../../../shared/types/role.types";
-import { apiClient } from "../../../shared/lib/apiClient";
+import type { AuthUser } from "@/shared/types/role.types";
+import { apiClient } from "@/shared/lib/apiClient";
 
 export type LoginCredentials = {
   clientId: string;

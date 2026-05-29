@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { priorityAlerts as initialPriorityAlerts } from "../../shared/data";
-import type { PriorityAlert, PriorityAlertStatus, SystemLogActorRole } from "../../shared/types";
+import { priorityAlerts as initialPriorityAlerts } from "@/shared/data";
+import type { PriorityAlert, PriorityAlertStatus, SystemLogActorRole } from "@/shared/types";
 import { useSystemLogStore } from "./systemLogStore";
 
 type AlertState = {

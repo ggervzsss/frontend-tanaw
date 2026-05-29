@@ -1,8 +1,8 @@
 import { Bell } from "lucide-react";
 import { motion } from "motion/react";
 import type { ReactNode } from "react";
-import { EmptyState, ModalPortal } from "../../../shared/components/ui";
-import type { AlertSeverity, PriorityAlert, PriorityAlertResolutionMode } from "../../../shared/types";
+import { EmptyState, ModalPortal } from "@/shared/components/ui";
+import type { AlertSeverity, PriorityAlert, PriorityAlertResolutionMode } from "@/shared/types";
 
 type PriorityAlertListItemProps = {
   alert: PriorityAlert;

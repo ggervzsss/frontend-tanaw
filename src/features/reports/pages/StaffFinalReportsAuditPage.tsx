@@ -1,11 +1,11 @@
 import { FileText, Search } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useMemo, useState } from "react";
-import { PageHeader } from "../../../shared/components/layout";
-import { Panel } from "../../../shared/components/panel";
-import { EmptyState, PageMotion } from "../../../shared/components/ui";
-import { useReportStore } from "../../../app/store/reportStore";
-import type { FinalReport } from "../../../shared/types";
+import { PageHeader } from "@/shared/components/layout";
+import { Panel } from "@/shared/components/panel";
+import { EmptyState, PageMotion } from "@/shared/components/ui";
+import { useReportStore } from "@/app/store/reportStore";
+import type { FinalReport } from "@/shared/types";
 import { FinalReportViewer, ReportStatusBadge } from "../components";
 
 const MONTH_ORDER = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];

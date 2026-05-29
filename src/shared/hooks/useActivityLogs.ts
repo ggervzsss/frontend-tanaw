@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { useAuthStore } from "../../app/store/authStore";
+import { useAuthStore } from "@/app/store/authStore";
 import { getActivityLogsWebSocketUrl, listActivityLogs } from "../services/activityLogs";
 import type { SystemLog } from "../types";
 

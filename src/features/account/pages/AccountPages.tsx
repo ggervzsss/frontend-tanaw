@@ -1,9 +1,12 @@
 import { Check, Database, Download, Key, Monitor, MonitorSmartphone, Moon, RefreshCw, Save, Shield, Sun, Upload } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, type ReactNode, useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import { useAuthStore } from "../../../app/store/authStore";
 import { PageHeader } from "../../../shared/components/layout";
 import { Panel, PanelHeader } from "../../../shared/components/panel";
 import { PageMotion } from "../../../shared/components/ui";
+import { changePassword } from "../../../shared/services/accountManagement";
 import type { UserRole } from "../../../shared/types/role.types";
 import { roleAccessLabel, rolePortalLabel } from "../../../shared/components/layout/navigation";
 
@@ -156,21 +159,41 @@ export function AccountProfilePage({ role }: AccountPageProps) {
 }
 
 export function AccountSecurityPage() {
+  const queryClient = useQueryClient();
+  const setSession = useAuthStore((state) => state.setSession);
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
   const [isPasswordSuccess, setIsPasswordSuccess] = useState(false);
-  const [is2FAEnabled, setIs2FAEnabled] = useState(true);
   const [theme, setTheme] = useState<ThemePreference>("system");
   const [isArchiveLoading, setIsArchiveLoading] = useState(false);
   const [isArchiveSuccess, setIsArchiveSuccess] = useState(false);
 
-  const handlePasswordUpdate = (event: FormEvent<HTMLFormElement>) => {
+  const handlePasswordUpdate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const currentPassword = String(formData.get("currentPassword") ?? "");
+    const newPassword = String(formData.get("newPassword") ?? "");
+    const confirmPassword = String(formData.get("confirmPassword") ?? "");
+
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match.");
+      return;
+    }
+
     setIsPasswordLoading(true);
-    window.setTimeout(() => {
-      setIsPasswordLoading(false);
+    try {
+      const session = await changePassword(currentPassword, newPassword);
+      queryClient.removeQueries({ queryKey: ["current-user"] });
+      setSession(session);
       setIsPasswordSuccess(true);
+      toast.success("Password updated.");
       window.setTimeout(() => setIsPasswordSuccess(false), 2600);
-    }, 900);
+      form.reset();
+    } catch {
+      toast.error("Unable to update password. Check your current password and try again.");
+    } finally {
+      setIsPasswordLoading(false);
+    }
   };
 
   const handleArchiveRequest = () => {
@@ -191,10 +214,10 @@ export function AccountSecurityPage() {
           <Panel className="overflow-hidden">
             <PanelHeader title="Credential Control" icon={Key} />
             <form onSubmit={handlePasswordUpdate} className="space-y-4 p-6">
-              <Field label="Current Password" defaultValue="" placeholder="********" type="password" />
+              <Field label="Current Password" name="currentPassword" defaultValue="" placeholder="********" type="password" />
               <div className="grid gap-4 md:grid-cols-2">
-                <Field label="New Password" defaultValue="" placeholder="********" type="password" />
-                <Field label="Confirm New Password" defaultValue="" placeholder="********" type="password" />
+                <Field label="New Password" name="newPassword" defaultValue="" placeholder="********" type="password" minLength={8} />
+                <Field label="Confirm New Password" name="confirmPassword" defaultValue="" placeholder="********" type="password" minLength={8} />
               </div>
               <div className="flex justify-end pt-2">
                 <button
@@ -210,17 +233,9 @@ export function AccountSecurityPage() {
           </Panel>
 
           <Panel className="overflow-hidden">
-            <PanelHeader
-              title="Active Sessions"
-              icon={MonitorSmartphone}
-              right={
-                <button type="button" className="text-tanaw-red text-xs font-bold transition hover:text-red-700 hover:underline">
-                  Sign Out of All Other Devices
-                </button>
-              }
-            />
+            <PanelHeader title="Active Sessions" icon={MonitorSmartphone} />
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-left text-sm">
+              <table className="w-full min-w-160 text-left text-sm">
                 <thead className="bg-slate-50 text-[10px] font-black tracking-widest text-slate-500 uppercase">
                   <tr>
                     <th className="border-b border-slate-200 p-3">Device</th>
@@ -250,17 +265,9 @@ export function AccountSecurityPage() {
             <div className="flex items-center justify-between gap-4 p-6">
               <div>
                 <p className="text-sm font-bold text-slate-900">Two-Factor Auth</p>
-                <p className="mt-1 text-xs text-slate-500">Require an extra security code when logging in.</p>
+                <p className="mt-1 text-xs text-slate-500">Not configured for this local deployment.</p>
               </div>
-              <button
-                type="button"
-                aria-pressed={is2FAEnabled}
-                aria-label="Toggle two-factor authentication"
-                onClick={() => setIs2FAEnabled((current) => !current)}
-                className={["relative h-7 w-13 rounded-full transition", is2FAEnabled ? "bg-tanaw-green" : "bg-slate-300"].join(" ")}
-              >
-                <span className={["absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition", is2FAEnabled ? "left-7" : "left-1"].join(" ")} />
-              </button>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black tracking-wide text-slate-500 uppercase">Unavailable</span>
             </div>
           </Panel>
 
@@ -296,15 +303,32 @@ export function AccountSecurityPage() {
   );
 }
 
-function Field({ label, defaultValue, type = "text", placeholder }: { label: string; defaultValue: string; type?: string; placeholder?: string }) {
+function Field({
+  label,
+  defaultValue,
+  name,
+  type = "text",
+  placeholder,
+  minLength,
+}: {
+  label: string;
+  defaultValue: string;
+  name?: string;
+  type?: string;
+  placeholder?: string;
+  minLength?: number;
+}) {
   return (
     <label className="block">
       <span className="mb-2 block text-xs font-bold tracking-wide text-slate-500 uppercase">{label}</span>
       <input
         key={`${label}-${defaultValue}`}
+        name={name}
         type={type}
         defaultValue={defaultValue}
         placeholder={placeholder}
+        minLength={minLength}
+        required={type === "password"}
         className="focus:ring-tanaw-green/20 w-full rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-900 transition outline-none focus:ring-2"
       />
     </label>

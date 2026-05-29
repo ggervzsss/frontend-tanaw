@@ -52,7 +52,7 @@ export function GlobalHeader({ role }: GlobalHeaderProps) {
     } finally {
       queryClient.removeQueries({ queryKey: ["current-user"] });
       logout();
-      toast.success("Secure logout complete.");
+      toast.success("Logout complete.");
       navigate(routes.login, { replace: true });
     }
   };
@@ -133,7 +133,7 @@ export function GlobalHeader({ role }: GlobalHeaderProps) {
                   <Shield size={14} /> Security & Data Control
                 </button>
                 <button type="button" onClick={handleLogout} className="text-tanaw-red flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-semibold transition-colors hover:bg-red-50">
-                  <LogOut size={14} /> Secure Logout
+                  <LogOut size={14} /> Logout
                 </button>
               </motion.div>
             )}

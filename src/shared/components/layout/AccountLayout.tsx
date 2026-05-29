@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { routes } from "../../../app/routers/routes";
 import { useAuthStore } from "../../../app/store/authStore";
 import { getCurrentUser } from "../../services/accountManagement";
 import type { UserRole } from "../../types/role.types";
@@ -14,7 +15,9 @@ type AccountLayoutProps = {
 export function AccountLayout({ role }: AccountLayoutProps) {
   const mainRef = useRef<HTMLElement>(null);
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const token = useAuthStore((state) => state.token);
+  const logout = useAuthStore((state) => state.logout);
   const updateUser = useAuthStore((state) => state.updateUser);
 
   const currentUserQuery = useQuery({
@@ -29,6 +32,13 @@ export function AccountLayout({ role }: AccountLayoutProps) {
       updateUser(currentUserQuery.data);
     }
   }, [currentUserQuery.data, updateUser]);
+
+  useEffect(() => {
+    if (currentUserQuery.isError) {
+      logout();
+      navigate(routes.login, { replace: true });
+    }
+  }, [currentUserQuery.isError, logout, navigate]);
 
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0, left: 0 });

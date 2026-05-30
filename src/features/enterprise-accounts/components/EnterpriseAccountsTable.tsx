@@ -14,8 +14,8 @@ type EnterpriseAccountsTableProps = {
 export function EnterpriseAccountsTable({ accounts, filteredEnterprises, isLoading, onSelectEnterprise, onResetPassword, onChangeStatus }: EnterpriseAccountsTableProps) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-205 table-fixed text-left text-sm">
-        <thead className="bg-gray-50 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
+      <table className="w-full min-w-225 table-fixed text-left text-sm">
+        <thead className="bg-gray-50 text-[11px] font-bold tracking-wider text-gray-500 uppercase">
           <tr>
             {["Enterprise", "Barangay", "Enterprise ID", "Status", "Contact", "Actions"].map((heading) => (
               <th key={heading} className="px-4 py-4 whitespace-nowrap">
@@ -34,18 +34,18 @@ export function EnterpriseAccountsTable({ accounts, filteredEnterprises, isLoadi
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-bold text-gray-900">{enterprise.enterpriseName ?? enterprise.displayName}</span>
-                    <span className="block truncate text-xs text-gray-500">{enterprise.category ?? "Uncategorized"}</span>
+                    <span className="block truncate text-sm text-gray-500">{enterprise.category ?? "Uncategorized"}</span>
                   </span>
                 </button>
               </td>
-              <td className="truncate px-4 py-4 text-xs whitespace-nowrap text-gray-600">{enterprise.barangay ?? "N/A"}</td>
+              <td className="truncate px-4 py-4 text-sm whitespace-nowrap text-gray-600">{enterprise.barangay ?? "N/A"}</td>
               <td className="px-4 py-4 whitespace-nowrap">
-                <span className="font-mono text-xs font-semibold text-gray-600">{enterprise.enterpriseId ?? "Pending"}</span>
+                <span className="font-mono text-sm font-semibold text-gray-600">{enterprise.enterpriseId ?? "Pending"}</span>
               </td>
               <td className="px-4 py-4 whitespace-nowrap">
                 <StatusBadge tone={enterprise.status === "active" ? "green" : "slate"}>{enterprise.status}</StatusBadge>
               </td>
-              <td className="truncate px-4 py-4 text-xs whitespace-nowrap text-gray-500">{enterprise.email}</td>
+              <td className="truncate px-4 py-4 text-sm whitespace-nowrap text-gray-500">{enterprise.email}</td>
               <td className="px-4 py-4 whitespace-nowrap">
                 <div className="flex gap-2">
                   <IconAction label="View enterprise" onClick={() => onSelectEnterprise(enterprise)} icon={<Eye size={15} />} />

@@ -16,11 +16,12 @@ export function useLogin() {
     const formData = new FormData(event.currentTarget);
     const clientId = String(formData.get("clientId") ?? "");
     const encryptionKey = String(formData.get("encryptionKey") ?? "");
+    const rememberMe = formData.get("rememberMe") === "on";
 
     try {
       const session = await loginService({ clientId, encryptionKey });
       queryClient.removeQueries({ queryKey: ["current-user"] });
-      setSession(session);
+      setSession(session, rememberMe);
       if (session.user.mustChangePassword) {
         toast.success("Temporary credentials verified");
         navigate("/change-password", { replace: true });
@@ -29,7 +30,7 @@ export function useLogin() {
       toast.success("Portal Initialized Successfully");
       navigate(getRoleDashboardPath(session.user.role), { replace: true });
     } catch {
-      toast.error("Invalid username or password");
+      toast.error("Invalid email or password");
       return;
     }
   };

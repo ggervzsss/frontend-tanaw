@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { AnimatePresence } from "motion/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, KeyRound } from "lucide-react";
 import toast from "react-hot-toast";
 import { PageHeader } from "@/shared/components/layout";
 import { Panel } from "@/shared/components/panel";
@@ -23,6 +23,7 @@ export function ITLguAccountsPage() {
   const [status, setStatus] = useState<LguStatusFilter>("active");
   const [selectedAccount, setSelectedAccount] = useState<AccountSummary | null>(null);
   const [pendingStatusChange, setPendingStatusChange] = useState<PendingStatusChange | null>(null);
+  const [pendingPasswordReset, setPendingPasswordReset] = useState<AccountSummary | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
 
   const accountsQuery = useQuery({ queryKey: ["lgu-accounts"], queryFn: listLguAccounts });
@@ -30,18 +31,22 @@ export function ITLguAccountsPage() {
   const filteredAccounts = useMemo(() => filterLguAccounts(accounts, query, role, status), [accounts, query, role, status]);
 
   const resetMutation = useMutation({
-    mutationFn: resetAccountPassword,
-    onSuccess: async () => {
+    mutationFn: (accountId: string) => resetAccountPassword(accountId),
+    onSuccess: async (updatedAccount) => {
       await Promise.all([queryClient.invalidateQueries({ queryKey: ["lgu-accounts"] }), queryClient.invalidateQueries({ queryKey: ["dev-deliveries"] })]);
-      toast.success("Temporary credentials recorded in development inbox");
+      toast.success("Temporary credentials recorded in Dev Log");
+      setSelectedAccount((current) => (current?.id === updatedAccount.id ? updatedAccount : current));
+      setPendingPasswordReset(null);
     },
+    onError: (error) => toast.error(getStatusErrorMessage(error)),
   });
 
   const statusMutation = useMutation({
     mutationFn: ({ accountId, nextStatus }: { accountId: string; nextStatus: LguStatusFilter }) => updateAccountStatus(accountId, nextStatus),
-    onSuccess: async () => {
+    onSuccess: async (updatedAccount) => {
       await queryClient.invalidateQueries({ queryKey: ["lgu-accounts"] });
       toast.success("Account status updated");
+      setSelectedAccount((current) => (current?.id === updatedAccount.id ? updatedAccount : current));
       setPendingStatusChange(null);
     },
     onError: (error) => toast.error(getStatusErrorMessage(error)),
@@ -60,14 +65,28 @@ export function ITLguAccountsPage() {
           filteredAccounts={filteredAccounts}
           isLoading={accountsQuery.isLoading}
           onSelectAccount={setSelectedAccount}
-          onResetPassword={(accountId) => resetMutation.mutate(accountId)}
-          onChangeStatus={(account, nextStatus) => setPendingStatusChange({ account, nextStatus })}
         />
       </Panel>
 
       <AnimatePresence>
         {createOpen && <CreateLguAccountModal onClose={() => setCreateOpen(false)} />}
-        {selectedAccount && <LguAccountDetailsModal account={selectedAccount} onClose={() => setSelectedAccount(null)} />}
+        {selectedAccount && (
+          <LguAccountDetailsModal
+            account={selectedAccount}
+            onClose={() => setSelectedAccount(null)}
+            onAccountUpdated={setSelectedAccount}
+            onResetCredentials={setPendingPasswordReset}
+            onRequestStatusChange={(account, nextStatus) => setPendingStatusChange({ account, nextStatus })}
+          />
+        )}
+        {pendingPasswordReset && (
+          <ConfirmPasswordResetModal
+            account={pendingPasswordReset}
+            isPending={resetMutation.isPending}
+            onClose={() => setPendingPasswordReset(null)}
+            onConfirm={() => resetMutation.mutate(pendingPasswordReset.id)}
+          />
+        )}
         {pendingStatusChange && (
           <ConfirmAccountStatusModal
             pendingStatusChange={pendingStatusChange}
@@ -78,6 +97,63 @@ export function ITLguAccountsPage() {
         )}
       </AnimatePresence>
     </PageMotion>
+  );
+}
+
+function ConfirmPasswordResetModal({
+  account,
+  isPending,
+  onClose,
+  onConfirm,
+}: {
+  account: AccountSummary;
+  isPending: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <ModalFrame title="Reset Credentials" onClose={onClose} maxWidthClassName="max-w-lg">
+      <div className="space-y-5">
+        <div className="flex gap-4 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-amber-950">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+            <KeyRound size={20} />
+          </span>
+          <div>
+            <p className="font-bold">This will generate new temporary credentials.</p>
+            <p className="mt-1 text-sm leading-relaxed text-amber-900/80">
+              The current password for {account.displayName} will stop working. New temporary credentials will be recorded in Dev Log and the user will need to change the password after signing in.
+            </p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <p className="text-xs font-bold tracking-wide text-slate-500 uppercase">Account</p>
+          <p className="mt-1 font-bold text-slate-900">{account.displayName}</p>
+          <p className="text-sm text-slate-600">{account.email}</p>
+        </div>
+        {account.role === "it" && (
+          <p className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900">
+            TANAW blocks self-resets and last-active IT resets so this action cannot silently lock out the IT Personnel role.
+          </p>
+        )}
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50 focus:ring-4 focus:ring-slate-200 focus:outline-none"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={onConfirm}
+            className="rounded-xl bg-amber-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-amber-900/15 transition hover:-translate-y-0.5 hover:bg-amber-700 focus:ring-4 focus:ring-amber-200 focus:outline-none disabled:translate-y-0 disabled:opacity-70"
+          >
+            {isPending ? "Resetting..." : "Reset Credentials"}
+          </button>
+        </div>
+      </div>
+    </ModalFrame>
   );
 }
 

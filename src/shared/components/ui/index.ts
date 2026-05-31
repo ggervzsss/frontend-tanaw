@@ -1,5 +1,6 @@
 export { EmptyState } from "./EmptyState";
 export { DetailField } from "./DetailField";
+export { ContactNumberField } from "./ContactNumberField";
 export { FilterSelect } from "./FilterSelect";
 export { FormField } from "./FormField";
 export { IconAction } from "./IconAction";

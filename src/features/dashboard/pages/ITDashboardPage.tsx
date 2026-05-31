@@ -1,7 +1,6 @@
 import { Activity, Bell, Building2, Users, Wifi } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
-import type { ReactNode } from "react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { routes } from "@/app/routers/routes";
@@ -9,7 +8,7 @@ import { useAlertStore } from "@/app/store";
 import { AlertDetailsModal, PriorityAlertListItem } from "@/features/alerts-monitor/components";
 import { MetricCard } from "@/shared/components/cards";
 import { PageHeader } from "@/shared/components/layout";
-import { EmptyState, ModalPortal, PageMotion, stagger } from "@/shared/components/ui";
+import { DetailField, EmptyState, ModalFrame, PageMotion, stagger } from "@/shared/components/ui";
 import { useActivityLogs } from "@/shared/hooks/useActivityLogs";
 import { listEnterpriseAccounts, listLguAccounts } from "@/shared/services/accountManagement";
 import type { PriorityAlert, SystemLog } from "@/shared/types";
@@ -35,37 +34,37 @@ export function ITDashboardPage() {
     <PageMotion>
       <PageHeader title="Dashboard" description="Operational overview for accounts, enterprise connectivity, camera health, and recent system activity." />
 
-      <motion.section className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4" variants={stagger}>
+      <motion.section className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-5" variants={stagger}>
         <MetricCard label="LGU Accounts" value={lguAccountsQuery.isLoading ? "..." : activeLguAccounts} foot="Active account registry" color="#065f46" icon={Users} />
         <MetricCard label="Active Enterprises" value={enterpriseAccountsQuery.isLoading ? "..." : activeEnterprises} foot="Can access TANAW" color="#2563eb" icon={Building2} />
         <MetricCard label="Gateways Online" value={enterpriseAccountsQuery.isLoading ? "..." : gatewaysOnline} foot="Connected edge gateways" color="#10b981" icon={Wifi} />
         <MetricCard label="Priority Alerts" value={activeAlertsCount} foot="Requires IT action" color="#dc2626" footClassName="text-red-600" icon={Bell} />
       </motion.section>
       {(lguAccountsQuery.isError || enterpriseAccountsQuery.isError) && (
-        <p className="mt-3 text-xs font-semibold text-red-600">Some dashboard metrics could not be loaded from the database. Refresh or check the API connection.</p>
+        <p className="mt-4 text-sm font-semibold text-red-600">Some dashboard metrics could not be loaded from the database. Refresh or check the API connection.</p>
       )}
 
-      <div className="mt-6 grid grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] gap-6 max-xl:grid-cols-1">
-        <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-6 py-5 max-sm:flex-col max-sm:items-start">
+      <div className="mt-7 grid grid-cols-[minmax(0,2fr)_minmax(360px,1fr)] gap-6 max-xl:grid-cols-1">
+        <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
+          <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-7 py-6 max-sm:flex-col max-sm:items-start max-sm:px-5">
             <div>
-              <h3 className="text-charcoal-800 m-0 text-base font-bold">Recent System Activity</h3>
-              <p className="mt-1 mb-0 text-xs text-gray-500">Latest IT-visible user, enterprise, configuration, and SYSTEM actions.</p>
+              <h3 className="text-charcoal-800 m-0 text-lg font-bold">Recent System Activity</h3>
+              <p className="mt-1.5 mb-0 text-sm text-gray-500">Latest IT-visible user, enterprise, configuration, and SYSTEM actions.</p>
             </div>
           </div>
           <div className="divide-y divide-gray-100">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-140 table-fixed text-left">
+              <table className="w-full min-w-160 table-fixed text-left">
                 <colgroup>
                   <col className="w-[18%]" />
                   <col className="w-[52%]" />
                   <col className="w-[30%]" />
                 </colgroup>
-                <thead className="bg-gray-50 text-[9px] font-bold tracking-wider text-gray-500 uppercase">
+                <thead className="bg-gray-50 text-[11px] font-bold tracking-wider text-gray-500 uppercase">
                   <tr>
-                    <th className="py-2.5 pr-1.5 pl-2.5 whitespace-nowrap lg:pr-2 lg:pl-3">Timestamp</th>
+                    <th className="py-3.5 pr-2 pl-4 whitespace-nowrap lg:pr-3 lg:pl-5">Timestamp</th>
                     {["Summary", "Name"].map((heading) => (
-                      <th key={heading} className="px-2.5 py-2.5 whitespace-nowrap lg:px-3">
+                      <th key={heading} className="px-4 py-3.5 whitespace-nowrap lg:px-5">
                         {heading}
                       </th>
                     ))}
@@ -75,11 +74,11 @@ export function ITDashboardPage() {
                   {recentActivities.map((activity) => {
                     return (
                       <tr key={activity.id} onClick={() => setSelectedActivity(activity)} className="hover:bg-tgreen-dark/5 cursor-pointer transition">
-                        <td className="py-3 pr-1.5 pl-2.5 font-mono text-[10px] leading-snug text-gray-500 lg:pr-2 lg:pl-3">{formatCompactTimestamp(activity.timestamp)}</td>
-                        <td className="text-charcoal-800 px-2.5 py-3 text-[11px] leading-snug font-semibold lg:px-3">
+                        <td className="py-4 pr-2 pl-4 font-mono text-xs leading-snug text-gray-500 lg:pr-3 lg:pl-5">{formatCompactTimestamp(activity.timestamp)}</td>
+                        <td className="text-charcoal-800 px-4 py-4 text-sm leading-snug font-semibold lg:px-5">
                           <span className="line-clamp-3">{activity.summary}</span>
                         </td>
-                        <td className="px-2.5 py-3 text-[10px] leading-snug font-semibold wrap-break-word text-gray-600 lg:px-3">
+                        <td className="px-4 py-4 text-xs leading-snug font-semibold wrap-break-word text-gray-600 lg:px-5">
                           <span className="line-clamp-3">{activity.actor}</span>
                         </td>
                       </tr>
@@ -99,14 +98,14 @@ export function ITDashboardPage() {
         </section>
 
         <aside className="grid gap-6">
-          <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-100 px-6 py-5">
+          <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
+            <div className="border-b border-gray-100 px-7 py-6 max-sm:px-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-charcoal-800 m-0 text-base font-bold">Priority Alerts</h3>
-                  <p className="mt-1 mb-0 text-xs text-gray-500">Actionable tasks requiring IT intervention or approval.</p>
+                  <h3 className="text-charcoal-800 m-0 text-lg font-bold">Priority Alerts</h3>
+                  <p className="mt-1.5 mb-0 text-sm text-gray-500">Actionable tasks requiring IT intervention or approval.</p>
                 </div>
-                <Link to={routes.it.alerts} className="shrink-0 text-xs font-semibold text-emerald-600 transition hover:text-emerald-700">
+                <Link to={routes.it.alerts} className="shrink-0 text-sm font-semibold text-emerald-600 transition hover:text-emerald-700">
                   View All Alerts
                 </Link>
               </div>
@@ -136,45 +135,17 @@ function formatCompactTimestamp(timestamp: string) {
 
 function ActivityDetailsModal({ activity, onClose }: { activity: SystemLog; onClose: () => void }) {
   return (
-    <ModalPortal>
-      <motion.div className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-        <motion.section
-          className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-2xl"
-          initial={{ opacity: 0, y: 12, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 12, scale: 0.98 }}
-          transition={{ duration: 0.18, ease: "easeOut" }}
-        >
-          <header className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
-            <div>
-              <p className="font-mono text-[10px] font-bold text-gray-400">{activity.id}</p>
-              <h2 className="text-lg font-bold text-gray-900">Activity Details</h2>
-            </div>
-            <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-white hover:text-gray-900">
-              Close
-            </button>
-          </header>
-          <div className="grid gap-4 p-6 md:grid-cols-2">
-            <Detail label="Type" value={activity.category} />
-            <Detail label="Actor" value={`${activity.actor} (${activity.actorRole})`} />
-            <Detail label="Timestamp" value={formatCompactTimestamp(activity.timestamp)} />
-            <Detail label="Target" value={activity.target} />
-            <Detail label="Action" value={activity.action} />
-            <div className="md:col-span-2">
-              <Detail label="Summary" value={activity.summary} />
-            </div>
-          </div>
-        </motion.section>
-      </motion.div>
-    </ModalPortal>
-  );
-}
-
-function Detail({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-      <p className="mb-1 text-[10px] font-bold tracking-wide text-gray-500 uppercase">{label}</p>
-      <p className="text-sm leading-relaxed font-semibold text-gray-900">{value}</p>
-    </div>
+    <ModalFrame title="Activity Details" eyebrow={activity.id} onClose={onClose}>
+      <div className="grid gap-4 md:grid-cols-2">
+        <DetailField label="Type" value={activity.category} />
+        <DetailField label="Actor" value={`${activity.actor} (${activity.actorRole})`} />
+        <DetailField label="Timestamp" value={formatCompactTimestamp(activity.timestamp)} />
+        <DetailField label="Target" value={activity.target} />
+        <DetailField label="Action" value={activity.action} />
+        <div className="md:col-span-2">
+          <DetailField label="Summary" value={activity.summary} />
+        </div>
+      </div>
+    </ModalFrame>
   );
 }

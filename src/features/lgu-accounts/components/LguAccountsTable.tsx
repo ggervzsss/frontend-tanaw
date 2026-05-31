@@ -1,7 +1,6 @@
-import { Eye, KeyRound, UserCheck, Users } from "lucide-react";
-import { EmptyState, IconAction, StatusBadge } from "@/shared/components/ui";
+import { Users } from "lucide-react";
+import { EmptyState, StatusBadge } from "@/shared/components/ui";
 import type { AccountSummary } from "@/shared/services/accountManagement";
-import type { LguStatusFilter } from "../types";
 import { lguRoleLabel } from "../utils";
 
 type LguAccountsTableProps = {
@@ -9,17 +8,15 @@ type LguAccountsTableProps = {
   filteredAccounts: AccountSummary[];
   isLoading: boolean;
   onSelectAccount: (account: AccountSummary) => void;
-  onResetPassword: (accountId: string) => void;
-  onChangeStatus: (accountId: string, nextStatus: LguStatusFilter) => void;
 };
 
-export function LguAccountsTable({ accounts, filteredAccounts, isLoading, onSelectAccount, onResetPassword, onChangeStatus }: LguAccountsTableProps) {
+export function LguAccountsTable({ accounts, filteredAccounts, isLoading, onSelectAccount }: LguAccountsTableProps) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-190 table-fixed text-left text-sm">
-        <thead className="bg-gray-50 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
+      <table className="w-full min-w-170 table-fixed text-left text-sm">
+        <thead className="bg-gray-50 text-[11px] font-bold tracking-wider text-gray-500 uppercase">
           <tr>
-            {["Name", "Email", "Role", "Status", "Last Login", "Actions"].map((heading) => (
+            {["Name", "Email", "Role", "Status", "Last Login"].map((heading) => (
               <th key={heading} className="px-4 py-4 whitespace-nowrap">
                 {heading}
               </th>
@@ -28,32 +25,33 @@ export function LguAccountsTable({ accounts, filteredAccounts, isLoading, onSele
         </thead>
         <tbody className="divide-y divide-gray-100 text-gray-800">
           {filteredAccounts.map((account) => (
-            <tr key={account.id} className="hover:bg-tgreen-dark/5 transition">
-              <td className="px-4 py-3 font-bold whitespace-nowrap text-gray-900">{account.displayName}</td>
-              <td className="truncate px-4 py-3 text-xs whitespace-nowrap text-gray-600">{account.email}</td>
-              <td className="px-4 py-3 whitespace-nowrap">
+            <tr
+              key={account.id}
+              tabIndex={0}
+              role="button"
+              onClick={() => onSelectAccount(account)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onSelectAccount(account);
+                }
+              }}
+              className="hover:bg-tgreen-dark/6 focus:bg-tgreen-dark/6 cursor-pointer transition outline-none focus-visible:ring-2 focus-visible:ring-tanaw-green/30"
+            >
+              <td className="px-4 py-4 font-bold whitespace-nowrap text-gray-900">{account.displayName}</td>
+              <td className="truncate px-4 py-4 text-sm whitespace-nowrap text-gray-600">{account.email}</td>
+              <td className="px-4 py-4 whitespace-nowrap">
                 <StatusBadge tone="blue">{lguRoleLabel[account.role] ?? account.role}</StatusBadge>
               </td>
-              <td className="px-4 py-3 whitespace-nowrap">
+              <td className="px-4 py-4 whitespace-nowrap">
                 <StatusBadge tone={account.status === "active" ? "green" : "slate"}>{account.status}</StatusBadge>
               </td>
-              <td className="truncate px-4 py-3 text-xs whitespace-nowrap text-gray-500">{account.lastLoginAt ? new Date(account.lastLoginAt).toLocaleString() : "Never"}</td>
-              <td className="px-4 py-3 whitespace-nowrap">
-                <div className="flex gap-2">
-                  <IconAction label="View account details" onClick={() => onSelectAccount(account)} icon={<Eye size={15} />} />
-                  <IconAction label="Reset password" onClick={() => onResetPassword(account.id)} icon={<KeyRound size={15} />} />
-                  <IconAction
-                    label={account.status === "active" ? "Deactivate account" : "Reactivate account"}
-                    onClick={() => onChangeStatus(account.id, account.status === "active" ? "inactive" : "active")}
-                    icon={<UserCheck size={15} />}
-                  />
-                </div>
-              </td>
+              <td className="truncate px-4 py-4 text-sm whitespace-nowrap text-gray-500">{account.lastLoginAt ? new Date(account.lastLoginAt).toLocaleString() : "Never"}</td>
             </tr>
           ))}
           {filteredAccounts.length === 0 && (
             <tr>
-              <td colSpan={6}>
+              <td colSpan={5}>
                 <EmptyState icon={Users} title="No LGU accounts" description={isLoading ? "Loading accounts..." : accounts.length === 0 ? "Create an LGU account to generate development credentials." : "No accounts match the current filters."} />
               </td>
             </tr>

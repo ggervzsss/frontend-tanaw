@@ -1,10 +1,9 @@
 import { Activity, Search } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
-import type { ReactNode } from "react";
+import { AnimatePresence } from "motion/react";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/shared/components/layout";
 import { Panel } from "@/shared/components/panel";
-import { EmptyState, FilterSelect, ModalPortal, PageMotion } from "@/shared/components/ui";
+import { DetailField, EmptyState, FilterSelect, ModalFrame, PageMotion } from "@/shared/components/ui";
 import { useActivityLogs } from "@/shared/hooks/useActivityLogs";
 import type { SystemLog, SystemLogCategory } from "@/shared/types";
 import { activityTimeRanges, isWithinActivityTimeRange } from "@/shared/utils";
@@ -80,7 +79,7 @@ export function ITSystemLogsPage() {
               <col className="w-[20%]" />
               <col className="w-[29%]" />
             </colgroup>
-            <thead className="bg-gray-50 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
+            <thead className="bg-gray-50 text-[11px] font-bold tracking-wider text-gray-500 uppercase">
               <tr>
                 {["Timestamp", "Type", "Actor", "Target", "Summary"].map((heading) => (
                   <th key={heading} className="px-3 py-4 whitespace-nowrap lg:px-4">
@@ -96,12 +95,12 @@ export function ITSystemLogsPage() {
                   <td className="px-3 py-4 whitespace-nowrap lg:px-4">
                     <TypeBadge type={activity.category} />
                   </td>
-                  <td className="px-3 py-4 text-xs whitespace-nowrap lg:px-4">
+                  <td className="px-3 py-4 text-sm whitespace-nowrap lg:px-4">
                     <span className="block truncate font-bold text-gray-900">{activity.actor}</span>
-                    <span className="text-[10px] font-semibold text-gray-500 uppercase">{activity.actorRole}</span>
+                    <span className="text-[11px] font-semibold text-gray-500 uppercase">{activity.actorRole}</span>
                   </td>
-                  <td className="truncate px-3 py-4 text-xs whitespace-nowrap text-gray-600 lg:px-4">{activity.target}</td>
-                  <td className="px-3 py-4 text-xs leading-relaxed text-gray-600 lg:px-4">{activity.summary}</td>
+                  <td className="truncate px-3 py-4 text-sm whitespace-nowrap text-gray-600 lg:px-4">{activity.target}</td>
+                  <td className="px-3 py-4 text-sm leading-relaxed text-gray-600 lg:px-4">{activity.summary}</td>
                 </tr>
               ))}
               {filteredActivities.length === 0 && (
@@ -118,7 +117,7 @@ export function ITSystemLogsPage() {
             </tbody>
           </table>
         </div>
-        <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-4 py-3 text-[10px] font-bold tracking-wide text-gray-500 uppercase">
+        <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-4 py-3 text-[11px] font-bold tracking-wide text-gray-500 uppercase">
           <span>Showing {filteredActivities.length} activities</span>
           <span>{timeRange}</span>
         </div>
@@ -145,37 +144,18 @@ function getAccountOptions(logs: SystemLog[], typeFilter: string) {
 
 function ActivityDetailsModal({ activity, onClose }: { activity: SystemLog; onClose: () => void }) {
   return (
-    <ModalPortal>
-      <motion.div className="bg-charcoal-950/70 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-        <motion.section
-          className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-2xl"
-          initial={{ opacity: 0, y: 12, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 12, scale: 0.98 }}
-          transition={{ duration: 0.18, ease: "easeOut" }}
-        >
-          <header className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
-            <div>
-              <p className="font-mono text-[10px] font-bold text-gray-400">{activity.id}</p>
-              <h2 className="text-lg font-bold text-gray-900">Activity Details</h2>
-            </div>
-            <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-white hover:text-gray-900">
-              Close
-            </button>
-          </header>
-          <div className="grid gap-4 p-6 md:grid-cols-2">
-            <Detail label="Type" value={activity.category} />
-            <Detail label="Actor" value={`${activity.actor} (${activity.actorRole})`} />
-            <Detail label="Timestamp" value={formatLogTimestamp(activity.timestamp)} />
-            <Detail label="Target" value={activity.target} />
-            <Detail label="Action" value={activity.action} />
-            <div className="md:col-span-2">
-              <Detail label="Summary" value={activity.summary} />
-            </div>
-          </div>
-        </motion.section>
-      </motion.div>
-    </ModalPortal>
+    <ModalFrame title="Activity Details" eyebrow={activity.id} onClose={onClose}>
+      <div className="grid gap-4 md:grid-cols-2">
+        <DetailField label="Type" value={activity.category} />
+        <DetailField label="Actor" value={`${activity.actor} (${activity.actorRole})`} />
+        <DetailField label="Timestamp" value={formatLogTimestamp(activity.timestamp)} />
+        <DetailField label="Target" value={activity.target} />
+        <DetailField label="Action" value={activity.action} />
+        <div className="md:col-span-2">
+          <DetailField label="Summary" value={activity.summary} />
+        </div>
+      </div>
+    </ModalFrame>
   );
 }
 
@@ -189,15 +169,6 @@ function TypeBadge({ type }: { type: SystemLogCategory }) {
     System: "bg-slate-100 text-slate-700",
   };
   return <span className={`rounded-full px-3 py-1 text-[10px] font-bold whitespace-nowrap uppercase ${classes[type]}`}>{type}</span>;
-}
-
-function Detail({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-      <p className="mb-1 text-[10px] font-bold tracking-wide text-gray-500 uppercase">{label}</p>
-      <p className="text-sm leading-relaxed font-semibold text-gray-900">{value}</p>
-    </div>
-  );
 }
 
 function formatLogTimestamp(timestamp: string) {

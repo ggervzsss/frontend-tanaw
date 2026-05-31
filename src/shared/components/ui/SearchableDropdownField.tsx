@@ -12,9 +12,10 @@ type SearchableDropdownFieldProps = {
   value: string;
   onChange: (value: string) => void;
   required?: boolean;
+  error?: string;
 };
 
-export function SearchableDropdownField({ name, label, options, value, onChange, required = false }: SearchableDropdownFieldProps) {
+export function SearchableDropdownField({ name, label, options, value, onChange, required = false, error }: SearchableDropdownFieldProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [menuStyle, setMenuStyle] = useState<{ top: number; left: number; width: number; maxHeight: number } | null>(null);
@@ -126,7 +127,7 @@ export function SearchableDropdownField({ name, label, options, value, onChange,
 
   return (
     <div className="relative" onKeyDown={handleDropdownKeyDown}>
-      <span className="mb-1 block text-[10px] font-bold text-gray-500 uppercase">{label}</span>
+      <span className="mb-1.5 block text-[11px] font-bold tracking-wide text-slate-500 uppercase">{label}</span>
       <input name={name} value={value} required={required} readOnly className="sr-only" tabIndex={-1} />
       <button
         ref={buttonRef}
@@ -134,17 +135,21 @@ export function SearchableDropdownField({ name, label, options, value, onChange,
         onClick={handleToggle}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        className="focus:ring-tgreen-dark flex w-full items-center justify-between gap-3 rounded-lg border border-gray-300 bg-white p-3 text-left text-sm transition outline-none focus:ring-1"
+        className={[
+          "focus:border-tanaw-green focus:ring-tanaw-green/15 flex w-full items-center justify-between gap-3 rounded-xl border bg-white px-4 py-3 text-left text-sm transition outline-none focus:ring-4",
+          error ? "border-red-300" : "border-slate-300",
+        ].join(" ")}
       >
         <span className={selectedOption ? "font-semibold text-gray-900" : "text-gray-400"}>{selectedOption?.[1] ?? `Select ${label.toLowerCase()}`}</span>
         <ChevronDown size={16} className={`shrink-0 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </button>
+      {error && <p className="mt-1.5 text-xs font-semibold text-red-600">{error}</p>}
 
       <AnimatePresence>
         {isOpen && menuStyle && (
           <ModalPortal>
             <div
-              className="fixed inset-0 z-[1000]"
+              className="fixed inset-0 z-[1200]"
               onMouseDown={() => {
                 setIsOpen(false);
                 setSearch("");
@@ -157,7 +162,7 @@ export function SearchableDropdownField({ name, label, options, value, onChange,
               exit={{ opacity: 0, y: -6, scale: 0.98 }}
               transition={{ duration: 0.14, ease: "easeOut" }}
               style={{ top: menuStyle.top, left: menuStyle.left, width: menuStyle.width, maxHeight: menuStyle.maxHeight }}
-              className="fixed z-[1001] flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl"
+              className="fixed z-[1201] flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl"
               onMouseDown={(event) => event.stopPropagation()}
             >
               <div className="shrink-0 border-b border-gray-100 p-2">

@@ -25,6 +25,7 @@ export type AccountSummary = {
   title: string;
   status: "active" | "inactive";
   mustChangePassword: boolean;
+  isProtectedDefault: boolean;
   createdAt: string;
   lastLoginAt: string | null;
 };
@@ -48,6 +49,10 @@ export type CreateLguAccountPayload = {
   role: "admin" | "it" | "staff";
 };
 
+export type UpdateLguAccountPayload = CreateLguAccountPayload & {
+  status: "active" | "inactive";
+};
+
 export type CreateEnterpriseAccountPayload = {
   enterpriseName: string;
   category: string;
@@ -62,6 +67,17 @@ export type CreateEnterpriseAccountPayload = {
   locationSource?: string;
   locationConfidence?: number;
   geocodedAddress?: string;
+};
+
+export type UpdateEnterpriseAccountPayload = {
+  enterpriseName: string;
+  category: string;
+  managerName: string;
+  email: string;
+  contactNumber?: string;
+  barangay: string;
+  address: string;
+  status: "active" | "inactive";
 };
 
 export type EnterpriseGeocodePayload = {
@@ -89,6 +105,11 @@ export async function createLguAccount(payload: CreateLguAccountPayload) {
   return response.data;
 }
 
+export async function updateLguAccount(accountId: string, payload: UpdateLguAccountPayload) {
+  const response = await apiClient.patch<AccountSummary>(`/accounts/lgu/${accountId}`, payload);
+  return response.data;
+}
+
 export async function listEnterpriseAccounts() {
   const response = await apiClient.get<AccountSummary[]>("/accounts/enterprises");
   return response.data;
@@ -96,6 +117,11 @@ export async function listEnterpriseAccounts() {
 
 export async function createEnterpriseAccount(payload: CreateEnterpriseAccountPayload) {
   const response = await apiClient.post<AccountSummary>("/accounts/enterprises", payload);
+  return response.data;
+}
+
+export async function updateEnterpriseAccount(accountId: string, payload: UpdateEnterpriseAccountPayload) {
+  const response = await apiClient.patch<AccountSummary>(`/accounts/enterprises/${accountId}`, payload);
   return response.data;
 }
 
